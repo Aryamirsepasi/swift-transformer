@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Matft
+import Metal
 
 func createAndManipulateMatrix() {
     let a = MfArray([[[ -8,  -7,  -6,  -5],
@@ -38,8 +39,3 @@ struct ContentView: View {
     }
 }
 
-
-
-#Preview {
-    ContentView()
-}

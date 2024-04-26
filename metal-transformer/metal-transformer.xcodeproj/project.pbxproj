@@ -15,6 +15,7 @@
 		2A59ED462BDBC72900F6A501 /* metal_transformerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59ED452BDBC72900F6A501 /* metal_transformerUITests.swift */; };
 		2A59ED482BDBC72900F6A501 /* metal_transformerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59ED472BDBC72900F6A501 /* metal_transformerUITestsLaunchTests.swift */; };
 		2A59ED562BDBC98F00F6A501 /* Matft in Frameworks */ = {isa = PBXBuildFile; productRef = 2A59ED552BDBC98F00F6A501 /* Matft */; };
+		2A59ED582BDBD09C00F6A501 /* prepare_data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59ED572BDBD09C00F6A501 /* prepare_data.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +47,7 @@
 		2A59ED412BDBC72900F6A501 /* metal-transformerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "metal-transformerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A59ED452BDBC72900F6A501 /* metal_transformerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = metal_transformerUITests.swift; sourceTree = "<group>"; };
 		2A59ED472BDBC72900F6A501 /* metal_transformerUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = metal_transformerUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		2A59ED572BDBD09C00F6A501 /* prepare_data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = prepare_data.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +101,7 @@
 			children = (
 				2A59ED292BDBC72800F6A501 /* metal_transformerApp.swift */,
 				2A59ED2B2BDBC72800F6A501 /* ContentView.swift */,
+				2A59ED572BDBD09C00F6A501 /* prepare_data.swift */,
 				2A59ED2D2BDBC72900F6A501 /* Assets.xcassets */,
 				2A59ED322BDBC72900F6A501 /* metal_transformer.entitlements */,
 				2A59ED2F2BDBC72900F6A501 /* Preview Content */,
@@ -267,6 +270,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A59ED582BDBD09C00F6A501 /* prepare_data.swift in Sources */,
 				2A59ED2C2BDBC72800F6A501 /* ContentView.swift in Sources */,
 				2A59ED2A2BDBC72800F6A501 /* metal_transformerApp.swift in Sources */,
 			);
