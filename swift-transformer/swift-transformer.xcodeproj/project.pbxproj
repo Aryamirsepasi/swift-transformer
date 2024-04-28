@@ -17,6 +17,7 @@
 		2A2912AA2BDEC1FB008A505C /* Matft in Frameworks */ = {isa = PBXBuildFile; productRef = 2A2912A92BDEC1FB008A505C /* Matft */; };
 		2A2912AC2BDEC237008A505C /* prepare_data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2912AB2BDEC237008A505C /* prepare_data.swift */; };
 		2AE3D9BE2BDED44F006AC004 /* decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE3D9BD2BDED44F006AC004 /* decoder.swift */; };
+		2AE3D9C02BDEFFBC006AC004 /* encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE3D9BF2BDEFFBC006AC004 /* encoder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +51,7 @@
 		2A29129B2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_transformerUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		2A2912AB2BDEC237008A505C /* prepare_data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = prepare_data.swift; sourceTree = "<group>"; };
 		2AE3D9BD2BDED44F006AC004 /* decoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = decoder.swift; sourceTree = "<group>"; };
+		2AE3D9BF2BDEFFBC006AC004 /* encoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = encoder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +105,7 @@
 			children = (
 				2A29127D2BDEC183008A505C /* swift_transformerApp.swift */,
 				2A29127F2BDEC183008A505C /* ContentView.swift */,
+				2AE3D9BF2BDEFFBC006AC004 /* encoder.swift */,
 				2A2912AB2BDEC237008A505C /* prepare_data.swift */,
 				2AE3D9BD2BDED44F006AC004 /* decoder.swift */,
 				2A2912812BDEC184008A505C /* Assets.xcassets */,
@@ -276,6 +279,7 @@
 				2A2912AC2BDEC237008A505C /* prepare_data.swift in Sources */,
 				2A2912802BDEC183008A505C /* ContentView.swift in Sources */,
 				2AE3D9BE2BDED44F006AC004 /* decoder.swift in Sources */,
+				2AE3D9C02BDEFFBC006AC004 /* encoder.swift in Sources */,
 				2A29127E2BDEC183008A505C /* swift_transformerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
