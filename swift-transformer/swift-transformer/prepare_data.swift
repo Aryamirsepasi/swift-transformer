@@ -146,14 +146,14 @@ class DataPreparator {
 }
 
 // Usage
-let tokens = ["<pad>", "<sos>", "<eos>", "<unk>"]
+/*let tokens = ["<pad>", "<sos>", "<eos>", "<unk>"]
 let indexes = [0, 1, 2, 3]
 let dataPreparator = DataPreparator(tokens: tokens, indexes: indexes)
 
-let dataset = dataPreparator.importDataset(fromPath: "path/to/your/dataset")
+let dataset = dataPreparator.importDataset(fromPath: "./dataset")
 // Process the dataset further as needed
 let batchedData = dataPreparator.addTokens(to: dataset, batchSize: 32)
-let (source, target) = dataPreparator.buildDataset(from: batchedData, vocabs: dataPreparator.vocabs ?? [:])
+let (source, target) = dataPreparator.buildDataset(from: batchedData, vocabs: dataPreparator.vocabs ?? [:])*/
 
 // Now `source` and `target` contain the indices of words ready for use in training
 
