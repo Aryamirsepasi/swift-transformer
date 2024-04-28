@@ -51,48 +51,70 @@ class DataPreparator {
     }
 
     func importDataset(fromPath path: String) -> [[String: [String]]] {
-        let fileManager = FileManager.default
-        let trainPath = "\(path)/train.txt"  // Adjust file paths and extensions as necessary
-        let data = try? String(contentsOfFile: trainPath, encoding: .utf8)
         var examples: [[String: [String]]] = []
-        
-        data?.enumerateLines { line, _ in
-            let parts = line.components(separatedBy: "\t")
-            if parts.count == 2 {
-                let enSeq = self.filterSeq(parts[0])
-                let deSeq = self.filterSeq(parts[1])
-                examples.append(["en": enSeq.split(separator: "").map(String.init),
-                                 "de": deSeq.split(separator: "").map(String.init)])
+        let fileManager = FileManager.default
+        let directoryURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(path)
+
+        let enPath = directoryURL.appendingPathComponent("train.en").path
+        let dePath = directoryURL.appendingPathComponent("train.de").path
+
+        do {
+            let enContent = try String(contentsOfFile: enPath, encoding: .utf8)
+            let deContent = try String(contentsOfFile: dePath, encoding: .utf8)
+            
+            let enLines = enContent.components(separatedBy: "\n").map { self.filterSeq($0) }
+            let deLines = deContent.components(separatedBy: "\n").map { self.filterSeq($0) }
+
+            for (enLine, deLine) in zip(enLines, deLines) {
+                examples.append(["en": enLine.split(separator: " ").map(String.init),
+                                 "de": deLine.split(separator: " ").map(String.init)])
             }
+        } catch {
+            print("Error reading files: \(error)")
         }
-        
+
         return examples
     }
+
     
     // Further methods to build vocabulary, prepare data batches, etc.
     
     func addTokens(to dataset: [[String: [String]]], batchSize: Int) -> [[[String: [String]]]] {
-        var batchedData: [[[String: [String]]]] = []
+        var batches: [[[String: [String]]]] = []
         var currentBatch: [[String: [String]]] = []
-        
-        for example in dataset {
-            var modifiedExample = example
-            modifiedExample["en"] = [sosToken] + (example["en"] ?? []) + [eosToken]
-            modifiedExample["de"] = [sosToken] + (example["de"] ?? []) + [eosToken]
-            currentBatch.append(modifiedExample)
-            
-            if currentBatch.count >= batchSize {
-                batchedData.append(currentBatch)
+
+        dataset.forEach { example in
+            var modExample = example
+            modExample["en"] = [sosToken] + (example["en"] ?? []) + [eosToken]
+            modExample["de"] = [sosToken] + (example["de"] ?? []) + [eosToken]
+            currentBatch.append(modExample)
+
+            if currentBatch.count == batchSize {
+                batches.append(currentBatch)
                 currentBatch = []
             }
         }
-        
+
         if !currentBatch.isEmpty {
-            batchedData.append(currentBatch)
+            batches.append(currentBatch)
         }
-        
-        return batchedData
+
+        // Pad each batch
+        batches = batches.map { batch in
+            let maxEnLen = batch.max { $0["en"]!.count < $1["en"]!.count }!["en"]!.count
+            let maxDeLen = batch.max { $0["de"]!.count < $1["de"]!.count }!["de"]!.count
+
+            return batch.map { example in
+                var example = example
+                example["en"] = example["en"]! + Array(repeating: padToken, count: maxEnLen - example["en"]!.count)
+                example["de"] = example["de"]! + Array(repeating: padToken, count: maxDeLen - example["de"]!.count)
+                return example
+            }
+        }
+
+        return batches
     }
+
     
     func buildDataset(from batchedData: [[[String: [String]]]], vocabs: [String: Int]) -> ([[[Int]]], [[[Int]]]) {
         var source: [[[Int]]] = []
@@ -123,26 +145,20 @@ class DataPreparator {
     }
     
     func buildVocab(from dataset: [[String: [String]]], minFreq: Int = 1) -> [String: Int] {
-        var vocab: [String: Int] = [:]
+        var vocab: [String: Int] = toksAndInds
         var wordFrequencies: [String: Int] = [:]
-        
-        for example in dataset {
-            guard let words = example["en"] else { continue }
-            for word in words {
-                wordFrequencies[word, default: 0] += 1
-            }
+
+        dataset.flatMap { $0.values.flatMap { $0 } }.forEach { word in
+            wordFrequencies[word, default: 0] += 1
         }
-        
-        for (word, count) in wordFrequencies {
-            if count >= minFreq {
-                if vocab[word] == nil {
-                    vocab[word] = vocab.count
-                }
-            }
+
+        for (word, count) in wordFrequencies where count >= minFreq && vocab[word] == nil {
+            vocab[word] = vocab.count + toksAndInds.count
         }
-        
+
         return vocab
     }
+
 }
 
 // Usage
