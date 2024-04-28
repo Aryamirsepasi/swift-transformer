@@ -1,13 +1,13 @@
 //
-//  metal_transformerUITestsLaunchTests.swift
-//  metal-transformerUITests
+//  swift_transformerUITestsLaunchTests.swift
+//  swift-transformerUITests
 //
-//  Created by Arya Mirsepasi on 26.04.24.
+//  Created by Arya Mirsepasi on 28.04.24.
 //
 
 import XCTest
 
-final class metal_transformerUITestsLaunchTests: XCTestCase {
+final class swift_transformerUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

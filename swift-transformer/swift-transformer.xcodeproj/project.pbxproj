@@ -7,66 +7,66 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2A59ED2A2BDBC72800F6A501 /* metal_transformerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59ED292BDBC72800F6A501 /* metal_transformerApp.swift */; };
-		2A59ED2C2BDBC72800F6A501 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59ED2B2BDBC72800F6A501 /* ContentView.swift */; };
-		2A59ED2E2BDBC72900F6A501 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A59ED2D2BDBC72900F6A501 /* Assets.xcassets */; };
-		2A59ED312BDBC72900F6A501 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A59ED302BDBC72900F6A501 /* Preview Assets.xcassets */; };
-		2A59ED3C2BDBC72900F6A501 /* metal_transformerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59ED3B2BDBC72900F6A501 /* metal_transformerTests.swift */; };
-		2A59ED462BDBC72900F6A501 /* metal_transformerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59ED452BDBC72900F6A501 /* metal_transformerUITests.swift */; };
-		2A59ED482BDBC72900F6A501 /* metal_transformerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59ED472BDBC72900F6A501 /* metal_transformerUITestsLaunchTests.swift */; };
-		2A59ED562BDBC98F00F6A501 /* Matft in Frameworks */ = {isa = PBXBuildFile; productRef = 2A59ED552BDBC98F00F6A501 /* Matft */; };
-		2A59ED582BDBD09C00F6A501 /* prepare_data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59ED572BDBD09C00F6A501 /* prepare_data.swift */; };
+		2A29127E2BDEC183008A505C /* swift_transformerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29127D2BDEC183008A505C /* swift_transformerApp.swift */; };
+		2A2912802BDEC183008A505C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29127F2BDEC183008A505C /* ContentView.swift */; };
+		2A2912822BDEC184008A505C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A2912812BDEC184008A505C /* Assets.xcassets */; };
+		2A2912852BDEC184008A505C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A2912842BDEC184008A505C /* Preview Assets.xcassets */; };
+		2A2912902BDEC184008A505C /* swift_transformerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29128F2BDEC184008A505C /* swift_transformerTests.swift */; };
+		2A29129A2BDEC184008A505C /* swift_transformerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2912992BDEC184008A505C /* swift_transformerUITests.swift */; };
+		2A29129C2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29129B2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift */; };
+		2A2912AA2BDEC1FB008A505C /* Matft in Frameworks */ = {isa = PBXBuildFile; productRef = 2A2912A92BDEC1FB008A505C /* Matft */; };
+		2A2912AC2BDEC237008A505C /* prepare_data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2912AB2BDEC237008A505C /* prepare_data.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		2A59ED382BDBC72900F6A501 /* PBXContainerItemProxy */ = {
+		2A29128C2BDEC184008A505C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 2A59ED1E2BDBC72800F6A501 /* Project object */;
+			containerPortal = 2A2912722BDEC183008A505C /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 2A59ED252BDBC72800F6A501;
-			remoteInfo = "metal-transformer";
+			remoteGlobalIDString = 2A2912792BDEC183008A505C;
+			remoteInfo = "swift-transformer";
 		};
-		2A59ED422BDBC72900F6A501 /* PBXContainerItemProxy */ = {
+		2A2912962BDEC184008A505C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 2A59ED1E2BDBC72800F6A501 /* Project object */;
+			containerPortal = 2A2912722BDEC183008A505C /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 2A59ED252BDBC72800F6A501;
-			remoteInfo = "metal-transformer";
+			remoteGlobalIDString = 2A2912792BDEC183008A505C;
+			remoteInfo = "swift-transformer";
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2A59ED262BDBC72800F6A501 /* metal-transformer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "metal-transformer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2A59ED292BDBC72800F6A501 /* metal_transformerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = metal_transformerApp.swift; sourceTree = "<group>"; };
-		2A59ED2B2BDBC72800F6A501 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		2A59ED2D2BDBC72900F6A501 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		2A59ED302BDBC72900F6A501 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		2A59ED322BDBC72900F6A501 /* metal_transformer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = metal_transformer.entitlements; sourceTree = "<group>"; };
-		2A59ED372BDBC72900F6A501 /* metal-transformerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "metal-transformerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2A59ED3B2BDBC72900F6A501 /* metal_transformerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = metal_transformerTests.swift; sourceTree = "<group>"; };
-		2A59ED412BDBC72900F6A501 /* metal-transformerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "metal-transformerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2A59ED452BDBC72900F6A501 /* metal_transformerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = metal_transformerUITests.swift; sourceTree = "<group>"; };
-		2A59ED472BDBC72900F6A501 /* metal_transformerUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = metal_transformerUITestsLaunchTests.swift; sourceTree = "<group>"; };
-		2A59ED572BDBD09C00F6A501 /* prepare_data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = prepare_data.swift; sourceTree = "<group>"; };
+		2A29127A2BDEC183008A505C /* swift-transformer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swift-transformer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2A29127D2BDEC183008A505C /* swift_transformerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_transformerApp.swift; sourceTree = "<group>"; };
+		2A29127F2BDEC183008A505C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2A2912812BDEC184008A505C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2A2912842BDEC184008A505C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		2A2912862BDEC184008A505C /* swift_transformer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = swift_transformer.entitlements; sourceTree = "<group>"; };
+		2A29128B2BDEC184008A505C /* swift-transformerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-transformerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2A29128F2BDEC184008A505C /* swift_transformerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_transformerTests.swift; sourceTree = "<group>"; };
+		2A2912952BDEC184008A505C /* swift-transformerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-transformerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2A2912992BDEC184008A505C /* swift_transformerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_transformerUITests.swift; sourceTree = "<group>"; };
+		2A29129B2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_transformerUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		2A2912AB2BDEC237008A505C /* prepare_data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = prepare_data.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		2A59ED232BDBC72800F6A501 /* Frameworks */ = {
+		2A2912772BDEC183008A505C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A59ED562BDBC98F00F6A501 /* Matft in Frameworks */,
+				2A2912AA2BDEC1FB008A505C /* Matft in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2A59ED342BDBC72900F6A501 /* Frameworks */ = {
+		2A2912882BDEC184008A505C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2A59ED3E2BDBC72900F6A501 /* Frameworks */ = {
+		2A2912922BDEC184008A505C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -76,147 +76,147 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2A59ED1D2BDBC72800F6A501 = {
+		2A2912712BDEC183008A505C = {
 			isa = PBXGroup;
 			children = (
-				2A59ED282BDBC72800F6A501 /* metal-transformer */,
-				2A59ED3A2BDBC72900F6A501 /* metal-transformerTests */,
-				2A59ED442BDBC72900F6A501 /* metal-transformerUITests */,
-				2A59ED272BDBC72800F6A501 /* Products */,
+				2A29127C2BDEC183008A505C /* swift-transformer */,
+				2A29128E2BDEC184008A505C /* swift-transformerTests */,
+				2A2912982BDEC184008A505C /* swift-transformerUITests */,
+				2A29127B2BDEC183008A505C /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		2A59ED272BDBC72800F6A501 /* Products */ = {
+		2A29127B2BDEC183008A505C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2A59ED262BDBC72800F6A501 /* metal-transformer.app */,
-				2A59ED372BDBC72900F6A501 /* metal-transformerTests.xctest */,
-				2A59ED412BDBC72900F6A501 /* metal-transformerUITests.xctest */,
+				2A29127A2BDEC183008A505C /* swift-transformer.app */,
+				2A29128B2BDEC184008A505C /* swift-transformerTests.xctest */,
+				2A2912952BDEC184008A505C /* swift-transformerUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		2A59ED282BDBC72800F6A501 /* metal-transformer */ = {
+		2A29127C2BDEC183008A505C /* swift-transformer */ = {
 			isa = PBXGroup;
 			children = (
-				2A59ED292BDBC72800F6A501 /* metal_transformerApp.swift */,
-				2A59ED2B2BDBC72800F6A501 /* ContentView.swift */,
-				2A59ED572BDBD09C00F6A501 /* prepare_data.swift */,
-				2A59ED2D2BDBC72900F6A501 /* Assets.xcassets */,
-				2A59ED322BDBC72900F6A501 /* metal_transformer.entitlements */,
-				2A59ED2F2BDBC72900F6A501 /* Preview Content */,
+				2A29127D2BDEC183008A505C /* swift_transformerApp.swift */,
+				2A29127F2BDEC183008A505C /* ContentView.swift */,
+				2A2912AB2BDEC237008A505C /* prepare_data.swift */,
+				2A2912812BDEC184008A505C /* Assets.xcassets */,
+				2A2912862BDEC184008A505C /* swift_transformer.entitlements */,
+				2A2912832BDEC184008A505C /* Preview Content */,
 			);
-			path = "metal-transformer";
+			path = "swift-transformer";
 			sourceTree = "<group>";
 		};
-		2A59ED2F2BDBC72900F6A501 /* Preview Content */ = {
+		2A2912832BDEC184008A505C /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
-				2A59ED302BDBC72900F6A501 /* Preview Assets.xcassets */,
+				2A2912842BDEC184008A505C /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		2A59ED3A2BDBC72900F6A501 /* metal-transformerTests */ = {
+		2A29128E2BDEC184008A505C /* swift-transformerTests */ = {
 			isa = PBXGroup;
 			children = (
-				2A59ED3B2BDBC72900F6A501 /* metal_transformerTests.swift */,
+				2A29128F2BDEC184008A505C /* swift_transformerTests.swift */,
 			);
-			path = "metal-transformerTests";
+			path = "swift-transformerTests";
 			sourceTree = "<group>";
 		};
-		2A59ED442BDBC72900F6A501 /* metal-transformerUITests */ = {
+		2A2912982BDEC184008A505C /* swift-transformerUITests */ = {
 			isa = PBXGroup;
 			children = (
-				2A59ED452BDBC72900F6A501 /* metal_transformerUITests.swift */,
-				2A59ED472BDBC72900F6A501 /* metal_transformerUITestsLaunchTests.swift */,
+				2A2912992BDEC184008A505C /* swift_transformerUITests.swift */,
+				2A29129B2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift */,
 			);
-			path = "metal-transformerUITests";
+			path = "swift-transformerUITests";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		2A59ED252BDBC72800F6A501 /* metal-transformer */ = {
+		2A2912792BDEC183008A505C /* swift-transformer */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2A59ED4B2BDBC72900F6A501 /* Build configuration list for PBXNativeTarget "metal-transformer" */;
+			buildConfigurationList = 2A29129F2BDEC184008A505C /* Build configuration list for PBXNativeTarget "swift-transformer" */;
 			buildPhases = (
-				2A59ED222BDBC72800F6A501 /* Sources */,
-				2A59ED232BDBC72800F6A501 /* Frameworks */,
-				2A59ED242BDBC72800F6A501 /* Resources */,
+				2A2912762BDEC183008A505C /* Sources */,
+				2A2912772BDEC183008A505C /* Frameworks */,
+				2A2912782BDEC183008A505C /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "metal-transformer";
+			name = "swift-transformer";
 			packageProductDependencies = (
-				2A59ED552BDBC98F00F6A501 /* Matft */,
+				2A2912A92BDEC1FB008A505C /* Matft */,
 			);
-			productName = "metal-transformer";
-			productReference = 2A59ED262BDBC72800F6A501 /* metal-transformer.app */;
+			productName = "swift-transformer";
+			productReference = 2A29127A2BDEC183008A505C /* swift-transformer.app */;
 			productType = "com.apple.product-type.application";
 		};
-		2A59ED362BDBC72900F6A501 /* metal-transformerTests */ = {
+		2A29128A2BDEC184008A505C /* swift-transformerTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2A59ED4E2BDBC72900F6A501 /* Build configuration list for PBXNativeTarget "metal-transformerTests" */;
+			buildConfigurationList = 2A2912A22BDEC184008A505C /* Build configuration list for PBXNativeTarget "swift-transformerTests" */;
 			buildPhases = (
-				2A59ED332BDBC72900F6A501 /* Sources */,
-				2A59ED342BDBC72900F6A501 /* Frameworks */,
-				2A59ED352BDBC72900F6A501 /* Resources */,
+				2A2912872BDEC184008A505C /* Sources */,
+				2A2912882BDEC184008A505C /* Frameworks */,
+				2A2912892BDEC184008A505C /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				2A59ED392BDBC72900F6A501 /* PBXTargetDependency */,
+				2A29128D2BDEC184008A505C /* PBXTargetDependency */,
 			);
-			name = "metal-transformerTests";
-			productName = "metal-transformerTests";
-			productReference = 2A59ED372BDBC72900F6A501 /* metal-transformerTests.xctest */;
+			name = "swift-transformerTests";
+			productName = "swift-transformerTests";
+			productReference = 2A29128B2BDEC184008A505C /* swift-transformerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		2A59ED402BDBC72900F6A501 /* metal-transformerUITests */ = {
+		2A2912942BDEC184008A505C /* swift-transformerUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2A59ED512BDBC72900F6A501 /* Build configuration list for PBXNativeTarget "metal-transformerUITests" */;
+			buildConfigurationList = 2A2912A52BDEC184008A505C /* Build configuration list for PBXNativeTarget "swift-transformerUITests" */;
 			buildPhases = (
-				2A59ED3D2BDBC72900F6A501 /* Sources */,
-				2A59ED3E2BDBC72900F6A501 /* Frameworks */,
-				2A59ED3F2BDBC72900F6A501 /* Resources */,
+				2A2912912BDEC184008A505C /* Sources */,
+				2A2912922BDEC184008A505C /* Frameworks */,
+				2A2912932BDEC184008A505C /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				2A59ED432BDBC72900F6A501 /* PBXTargetDependency */,
+				2A2912972BDEC184008A505C /* PBXTargetDependency */,
 			);
-			name = "metal-transformerUITests";
-			productName = "metal-transformerUITests";
-			productReference = 2A59ED412BDBC72900F6A501 /* metal-transformerUITests.xctest */;
+			name = "swift-transformerUITests";
+			productName = "swift-transformerUITests";
+			productReference = 2A2912952BDEC184008A505C /* swift-transformerUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		2A59ED1E2BDBC72800F6A501 /* Project object */ = {
+		2A2912722BDEC183008A505C /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1530;
 				LastUpgradeCheck = 1530;
 				TargetAttributes = {
-					2A59ED252BDBC72800F6A501 = {
+					2A2912792BDEC183008A505C = {
 						CreatedOnToolsVersion = 15.3;
 					};
-					2A59ED362BDBC72900F6A501 = {
+					2A29128A2BDEC184008A505C = {
 						CreatedOnToolsVersion = 15.3;
-						TestTargetID = 2A59ED252BDBC72800F6A501;
+						TestTargetID = 2A2912792BDEC183008A505C;
 					};
-					2A59ED402BDBC72900F6A501 = {
+					2A2912942BDEC184008A505C = {
 						CreatedOnToolsVersion = 15.3;
-						TestTargetID = 2A59ED252BDBC72800F6A501;
+						TestTargetID = 2A2912792BDEC183008A505C;
 					};
 				};
 			};
-			buildConfigurationList = 2A59ED212BDBC72800F6A501 /* Build configuration list for PBXProject "metal-transformer" */;
+			buildConfigurationList = 2A2912752BDEC183008A505C /* Build configuration list for PBXProject "swift-transformer" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -224,39 +224,39 @@
 				en,
 				Base,
 			);
-			mainGroup = 2A59ED1D2BDBC72800F6A501;
+			mainGroup = 2A2912712BDEC183008A505C;
 			packageReferences = (
-				2A59ED542BDBC98F00F6A501 /* XCRemoteSwiftPackageReference "Matft" */,
+				2A2912A82BDEC1FB008A505C /* XCRemoteSwiftPackageReference "Matft" */,
 			);
-			productRefGroup = 2A59ED272BDBC72800F6A501 /* Products */;
+			productRefGroup = 2A29127B2BDEC183008A505C /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				2A59ED252BDBC72800F6A501 /* metal-transformer */,
-				2A59ED362BDBC72900F6A501 /* metal-transformerTests */,
-				2A59ED402BDBC72900F6A501 /* metal-transformerUITests */,
+				2A2912792BDEC183008A505C /* swift-transformer */,
+				2A29128A2BDEC184008A505C /* swift-transformerTests */,
+				2A2912942BDEC184008A505C /* swift-transformerUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		2A59ED242BDBC72800F6A501 /* Resources */ = {
+		2A2912782BDEC183008A505C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A59ED312BDBC72900F6A501 /* Preview Assets.xcassets in Resources */,
-				2A59ED2E2BDBC72900F6A501 /* Assets.xcassets in Resources */,
+				2A2912852BDEC184008A505C /* Preview Assets.xcassets in Resources */,
+				2A2912822BDEC184008A505C /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2A59ED352BDBC72900F6A501 /* Resources */ = {
+		2A2912892BDEC184008A505C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2A59ED3F2BDBC72900F6A501 /* Resources */ = {
+		2A2912932BDEC184008A505C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -266,50 +266,50 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		2A59ED222BDBC72800F6A501 /* Sources */ = {
+		2A2912762BDEC183008A505C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A59ED582BDBD09C00F6A501 /* prepare_data.swift in Sources */,
-				2A59ED2C2BDBC72800F6A501 /* ContentView.swift in Sources */,
-				2A59ED2A2BDBC72800F6A501 /* metal_transformerApp.swift in Sources */,
+				2A2912AC2BDEC237008A505C /* prepare_data.swift in Sources */,
+				2A2912802BDEC183008A505C /* ContentView.swift in Sources */,
+				2A29127E2BDEC183008A505C /* swift_transformerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2A59ED332BDBC72900F6A501 /* Sources */ = {
+		2A2912872BDEC184008A505C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A59ED3C2BDBC72900F6A501 /* metal_transformerTests.swift in Sources */,
+				2A2912902BDEC184008A505C /* swift_transformerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2A59ED3D2BDBC72900F6A501 /* Sources */ = {
+		2A2912912BDEC184008A505C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A59ED482BDBC72900F6A501 /* metal_transformerUITestsLaunchTests.swift in Sources */,
-				2A59ED462BDBC72900F6A501 /* metal_transformerUITests.swift in Sources */,
+				2A29129C2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift in Sources */,
+				2A29129A2BDEC184008A505C /* swift_transformerUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		2A59ED392BDBC72900F6A501 /* PBXTargetDependency */ = {
+		2A29128D2BDEC184008A505C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2A59ED252BDBC72800F6A501 /* metal-transformer */;
-			targetProxy = 2A59ED382BDBC72900F6A501 /* PBXContainerItemProxy */;
+			target = 2A2912792BDEC183008A505C /* swift-transformer */;
+			targetProxy = 2A29128C2BDEC184008A505C /* PBXContainerItemProxy */;
 		};
-		2A59ED432BDBC72900F6A501 /* PBXTargetDependency */ = {
+		2A2912972BDEC184008A505C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2A59ED252BDBC72800F6A501 /* metal-transformer */;
-			targetProxy = 2A59ED422BDBC72900F6A501 /* PBXContainerItemProxy */;
+			target = 2A2912792BDEC183008A505C /* swift-transformer */;
+			targetProxy = 2A2912962BDEC184008A505C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		2A59ED492BDBC72900F6A501 /* Debug */ = {
+		2A29129D2BDEC184008A505C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -372,7 +372,7 @@
 			};
 			name = Debug;
 		};
-		2A59ED4A2BDBC72900F6A501 /* Release */ = {
+		2A29129E2BDEC184008A505C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -427,16 +427,16 @@
 			};
 			name = Release;
 		};
-		2A59ED4C2BDBC72900F6A501 /* Debug */ = {
+		2A2912A02BDEC184008A505C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "metal-transformer/metal_transformer.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "swift-transformer/swift_transformer.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"metal-transformer/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"swift-transformer/Preview Content\"";
 				DEVELOPMENT_TEAM = MK2V998W66;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -447,23 +447,23 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.metal-transformer";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.swift-transformer";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
-		2A59ED4D2BDBC72900F6A501 /* Release */ = {
+		2A2912A12BDEC184008A505C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "metal-transformer/metal_transformer.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "swift-transformer/swift_transformer.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"metal-transformer/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"swift-transformer/Preview Content\"";
 				DEVELOPMENT_TEAM = MK2V998W66;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -474,14 +474,14 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.metal-transformer";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.swift-transformer";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
-		2A59ED4F2BDBC72900F6A501 /* Debug */ = {
+		2A2912A32BDEC184008A505C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -492,15 +492,15 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.metal-transformerTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.swift-transformerTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/metal-transformer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/metal-transformer";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swift-transformer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/swift-transformer";
 			};
 			name = Debug;
 		};
-		2A59ED502BDBC72900F6A501 /* Release */ = {
+		2A2912A42BDEC184008A505C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -511,15 +511,15 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.metal-transformerTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.swift-transformerTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/metal-transformer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/metal-transformer";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swift-transformer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/swift-transformer";
 			};
 			name = Release;
 		};
-		2A59ED522BDBC72900F6A501 /* Debug */ = {
+		2A2912A62BDEC184008A505C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -528,15 +528,15 @@
 				DEVELOPMENT_TEAM = MK2V998W66;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.metal-transformerUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.swift-transformerUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "metal-transformer";
+				TEST_TARGET_NAME = "swift-transformer";
 			};
 			name = Debug;
 		};
-		2A59ED532BDBC72900F6A501 /* Release */ = {
+		2A2912A72BDEC184008A505C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -545,49 +545,49 @@
 				DEVELOPMENT_TEAM = MK2V998W66;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.metal-transformerUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.swift-transformerUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "metal-transformer";
+				TEST_TARGET_NAME = "swift-transformer";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2A59ED212BDBC72800F6A501 /* Build configuration list for PBXProject "metal-transformer" */ = {
+		2A2912752BDEC183008A505C /* Build configuration list for PBXProject "swift-transformer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2A59ED492BDBC72900F6A501 /* Debug */,
-				2A59ED4A2BDBC72900F6A501 /* Release */,
+				2A29129D2BDEC184008A505C /* Debug */,
+				2A29129E2BDEC184008A505C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2A59ED4B2BDBC72900F6A501 /* Build configuration list for PBXNativeTarget "metal-transformer" */ = {
+		2A29129F2BDEC184008A505C /* Build configuration list for PBXNativeTarget "swift-transformer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2A59ED4C2BDBC72900F6A501 /* Debug */,
-				2A59ED4D2BDBC72900F6A501 /* Release */,
+				2A2912A02BDEC184008A505C /* Debug */,
+				2A2912A12BDEC184008A505C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2A59ED4E2BDBC72900F6A501 /* Build configuration list for PBXNativeTarget "metal-transformerTests" */ = {
+		2A2912A22BDEC184008A505C /* Build configuration list for PBXNativeTarget "swift-transformerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2A59ED4F2BDBC72900F6A501 /* Debug */,
-				2A59ED502BDBC72900F6A501 /* Release */,
+				2A2912A32BDEC184008A505C /* Debug */,
+				2A2912A42BDEC184008A505C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2A59ED512BDBC72900F6A501 /* Build configuration list for PBXNativeTarget "metal-transformerUITests" */ = {
+		2A2912A52BDEC184008A505C /* Build configuration list for PBXNativeTarget "swift-transformerUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2A59ED522BDBC72900F6A501 /* Debug */,
-				2A59ED532BDBC72900F6A501 /* Release */,
+				2A2912A62BDEC184008A505C /* Debug */,
+				2A2912A72BDEC184008A505C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -595,7 +595,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		2A59ED542BDBC98F00F6A501 /* XCRemoteSwiftPackageReference "Matft" */ = {
+		2A2912A82BDEC1FB008A505C /* XCRemoteSwiftPackageReference "Matft" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/jjjkkkjjj/Matft";
 			requirement = {
@@ -606,12 +606,12 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		2A59ED552BDBC98F00F6A501 /* Matft */ = {
+		2A2912A92BDEC1FB008A505C /* Matft */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2A59ED542BDBC98F00F6A501 /* XCRemoteSwiftPackageReference "Matft" */;
+			package = 2A2912A82BDEC1FB008A505C /* XCRemoteSwiftPackageReference "Matft" */;
 			productName = Matft;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 2A59ED1E2BDBC72800F6A501 /* Project object */;
+	rootObject = 2A2912722BDEC183008A505C /* Project object */;
 }

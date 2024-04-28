@@ -1,14 +1,14 @@
 //
-//  metal_transformerTests.swift
-//  metal-transformerTests
+//  swift_transformerTests.swift
+//  swift-transformerTests
 //
-//  Created by Arya Mirsepasi on 26.04.24.
+//  Created by Arya Mirsepasi on 28.04.24.
 //
 
 import XCTest
-@testable import metal_transformer
+@testable import swift_transformer
 
-final class metal_transformerTests: XCTestCase {
+final class swift_transformerTests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

@@ -1,13 +1,13 @@
 //
-//  metal_transformerUITests.swift
-//  metal-transformerUITests
+//  swift_transformerUITests.swift
+//  swift-transformerUITests
 //
-//  Created by Arya Mirsepasi on 26.04.24.
+//  Created by Arya Mirsepasi on 28.04.24.
 //
 
 import XCTest
 
-final class metal_transformerUITests: XCTestCase {
+final class swift_transformerUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
