@@ -1,10 +1,3 @@
-//
-//  decoder_layer.swift
-//  swift-transformer
-//
-//  Created by Arya Mirsepasi on 11.05.24.
-//
-
 import Foundation
 import Accelerate
 

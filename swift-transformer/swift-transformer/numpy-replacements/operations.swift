@@ -83,7 +83,6 @@ func whereCondition(_ condition: [Bool], _ x: [Float], _ y: [Float]) -> [Float] 
 }
 
 // 15. np.ndarray.astype
-// Swift does not have a direct method for casting arrays but manual casting can be done
 
 // 16. np.asarray
 func asarray(_ array: [Float]) -> [Float] {

@@ -1,10 +1,3 @@
-//
-//  optimizers.swift
-//  swift-transformer
-//
-//  Created by Arya Mirsepasi on 30.04.24.
-//
-
 import Foundation
 import Accelerate
 

@@ -71,7 +71,7 @@ class MultiHeadAttention {
     }
 
     func forward(query: [Float], key: [Float], value: [Float], mask: [Float]?, training: Bool = true) -> ([Float], [Float]) {
-        let batchCount = 1 // Simplification for example
+        let batchCount = 1
         let dK = dModel / headsNum
 
         let k = kLinear.forward([key])
@@ -113,14 +113,12 @@ class MultiHeadAttention {
         var qError = [Float](repeating: 0.0, count: adjustedError.count)
         let kError = [Float](repeating: 0.0, count: adjustedError.count)
 
-        // Assuming batch count 1 for simplicity
         vDSP_mtrans(adjustedError, 1, &vError, 1, vDSP_Length(1), vDSP_Length(adjustedError.count))
         vDSP_mtrans(adjustedError, 1, &qError, 1, vDSP_Length(1), vDSP_Length(adjustedError.count))
 
         let vErrorReshaped = splitHeadsBackward(vError, batchCount: 1)
         let qErrorReshaped = splitHeadsBackward(qError, batchCount: 1)
-        let kErrorReshaped = splitHeadsBackward(vError, batchCount: 1) // Placeholder for actual backward pass
-
+        let kErrorReshaped = splitHeadsBackward(vError, batchCount: 1)
         let vBack = vLinear.backward([vErrorReshaped]).flatMap { $0 }
         let qBack = qLinear.backward([qErrorReshaped]).flatMap { $0 }
         let kBack = kLinear.backward([kErrorReshaped]).flatMap { $0 }

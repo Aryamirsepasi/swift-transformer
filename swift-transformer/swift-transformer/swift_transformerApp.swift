@@ -1,10 +1,3 @@
-//
-//  swift_transformerApp.swift
-//  swift-transformer
-//
-//  Created by Arya Mirsepasi on 28.04.24.
-//
-
 import SwiftUI
 import Accelerate
 
@@ -79,7 +72,6 @@ class TransformerViewModel: ObservableObject {
         
         let (_, valLossHistory) = model.fit(trainData: (source, target), valData: valData, epochs: 5, saveEveryEpochs: 20, savePath: "saved models/seq2seq_model", validationCheck: true)
 
-        // Optionally: Print loss history or handle it as needed
         print("Validation Loss History: \(valLossHistory)")
         
         return model
