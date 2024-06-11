@@ -263,6 +263,26 @@ extension Array where Element == [Float] {
             return result.map { $0 / Float(self.count) }
         }*/
 }
+extension Array where Element == [[Float]] {
+    func transpose() -> [[[Float]]] {
+        let outerCount = self.count
+        let innerCount = self[0].count
+        let innerMostCount = self[0][0].count
+        
+        var result = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0.0, count: outerCount), count: innerMostCount), count: innerCount)
+        
+        for i in 0..<outerCount {
+            for j in 0..<innerCount {
+                for k in 0..<innerMostCount {
+                    result[j][k][i] = self[i][j][k]
+                }
+            }
+        }
+        
+        return result
+    }
+}
+
 
 // 36. shape
 func shape(_ array: Any) -> [Int] {

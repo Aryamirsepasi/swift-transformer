@@ -12,12 +12,19 @@ func calculateShape<T>(_ array: [T], newShape: [Int]) -> [Int] {
     return shape
 }
 
-// Utility function to reshape a flat array
-func reshape<T>(_ array: [T], newShape: [Int]) -> [T] {
+// Utility function to reshape a flat array into nested arrays
+func reshape<T>(_ array: [T], newShape: [Int]) -> Any {
     let calculatedShape = calculateShape(array, newShape: newShape)
     let totalElements = calculatedShape.reduce(1, *)
     assert(array.count == totalElements, "Total elements must match in reshape operation")
-    return array // No actual reshaping needed as this is a flat array operation
+    
+    func reshapeHelper<T>(_ array: [T], shape: [Int]) -> Any {
+        guard !shape.isEmpty else { return array }
+        let step = array.count / shape[0]
+        return stride(from: 0, to: array.count, by: step).map { Array(array[$0..<$0+step]) }
+    }
+    
+    return reshapeHelper(array, shape: calculatedShape)
 }
 
 // Reshape class using the above utility functions
@@ -32,22 +39,21 @@ class Reshape {
     }
 
     func build() {
-        
         self.outputShape = self.shape
     }
 
-    func forwardProp(X: [Float], batchSize: Int) -> [Float] {
+    func forwardProp(X: [Float], batchSize: Int) -> [[Float]] {
         self.prevShape = [batchSize] + self.shape
-        let reshapedArray = reshape(X, newShape: [batchSize] + self.shape)
+        let reshapedArray = reshape(X, newShape: [batchSize] + self.shape) as! [[Float]]
         return reshapedArray
     }
 
-    func backwardProp(error: [Float], batchSize: Int) -> [Float] {
+    func backwardProp(error: [Float], batchSize: Int) -> [[Float]] {
         guard let prevShape = self.prevShape else {
             fatalError("forwardProp must be called before backwardProp")
         }
 
-        let reshapedError = reshape(error, newShape: prevShape)
+        let reshapedError = reshape(error, newShape: prevShape) as! [[Float]]
         return reshapedError
     }
 }

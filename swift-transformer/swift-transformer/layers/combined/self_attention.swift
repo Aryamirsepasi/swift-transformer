@@ -4,142 +4,217 @@ import Accelerate
 class MultiHeadAttention {
     var dModel: Int
     var headsNum: Int
+    var dataType: [Float]
+    
+    var dK: Int
+    var dQ: Int
+    var dV: Int
     var scale: Float
-    var kLinear, qLinear, vLinear, oLinear: Dense
+    
+    var KLinear: Dense
+    var QLinear: Dense
+    var VLinear: Dense
+    var OLinear: Dense
+    
     var activation: Softmax
     var dropout: Dropout
-    var dataType: [Float]
-
-    init(dModel: Int = 512, headsNum: Int = 8, dropoutRate: Float = 0.1, dataType: [Float]) {
+    
+    var splitK: [[[Float]]] = []
+    var splitQ: [[[Float]]] = []
+    var splitV: [[[Float]]] = []
+    var dropoutAttention: [[[Float]]] = []
+    var maskArray: [[Bool]] = []
+    
+    init(dModel: Int = 512, headsNum: Int = 8, dropoutRate: Float = 0.1, dataType: [Float] = []) {
         self.dModel = dModel
         self.headsNum = headsNum
-        let dK = dModel / headsNum
-        self.scale = Float(sqrt(Double(dK)))
         self.dataType = dataType
-
-        self.kLinear = Dense(unitsNum: dK * headsNum, inputsNum: dModel, useBias: false, dataType: dataType)
-        self.qLinear = Dense(unitsNum: dK * headsNum, inputsNum: dModel, useBias: false, dataType: dataType)
-        self.vLinear = Dense(unitsNum: dK * headsNum, inputsNum: dModel, useBias: false, dataType: dataType)
-        self.oLinear = Dense(unitsNum: dModel, inputsNum: dK * headsNum, useBias: true, dataType: dataType)
-
+        
+        self.dK = dModel / headsNum
+        self.dQ = dModel / headsNum
+        self.dV = dModel / headsNum
+        self.scale = sqrt(Float(dK))
+        
+        self.KLinear = Dense(unitsNum: dK * headsNum, inputsNum: dModel, useBias: false, dataType: dataType)
+        self.QLinear = Dense(unitsNum: dQ * headsNum, inputsNum: dModel, useBias: false, dataType: dataType)
+        self.VLinear = Dense(unitsNum: dV * headsNum, inputsNum: dModel, useBias: false, dataType: dataType)
+        self.OLinear = Dense(unitsNum: dV * headsNum, inputsNum: dModel, useBias: true, dataType: dataType)
+        
         self.activation = Softmax()
         self.dropout = Dropout(rate: dropoutRate, dataType: dataType)
     }
-
-    func splitHeadsForward(_ x: [Float], batchCount: Int) -> [Float] {
-        let dK = dModel / headsNum
-        let batchSize = x.count / (batchCount * dModel)
-        var reshaped = Array(repeating: Float(0), count: batchCount * headsNum * batchSize * dK)
+    
+    func splitHeadsForward(_ x: [[Float]]) -> [[[Float]]] {
+        let batchSize = x.count
+        let reshaped = reshape(x.flatMap { $0 }, newShape: [batchSize, -1, headsNum, dK]) as! [[[Float]]]
+        return reshaped.transposed()
+    }
+    
+    func splitHeadsBackward(_ x: [[[Float]]]) -> [[Float]] {
+        let batchSize = x.count
+        let transposed = x.transposed()
+        return reshape(transposed.flatMap { $0 }, newShape: [batchSize, -1, headsNum * dK]) as! [[Float]]
+    }
+    
+    func groupHeadsForward(_ x: [[[Float]]]) -> [[Float]] {
+        let batchSize = x.count
+        let transposed = x.transposed()
+        return reshape(transposed.flatMap { $0 }, newShape: [batchSize, -1, headsNum * dK]) as! [[Float]]
+    }
+    
+    func groupHeadsBackward(_ x: [[Float]]) -> [[[Float]]] {
+        let batchSize = x.count
+        let reshaped = reshape(x.flatMap { $0 }, newShape: [batchSize, -1, headsNum, dK]) as! [[[Float]]]
+        return reshaped.transposed()
+    }
+    
+    func forward(query: [[Float]], key: [[Float]], value: [[Float]], mask: [[Bool]], training: Bool = true) -> ([[Float]], [[Float]]) {
+        let keyLen = key[0].count
+        let queryLen = query[0].count
+        let valueLen = value[0].count
         
-        for b in 0..<batchCount {
-            for i in 0..<batchSize {
-                for h in 0..<headsNum {
-                    let srcIndex = b * dModel * batchSize + i * dModel + h * dK
-                    let dstIndex = b * headsNum * batchSize * dK + h * batchSize * dK + i * dK
-                    reshaped[dstIndex..<(dstIndex + dK)] = x[srcIndex..<(srcIndex + dK)]
-                }
+        let K = KLinear.forward(key, training: training)
+        let Q = QLinear.forward(query, training: training)
+        let V = VLinear.forward(value, training: training)
+        
+        splitK = splitHeadsForward(K)
+        splitQ = splitHeadsForward(Q)
+        splitV = splitHeadsForward(V)
+        
+        var energy = splitQ.flatMap { $0 }.map { row in
+            splitK.transposed().map { col in
+                zip(row, col).map(*).reduce(0, +) / scale
             }
         }
         
-        return reshaped
-    }
-
-    func splitHeadsBackward(_ x: [Float], batchCount: Int) -> [Float] {
-        return groupHeadsForward(x, batchCount: batchCount)
-    }
-
-    func groupHeadsForward(_ x: [Float], batchCount: Int) -> [Float] {
-        let dK = dModel / headsNum
-        let batchSize = x.count / (batchCount * headsNum * dK)
-        var grouped = Array(repeating: Float(0), count: batchCount * dModel * batchSize)
+        maskArray = mask
+        if !maskArray.isEmpty {
+            let maskArrayFloat = maskArray.map { $0.map { $0 ? 0.0 : -Float.greatestFiniteMagnitude } }
+            energy = zip(energy, maskArrayFloat).map { zip($0, $1).map { $0 + $1 } }
+        }
         
-        for b in 0..<batchCount {
-            for i in 0..<batchSize {
-                for h in 0..<headsNum {
-                    let srcIndex = b * headsNum * batchSize * dK + h * batchSize * dK + i * dK
-                    let dstIndex = b * dModel * batchSize + i * dModel + h * dK
-                    grouped[dstIndex..<(dstIndex + dK)] = x[srcIndex..<(srcIndex + dK)]
-                }
+        let attention = activation.forward(x: energy.flatMap { $0 })
+        let attention2D = convert(attention, to: energy.map { $0.count })
+        
+        let dropoutAttention2D = dropout.forward(attention2D, training: training)
+        dropoutAttention = reshape(dropoutAttention2D.flatMap { $0 }, newShape: [dropoutAttention2D.count, -1, headsNum, dK]) as! [[[Float]]]
+        
+        let output = dropoutAttention.flatMap { $0 }.map { row in
+            splitV.flatMap { $0 }.map { col in
+                zip(row, col).map(*).reduce(0, +)
             }
         }
         
-        return grouped
+        let concatOutput = groupHeadsForward(output)
+        let O = OLinear.forward(concatOutput, training: training)
+        
+        return (O, attention2D)
     }
-
-    func groupHeadsBackward(_ x: [Float], batchCount: Int) -> [Float] {
-        return splitHeadsForward(x, batchCount: batchCount)
-    }
-
-    func forward(query: [Float], key: [Float], value: [Float], mask: [Float]?, training: Bool = true) -> ([Float], [Float]) {
-        let batchCount = 1
-        let dK = dModel / headsNum
-
-        let k = kLinear.forward([key])
-        let q = qLinear.forward([query])
-        let v = vLinear.forward([value])
-
-        let reshapedK = splitHeadsForward(k.flatMap { $0 }, batchCount: batchCount)
-        let reshapedQ = splitHeadsForward(q.flatMap { $0 }, batchCount: batchCount)
-        let reshapedV = splitHeadsForward(v.flatMap { $0 }, batchCount: batchCount)
-
-        var energy = [Float](repeating: 0.0, count: reshapedQ.count * reshapedK.count / dModel)
-        vDSP_mmul(reshapedQ, 1, reshapedK, 1, &energy, 1, vDSP_Length(headsNum), vDSP_Length(reshapedQ.count / dModel), vDSP_Length(dK))
-
-        var scaledEnergy = [Float](repeating: scale, count: energy.count)
-        vDSP_vsdiv(energy, 1, &scaledEnergy, &energy, 1, vDSP_Length(energy.count))
-
-        if let mask = mask {
-            for i in 0..<energy.count {
-                energy[i] = mask[i] == 0 ? -Float.greatestFiniteMagnitude : energy[i]
+    
+    func backward(error: [[Float]]) -> ([[Float]], [[Float]], [[Float]]) {
+        var error = OLinear.backward(error)
+        
+        error = groupHeadsBackward(error).flatMap { $0 }
+        let VError = dropoutAttention.transposed().flatMap { $0 }.map { row in
+            error.map { col in
+                zip(row, col).map(*).reduce(0, +)
             }
         }
-
-        let attention = activation.forward(x: energy)
-        let dropoutAttention = dropout.forward(attention, shape: (attention.count, 1), training: training)
-        var output = [Float](repeating: 0.0, count: dropoutAttention.count * reshapedV.count / dModel)
-        vDSP_mmul(dropoutAttention, 1, reshapedV, 1, &output, 1, vDSP_Length(dropoutAttention.count / dModel), vDSP_Length(reshapedV.count / dModel), vDSP_Length(1))
-
-        let groupedOutput = groupHeadsForward(output, batchCount: batchCount)
-        let finalOutput = oLinear.forward([groupedOutput]).flatMap { $0 }
-
-        return (finalOutput, attention)
+        error = error.flatMap { $0 }.map { row in
+            splitV.transposed().map { col in
+                zip(row, col).map(*).reduce(0, +)
+            }
+        }
+        error = dropout.backward(error)
+        error = activation.backward(grad: error.flatMap { $0 })
+        
+        if !maskArray.isEmpty {
+            let maskArrayFlat = maskArray.flatMap { $0 }
+            error = zip(error.flatMap { $0 }, maskArrayFlat).map { $1 == false ? 0.0 : $0 }
+        }
+        
+        error = error.map { $0 / scale }
+        
+        let QError = error.flatMap { $0 }.map { row in
+            splitK.flatMap { $0 }.map { col in
+                zip(row, col).map(*).reduce(0, +)
+            }
+        }
+        var KError = splitQ.transposed().flatMap { $0 }.map { row in
+            error.map { col in
+                zip(row, col).map(*).reduce(0, +)
+            }
+        }
+        KError = KError.transposed()
+        
+        let VErrorFinal = splitHeadsBackward(VError)
+        let QErrorFinal = splitHeadsBackward(QError)
+        let KErrorFinal = splitHeadsBackward(KError)
+        
+        let VErrorOutput = VLinear.backward(VErrorFinal)
+        let QErrorOutput = QLinear.backward(QErrorFinal)
+        let KErrorOutput = KLinear.backward(KErrorFinal)
+        
+        return (QErrorOutput, KErrorOutput, VErrorOutput)
     }
-
-    func backward(_ error: [Float]) -> ([Float], [Float], [Float]) {
-        var adjustedError = oLinear.backward([error]).flatMap { $0 }
-        adjustedError = groupHeadsBackward(adjustedError, batchCount: 1)
-
-        var vError = [Float](repeating: 0.0, count: adjustedError.count)
-        var qError = [Float](repeating: 0.0, count: adjustedError.count)
-        let kError = [Float](repeating: 0.0, count: adjustedError.count)
-
-        vDSP_mtrans(adjustedError, 1, &vError, 1, vDSP_Length(1), vDSP_Length(adjustedError.count))
-        vDSP_mtrans(adjustedError, 1, &qError, 1, vDSP_Length(1), vDSP_Length(adjustedError.count))
-
-        let vErrorReshaped = splitHeadsBackward(vError, batchCount: 1)
-        let qErrorReshaped = splitHeadsBackward(qError, batchCount: 1)
-        let kErrorReshaped = splitHeadsBackward(vError, batchCount: 1)
-        let vBack = vLinear.backward([vErrorReshaped]).flatMap { $0 }
-        let qBack = qLinear.backward([qErrorReshaped]).flatMap { $0 }
-        let kBack = kLinear.backward([kErrorReshaped]).flatMap { $0 }
-
-        return (qBack, kBack, vBack)
+    
+    func setOptimizer(optimizer: Optimizer) {
+        KLinear.setOptimizer(optimizer: optimizer)
+        QLinear.setOptimizer(optimizer: optimizer)
+        VLinear.setOptimizer(optimizer: optimizer)
+        OLinear.setOptimizer(optimizer: optimizer)
     }
-
-    func setOptimizer(_ optimizer: Optimizer) {
-        kLinear.setOptimizer(optimizer: optimizer)
-        qLinear.setOptimizer(optimizer: optimizer)
-        vLinear.setOptimizer(optimizer: optimizer)
-        oLinear.setOptimizer(optimizer: optimizer)
-    }
-
-    func updateWeights(_ layerNum: Int) -> Int {
-        var layerNum = layerNum
-        layerNum = kLinear.updateWeights(layerNum: layerNum)
-        layerNum = qLinear.updateWeights(layerNum: layerNum)
-        layerNum = vLinear.updateWeights(layerNum: layerNum)
-        layerNum = oLinear.updateWeights(layerNum: layerNum)
+    
+    func updateWeights(layerNum: Int) -> Int {
+        var layerNum = KLinear.updateWeights(layerNum: layerNum)
+        layerNum = QLinear.updateWeights(layerNum: layerNum)
+        layerNum = VLinear.updateWeights(layerNum: layerNum)
+        layerNum = OLinear.updateWeights(layerNum: layerNum)
         return layerNum
     }
 }
 
+// Extensions and helper functions
+
+extension Array where Element == [Float] {
+    func transposed() -> [[Float]] {
+        var result = [[Float]](repeating: [Float](repeating: 0.0, count: self.count), count: self[0].count)
+        for i in 0..<self.count {
+            for j in 0..<self[i].count {
+                result[j][i] = self[i][j]
+            }
+        }
+        return result
+    }
+}
+
+extension Array where Element == [[Float]] {
+    func transposed() -> [[[Float]]] {
+        let outerCount = self.count
+        let innerCount = self[0].count
+        let innerMostCount = self[0][0].count
+        
+        var result = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0.0, count: outerCount), count: innerMostCount), count: innerCount)
+        
+        for i in 0..<outerCount {
+            for j in 0..<innerCount {
+                for k in 0..<innerMostCount {
+                    result[j][k][i] = self[i][j][k]
+                }
+            }
+        }
+        
+        return result
+    }
+}
+
+func convert(_ array: [Float], to shape: [Int]) -> [[Float]] {
+    var reshapedArray: [[Float]] = []
+    var start = 0
+    for count in shape {
+        let end = start + count
+        reshapedArray.append(Array(array[start..<end]))
+        start = end
+    }
+    return reshapedArray
+}
