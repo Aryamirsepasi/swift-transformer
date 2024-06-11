@@ -8,172 +8,170 @@
 import Foundation
 import Matft
 
+import Accelerate
+
 class DataPreparator {
-    let padToken: String
-    let sosToken: String
-    let eosToken: String
-    let unkToken: String
-    
-    let padIndex: Int
-    let sosIndex: Int
-    let eosIndex: Int
-    let unkIndex: Int
-    
-    var toksAndInds: [String: Int]
-    var vocabs: [String: Int]?
-    
+    var padToken: String
+    var sosToken: String
+    var eosToken: String
+    var unkToken: String
+
+    var padIndex: Int
+    var sosIndex: Int
+    var eosIndex: Int
+    var unkIndex: Int
+
+    var tokensAndIndices: [String: Int]
+    var vocabs: [String: Int]
+
     init(tokens: [String], indexes: [Int]) {
         self.padToken = tokens[0]
         self.sosToken = tokens[1]
         self.eosToken = tokens[2]
         self.unkToken = tokens[3]
-        
+
         self.padIndex = indexes[0]
         self.sosIndex = indexes[1]
         self.eosIndex = indexes[2]
         self.unkIndex = indexes[3]
-        
-        self.toksAndInds = [
-            tokens[0]: indexes[0],
-            tokens[1]: indexes[1],
-            tokens[2]: indexes[2],
-            tokens[3]: indexes[3]
+
+        self.tokensAndIndices = [
+            padToken: padIndex,
+            sosToken: sosIndex,
+            eosToken: eosIndex,
+            unkToken: unkIndex
         ]
+        
+        self.vocabs = [:]
     }
 
-    func filterSeq(_ seq: String) -> String {
-        let charsToRemove = CharacterSet(charactersIn: "\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\t\n")
-        return seq.components(separatedBy: charsToRemove).joined()
+    func prepareData(path: String = "dataset/", batchSize: Int = 1, minFreq: Int = 10) -> (([[Int]], [[Int]]), ([[Int]], [[Int]]), ([[Int]], [[Int]])) {
+        let (trainData, valData, testData) = importMulti30kDataset(path: path)
+        let clearedTrainData = clearDataset(data: trainData)
+        let clearedValData = clearDataset(data: valData)
+        let clearedTestData = clearDataset(data: testData)
+
+        print("Train data sequences num = \(clearedTrainData.count)")
+        
+        let vocabs = buildVocab(dataset: clearedTrainData, minFreq: minFreq)
+        print("EN vocab length = \(vocabs.count); DE vocab length = \(vocabs.count)") // Assuming one vocab for simplification
+        
+        let trainDataBatches = addTokens(data: clearedTrainData, batchSize: batchSize)
+        print("Batch num = \(trainDataBatches.count)")
+
+        let trainSourceTarget = buildDataset(data: trainDataBatches)
+        let testDataBatches = addTokens(data: clearedTestData, batchSize: batchSize)
+        let testSourceTarget = buildDataset(data: testDataBatches)
+        let valDataBatches = addTokens(data: clearedValData, batchSize: batchSize)
+        let valSourceTarget = buildDataset(data: valDataBatches)
+
+        return (trainSourceTarget, testSourceTarget, valSourceTarget)
     }
 
-    func lowercaseSeq(_ seq: String) -> String {
+    func importMulti30kDataset(path: String) -> ([(String, String)], [(String, String)], [(String, String)]) {
+        let filenames = ["train", "val", "test"]
+        var trainResults: [(String, String)] = []
+        var valResults: [(String, String)] = []
+        var testResults: [(String, String)] = []
+
+        for filename in filenames {
+            let enPath = "\(path)/\(filename).en"
+            let dePath = "\(path)/\(filename).de"
+
+            if let enLines = try? String(contentsOfFile: enPath).split(separator: "\n"),
+               let deLines = try? String(contentsOfFile: dePath).split(separator: "\n"),
+               enLines.count == deLines.count {
+
+                let pairs = zip(enLines, deLines).map { (String($0), String($1)) }
+                switch filename {
+                case "train":
+                    trainResults.append(contentsOf: pairs)
+                case "val":
+                    valResults.append(contentsOf: pairs)
+                case "test":
+                    testResults.append(contentsOf: pairs)
+                default: break
+                }
+            }
+        }
+
+        return (trainResults, valResults, testResults)
+    }
+
+    func clearDataset(data: [(String, String)]) -> [(String, String)] {
+        return data.map { (en, de) in
+            let filteredEn = filterSeq(seq: en)
+            let filteredDe = filterSeq(seq: de)
+            let lowercasedEn = filteredEn.lowercased()
+            let lowercasedDe = filteredDe.lowercased()
+            return (lowercasedEn, lowercasedDe)
+        }
+    }
+    
+    func getVocabs() -> [String: Int] {
+        return vocabs
+    }
+
+    func lowercaseSeq(seq: String) -> String {
         return seq.lowercased()
     }
 
-    func importDataset(fromPath path: String) -> [[String: [String]]] {
-        var examples: [[String: [String]]] = []
-        let fileManager = FileManager.default
-        let directoryURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(path)
-
-        let enPath = directoryURL.appendingPathComponent("train.en").path
-        let dePath = directoryURL.appendingPathComponent("train.de").path
-
-        do {
-            let enContent = try String(contentsOfFile: enPath, encoding: .utf8)
-            let deContent = try String(contentsOfFile: dePath, encoding: .utf8)
-            
-            let enLines = enContent.components(separatedBy: "\n").map { self.filterSeq($0) }
-            let deLines = deContent.components(separatedBy: "\n").map { self.filterSeq($0) }
-
-            for (enLine, deLine) in zip(enLines, deLines) {
-                examples.append(["en": enLine.split(separator: " ").map(String.init),
-                                 "de": deLine.split(separator: " ").map(String.init)])
-            }
-        } catch {
-            print("Error reading files: \(error)")
-        }
-
-        return examples
+    func filterSeq(seq: String) -> String {
+        let charsToRemove = CharacterSet(charactersIn: "!”#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\t\n")
+        return seq.components(separatedBy: charsToRemove).joined()
     }
 
-    
-    // Further methods to build vocabulary, prepare data batches, etc.
-    
-    func addTokens(to dataset: [[String: [String]]], batchSize: Int) -> [[[String: [String]]]] {
-        var batches: [[[String: [String]]]] = []
-        var currentBatch: [[String: [String]]] = []
+    func buildVocab(dataset: [(String, String)], minFreq: Int = 1) -> [String: Int] {
+        var vocab: [String: Int] = tokensAndIndices
+        var freqs: [String: Int] = [:]
 
-        dataset.forEach { example in
-            var modExample = example
-            modExample["en"] = [sosToken] + (example["en"] ?? []) + [eosToken]
-            modExample["de"] = [sosToken] + (example["de"] ?? []) + [eosToken]
-            currentBatch.append(modExample)
-
-            if currentBatch.count == batchSize {
-                batches.append(currentBatch)
-                currentBatch = []
+        for (en, de) in dataset {
+            let words = en.split(separator: " ") + de.split(separator: " ")
+            for word in words {
+                freqs[String(word), default: 0] += 1
             }
         }
 
-        if !currentBatch.isEmpty {
-            batches.append(currentBatch)
-        }
-
-        // Pad each batch
-        batches = batches.map { batch in
-            let maxEnLen = batch.max { $0["en"]!.count < $1["en"]!.count }!["en"]!.count
-            let maxDeLen = batch.max { $0["de"]!.count < $1["de"]!.count }!["de"]!.count
-
-            return batch.map { example in
-                var example = example
-                example["en"] = example["en"]! + Array(repeating: padToken, count: maxEnLen - example["en"]!.count)
-                example["de"] = example["de"]! + Array(repeating: padToken, count: maxDeLen - example["de"]!.count)
-                return example
+        for (word, freq) in freqs {
+            if freq >= minFreq && vocab[word] == nil {
+                vocab[word] = vocab.count
             }
-        }
-
-        return batches
-    }
-
-    
-    func buildDataset(from batchedData: [[[String: [String]]]], vocabs: [String: Int]) -> ([[[Int]]], [[[Int]]]) {
-        var source: [[[Int]]] = []
-        var target: [[[Int]]] = []
-        
-        for batch in batchedData {
-            var sourceBatch: [[Int]] = []
-            var targetBatch: [[Int]] = []
-            
-            for example in batch {
-                let sourceIndices = example["en"]?.map { word -> Int in
-                    vocabs[word] ?? unkIndex
-                } ?? []
-                
-                let targetIndices = example["de"]?.map { word -> Int in
-                    vocabs[word] ?? unkIndex
-                } ?? []
-                
-                sourceBatch.append(sourceIndices)
-                targetBatch.append(targetIndices)
-            }
-            
-            source.append(sourceBatch)
-            target.append(targetBatch)
-        }
-        
-        return (source, target)
-    }
-    
-    func buildVocab(from dataset: [[String: [String]]], minFreq: Int = 1) -> [String: Int] {
-        var vocab: [String: Int] = toksAndInds
-        var wordFrequencies: [String: Int] = [:]
-
-        dataset.flatMap { $0.values.flatMap { $0 } }.forEach { word in
-            wordFrequencies[word, default: 0] += 1
-        }
-
-        for (word, count) in wordFrequencies where count >= minFreq && vocab[word] == nil {
-            vocab[word] = vocab.count + toksAndInds.count
         }
 
         return vocab
     }
 
+    func addTokens(data: [(String, String)], batchSize: Int) -> [[(String, String)]] {
+        let paddedData = data.map { (en, de) -> (String, String) in
+            let paddedEn = "\(sosToken) \(en) \(eosToken)"
+            let paddedDe = "\(sosToken) \(de) \(eosToken)"
+            return (paddedEn, paddedDe)
+        }
+
+        return stride(from: 0, to: paddedData.count, by: batchSize).map {
+            Array(paddedData[$0..<min($0 + batchSize, paddedData.count)])
+        }
+    }
+
+    func buildDataset(data: [[(String, String)]]) -> ([[Int]], [[Int]]) {
+        var source: [[Int]] = []
+        var target: [[Int]] = []
+
+        for batch in data {
+            var sourceBatch: [[Int]] = []
+            var targetBatch: [[Int]] = []
+
+            for (en, de) in batch {
+                let enIndices = en.split(separator: " ").map { vocabs[String($0)] ?? unkIndex }
+                let deIndices = de.split(separator: " ").map { vocabs[String($0)] ?? unkIndex }
+                sourceBatch.append(enIndices)
+                targetBatch.append(deIndices)
+            }
+
+            source.append(contentsOf: sourceBatch)
+            target.append(contentsOf: targetBatch)
+        }
+
+        return (source, target)
+    }
 }
-
-// Usage
-/*let tokens = ["<pad>", "<sos>", "<eos>", "<unk>"]
-let indexes = [0, 1, 2, 3]
-let dataPreparator = DataPreparator(tokens: tokens, indexes: indexes)
-
-let dataset = dataPreparator.importDataset(fromPath: "./dataset")
-// Process the dataset further as needed
-let batchedData = dataPreparator.addTokens(to: dataset, batchSize: 32)
-let (source, target) = dataPreparator.buildDataset(from: batchedData, vocabs: dataPreparator.vocabs ?? [:])*/
-
-// Now `source` and `target` contain the indices of words ready for use in training
-
-
-
-
-
