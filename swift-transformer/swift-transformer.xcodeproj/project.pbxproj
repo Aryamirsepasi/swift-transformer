@@ -236,8 +236,8 @@
 			isa = PBXGroup;
 			children = (
 				2A4206692BEF97AA00F914ED /* Dense.swift */,
-				2A42066F2BEFA5F800F914ED /* dropout.swift */,
 				2A4206752BEFB27100F914ED /* reshape.swift */,
+				2A42066F2BEFA5F800F914ED /* dropout.swift */,
 				2A59D3212BF0154F00048D26 /* embedding.swift */,
 				2A59D3232BF0155A00048D26 /* layer_norm.swift */,
 			);

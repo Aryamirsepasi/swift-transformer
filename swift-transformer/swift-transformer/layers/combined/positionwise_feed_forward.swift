@@ -8,24 +8,24 @@ class PositionwiseFeedforward {
     var fc2: Dense
 
     init(dModel: Int = 512, dFF: Int = 2048, dropoutRate: Float = 0.1) {
-        self.fc1 = Dense(unitsNum: dFF, inputsNum: dModel, useBias: true, dataType: <#[Float]#>)
+        self.fc1 = Dense(unitsNum: dFF, inputsNum: dModel, useBias: true, dataType: [])
         self.activation = ReLU()
-        self.fc2 = Dense(unitsNum: dModel, inputsNum: dFF, useBias: true, dataType: <#[Float]#>)
+        self.fc2 = Dense(unitsNum: dModel, inputsNum: dFF, useBias: true, dataType: [])
         self.dropout = Dropout(rate: dropoutRate)
     }
 
-    func forward(_ input: [[Float]], training: Bool = true) -> [[Float]] {
-        var x = fc1.forward(input, training: training)
-        x = activation.forward(x: x.flatMap { $0 }).chunked(into: fc1.unitsNum)
-        x = dropout.forward(x, shape: (x.count, x[0].count), training: training).chunked(into: fc1.unitsNum)
+    func forward(_ X: [[Float]], training: Bool = true) -> [[Float]] {
+        var x = fc1.forward(X, training: training)
+        x = activation.forward(x: x)
+        x = dropout.forward(x, training: training)
         x = fc2.forward(x, training: training)
         return x
     }
 
     func backward(_ error: [[Float]]) -> [[Float]] {
         var err = fc2.backward(error)
-        err = dropout.backward(err).chunked(into: fc1.unitsNum)
-        err = activation.backward(grad: err.flatMap { $0 }).chunked(into: fc1.inputsNum!)
+        err = dropout.backward(err)
+        err = activation.backward(grad: err)
         err = fc1.backward(err)
         return err
     }

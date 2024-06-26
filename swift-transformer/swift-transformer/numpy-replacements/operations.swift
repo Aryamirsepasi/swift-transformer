@@ -296,3 +296,4 @@ func shape(_ array: Any) -> [Int] {
         return []
     }
 }
+

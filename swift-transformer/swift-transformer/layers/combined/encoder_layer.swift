@@ -17,44 +17,28 @@ class EncoderLayer {
     }
 
     func forward(_ src: [[Float]], srcMask: [[Float]], training: Bool) -> [[Float]] {
-        var srcFlat = src.flatMap { $0 }
-        var srcMaskFlat = srcMask.flatMap { $0 }
-
-        let (attentionOutputFlat, _) = selfAttention.forward(query: srcFlat, key: srcFlat, value: srcFlat, mask: srcMaskFlat, training: training)
-        let attentionOutput = reshape(attentionOutputFlat, rows: src.count, cols: src[0].count)
+        let (attentionOutput, _) = selfAttention.forward(query: src, key: src, value: src, mask: srcMask, training: training)
+        var src = selfAttentionNorm.forward(src + attentionOutput)
         
-        let droppedAttentionOutput = dropout.forward(attentionOutputFlat, shape: (attentionOutputFlat.count, 1), training: training)
-        let droppedAttentionOutputReshaped = reshape(droppedAttentionOutput, rows: src.count, cols: src[0].count)
-        src = selfAttentionNorm.forward(addArrays(src, droppedAttentionOutputReshaped))
-
         let feedForwardOutput = positionWiseFeedForward.forward(src, training: training)
-        let feedForwardOutputFlat = feedForwardOutput.flatMap { $0 }
-        let droppedFeedForwardOutput = dropout.forward(feedForwardOutputFlat, shape: (feedForwardOutputFlat.count, 1), training: training)
-        let droppedFeedForwardOutputReshaped = reshape(droppedFeedForwardOutput, rows: src.count, cols: src[0].count)
-        src = ffLayerNorm.forward(addArrays(src, droppedFeedForwardOutputReshaped))
+        src = self.ffLayerNorm.forward(src + feedForwardOutput)
 
         return src
     }
 
     func backward(_ error: [[Float]]) -> [[Float]] {
-        var errorFlat = error.flatMap { $0 }
-
         var errorNorm = ffLayerNorm.backward(error)
-        let feedForwardError = positionWiseFeedForward.backward(dropout.backward(errorNorm.flatMap { $0 }))
+        let feedForwardError = positionWiseFeedForward.backward(dropout.backward(errorNorm))
         errorNorm = addArrays(errorNorm, feedForwardError)
 
-        var attentionErrorFlat, qErrorFlat, kErrorFlat, vErrorFlat: [Float]
-        (attentionErrorFlat, qErrorFlat, kErrorFlat, vErrorFlat) = selfAttention.backward(dropout.backward(errorNorm.flatMap { $0 }))
-        
-        let attentionError = reshape(attentionErrorFlat, rows: error.count, cols: error[0].count)
-
+        let attentionError = selfAttention.backward(error: dropout.backward(errorNorm))
         return addArrays(attentionError, errorNorm)
     }
 
     func setOptimizer(_ optimizer: Optimizer) {
         selfAttentionNorm.setOptimizer(optimizer: optimizer)
         ffLayerNorm.setOptimizer(optimizer: optimizer)
-        selfAttention.setOptimizer(optimizer)
+        selfAttention.setOptimizer(optimizer: optimizer)
         positionWiseFeedForward.setOptimizer(optimizer: optimizer)
     }
 
@@ -62,7 +46,7 @@ class EncoderLayer {
         var layerNum = layerNum
         layerNum = selfAttentionNorm.updateWeights(layerNum: layerNum)
         layerNum = ffLayerNorm.updateWeights(layerNum: layerNum)
-        layerNum = selfAttention.updateWeights(layerNum)
+        layerNum = selfAttention.updateWeights(layerNum: layerNum)
         layerNum = positionWiseFeedForward.updateWeights(startingLayerNum: layerNum)
         return layerNum
     }
@@ -77,17 +61,5 @@ class EncoderLayer {
             }
         }
         return result
-    }
-
-    // Helper function to reshape 1D array to 2D array
-    func reshape(_ array: [Float], rows: Int, cols: Int) -> [[Float]] {
-        var reshapedArray = [[Float]]()
-        for i in 0..<rows {
-            let start = i * cols
-            let end = start + cols
-            let row = Array(array[start..<end])
-            reshapedArray.append(row)
-        }
-        return reshapedArray
     }
 }

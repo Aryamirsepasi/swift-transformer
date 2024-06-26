@@ -1,4 +1,3 @@
-// transformer.swift
 import Foundation
 import Accelerate
 
@@ -49,15 +48,15 @@ class Seq2Seq {
     }
     
     func load(path: String) {
-        let picklePath = "\(path)/encoder.pkl"
-        let picklePath2 = "\(path)/decoder.pkl"
+        let encoderPath = "\(path)/encoder.pkl"
+        let decoderPath = "\(path)/decoder.pkl"
         
         do {
-            let pickleBinaryData = try Data(contentsOf: URL(fileURLWithPath: picklePath))
-            let pickleBinaryData2 = try Data(contentsOf: URL(fileURLWithPath: picklePath2))
+            let encoderData = try Data(contentsOf: URL(fileURLWithPath: encoderPath))
+            let decoderData = try Data(contentsOf: URL(fileURLWithPath: decoderPath))
             
-            self.encoder = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(pickleBinaryData) as! Encoder
-            self.decoder = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(pickleBinaryData2) as! Decoder
+            self.encoder = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(encoderData) as! Encoder
+            self.decoder = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(decoderData) as! Decoder
         } catch {
             print("Error loading from \(path): \(error)")
         }
@@ -74,15 +73,15 @@ class Seq2Seq {
             }
         }
         
-        let picklePath = "\(path)/encoder.pkl"
-        let picklePath2 = "\(path)/decoder.pkl"
+        let encoderPath = "\(path)/encoder.pkl"
+        let decoderPath = "\(path)/decoder.pkl"
         
         do {
-            let encoderData = try NSKeyedArchiver.archivedData(withRootObject: self.encoder as Any)
-            let decoderData = try NSKeyedArchiver.archivedData(withRootObject: self.decoder as Any)
+            let encoderData = try NSKeyedArchiver.archivedData(withRootObject: self.encoder)
+            let decoderData = try NSKeyedArchiver.archivedData(withRootObject: self.decoder)
             
-            try encoderData.write(to: URL(fileURLWithPath: picklePath))
-            try decoderData.write(to: URL(fileURLWithPath: picklePath2))
+            try encoderData.write(to: URL(fileURLWithPath: encoderPath))
+            try decoderData.write(to: URL(fileURLWithPath: decoderPath))
         } catch {
             print("Error saving to \(path): \(error)")
         }
@@ -90,31 +89,27 @@ class Seq2Seq {
         print("Saved to \"\(path)\"")
     }
     
-    func getPadMask(x: [[Int]]) -> [[[Float]]] {
+    func getPadMask(x: [[Float]]) -> [[Float]] {
         return x.map { sequence in
-            sequence.map { $0 != self.padIdx ? 1.0 : 0.0 }
-        }.map { $0.map { [$0] } }
+            sequence.map { $0 != Float(self.padIdx) ? 1.0 : 0.0 }
+        }
     }
     
-    func getSubMask(size: Int) -> [[[Float]]] {
-        var mask: [[[Float]]] = Array(repeating: Array(repeating: Array(repeating: 0.0, count: size), count: size), count: 1)
+    func getSubMask(size: Int) -> [[Float]] {
+        var mask: [[Float]] = Array(repeating: Array(repeating: 1.0, count: size), count: size)
         for i in 0..<size {
-            for j in 0..<size {
-                mask[0][i][j] = j > i ? 0.0 : 1.0
+            for j in i+1..<size {
+                mask[i][j] = 0.0
             }
         }
         return mask
     }
     
-    func forward(src: [[Int]], trg: [[Int]], training: Bool) -> ([[[Float]]], [[[Float]]]) {
+    func forward(src: [[Float]], trg: [[Float]], training: Bool) -> ([[[Float]]], [[[Float]]]) {
         let srcMask = getPadMask(x: src)
-        let trgMask = trg.map { getPadMask(x: [$0]) }.flatMap { $0 }
-        let subMask = getSubMask(size: trg[0].count)
-        
-        let flatSrc = src.flatMap { $0 }
-        let flatSrcMask = srcMask.flatMap { $0.flatMap { $0 } }
-        
-        let encSrc = encoder.forward(src: flatSrc, srcMask: flatSrcMask, training: training)
+        let trgMask = getPadMask(x: trg).map { $0 } + getSubMask(size: trg[0].count)
+
+        let encSrc = encoder.forward(src: src, srcMask: srcMask, training: training)
         
         var allOutputs: [[[Float]]] = []
         var allAttentions: [[[Float]]] = []
@@ -122,9 +117,9 @@ class Seq2Seq {
         for i in 0..<src.count {
             let (output, attention) = decoder.forward(
                 trg: [trg[i]],
-                trgMask: [trgMask[i]],
+                trgMask: trgMask,
                 src: encSrc,
-                srcMask: [srcMask[i]],
+                srcMask: srcMask,
                 training: training
             )
             allOutputs.append(output)
@@ -134,22 +129,33 @@ class Seq2Seq {
         return (allOutputs, allAttentions)
     }
     
-    func backward(error: [[Float]]) {
-        var allEncoderErrors: [[Float]] = []
-        // TODO: Implement the backward function.
+    func backward(error: [[[Float]]]) {
+        var decoderError = error.flatMap { $0 }
+        for layer in decoder.layers.reversed() {
+            let (layerError, encError) = layer.backward(decoderError)
+            decoderError = layerError + encError
+        }
+        
+        let encoderError = decoderError.map { $0.map { $0 * decoder.scale } }
+        encoder.backward(error: encoderError)
     }
     
-    func train(source: [[Int]], target: [[Int]], epoch: Int, epochs: Int) -> Float {
+    func updateWeights() {
+        encoder.updateWeights()
+        decoder.updateWeights()
+    }
+    
+    func train(source: [[Float]], target: [[Float]], epoch: Int, epochs: Int) -> Float {
         var lossHistory: [Float] = []
         
         for (sourceBatch, targetBatch) in zip(source, target) {
             let (output, _) = forward(src: [sourceBatch], trg: [targetBatch.dropLast()], training: true)
-            let outputFlat = output.flatMap { $0.flatMap { $0 } } // Flatten to [Float]
-            let targetFlat = targetBatch.dropFirst().flatMap { Float($0) } // Flatten to [Float]
+            let outputFlat = output.flatMap { $0.flatMap { $0 } }
+            let targetFlat = targetBatch.dropFirst().map { [Float($0)] }
             
-            let loss = lossFunction.loss(y: outputFlat, t: targetFlat)
-            lossHistory.append(loss.reduce(0, +) / Float(loss.count))
-            let error = lossFunction.derivative(y: outputFlat, t: targetFlat)
+            let loss = lossFunction.loss(y: [outputFlat], t: targetFlat)
+            lossHistory.append(loss.flatMap { $0 }.reduce(0, +) / Float(loss.count))
+            let error = lossFunction.derivative(y: [outputFlat], t: targetFlat)
             
             backward(error: [error])
             updateWeights()
@@ -159,23 +165,23 @@ class Seq2Seq {
         return epochLoss
     }
     
-    func evaluate(source: [[Int]], target: [[Int]]) -> Float {
+    func evaluate(source: [[Float]], target: [[Float]]) -> Float {
         var lossHistory: [Float] = []
         
         for (sourceBatch, targetBatch) in zip(source, target) {
             let (output, _) = forward(src: [sourceBatch], trg: [targetBatch.dropLast()], training: false)
-            let outputFlat = output.flatMap { $0.flatMap { $0 } } // Flatten to [Float]
-            let targetFlat = targetBatch.dropFirst().flatMap { Float($0) } // Flatten to [Float]
+            let outputFlat = output.flatMap { $0.flatMap { $0 } }
+            let targetFlat = targetBatch.dropFirst().map { [Float($0)] }
             
-            let loss = lossFunction.loss(y: outputFlat, t: targetFlat)
-            lossHistory.append(loss.reduce(0, +) / Float(loss.count))
+            let loss = lossFunction.loss(y: [outputFlat], t: targetFlat)
+            lossHistory.append(loss.flatMap { $0 }.reduce(0, +) / Float(loss.count))
         }
         
         let epochLoss = lossHistory.reduce(0, +) / Float(lossHistory.count)
         return epochLoss
     }
     
-    func fit(trainData: ([[Int]], [[Int]]), valData: ([[Int]], [[Int]]), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> ([Float], [Float]) {
+    func fit(trainData: ([[Float]], [[Float]]), valData: ([[Float]], [[Float]]), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> ([Float], [Float]) {
         setOptimizer()
         
         var bestValLoss = Float.infinity
@@ -209,26 +215,24 @@ class Seq2Seq {
         return (trainLossHistory, valLossHistory)
     }
     
-    func predict(sentence: [Int], max_length: Int = 50) -> ([Int], [[Float]]) {
+    func predict(sentence: [Int], vocabs: ([String: Int], [String: Int]), maxLength: Int = 50) -> ([String], [[Float]]) {
         var srcIndices = [sosIndex] + sentence + [eosIndex]
         var trgIndices = [sosIndex]
         
         var attentionWeights = [[Float]]()
-        while trgIndices.count < max_length {
-            let (output, attention) = forward(src: [srcIndices], trg: [trgIndices], training: false)
+        while trgIndices.count < maxLength {
+            let (output, attention) = forward(src: [srcIndices.map { Float($0) }], trg: [trgIndices.map { Float($0) }], training: false)
             guard let lastOutput = output.last?.last else { continue }
-            let predictedIndex = lastOutput.indices.max(by: { lastOutput[$0] < lastOutput[$1] }) ?? eosIndex
+            let predictedIndex = (lastOutput.enumerated().max(by: { $0.element < $1.element })?.offset) ?? eosIndex
             trgIndices.append(predictedIndex)
             attentionWeights.append(attention.last?.last ?? [])
-
+            
             if predictedIndex == eosIndex { break }
         }
         
-        return (trgIndices, attentionWeights)
-    }
-    
-    func updateWeights() {
-        encoder.updateWeights()
-        decoder.updateWeights()
+        let reversedVocab = Dictionary(uniqueKeysWithValues: vocabs.1.map { ($1, $0) })
+        let decodedSentence = trgIndices.dropFirst().compactMap { reversedVocab[$0] }
+        
+        return (decodedSentence, attentionWeights)
     }
 }

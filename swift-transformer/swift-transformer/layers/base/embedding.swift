@@ -6,20 +6,16 @@ class Embedding {
     var outputDim: Int
     var weights: [Float]
     var optimizer: Optimizer?
-    var dataType: [Float]
-    
     var v: [Float]
     var m: [Float]
     var vHat: [Float]
     var mHat: [Float]
-    
-    var inputLabels: [[Float]]?
+    var inputLabels: [[[Float]]]?  // 3D array to hold the prepared labels
     var gradWeights: [Float]?
 
     init(inputDim: Int, outputDim: Int, dataType: [Float]) {
         self.inputDim = inputDim
         self.outputDim = outputDim
-        self.dataType = dataType
         self.weights = [Float](repeating: 0.0, count: inputDim * outputDim)
         self.v = [Float](repeating: 0.0, count: inputDim * outputDim)
         self.m = [Float](repeating: 0.0, count: inputDim * outputDim)
@@ -39,53 +35,71 @@ class Embedding {
         weights = (0..<weights.count).map { _ in distribution.next() }
     }
     
-    private func prepareLabels(batchLabels: [Int]) -> [[Float]] {
+    private func prepareLabels(batchLabels: [[Float]]) -> [[[Float]]] {
         let batchCount = batchLabels.count
-        var preparedBatchLabels = [Float](repeating: 0.0, count: batchCount * inputDim)
+        let inputLength = batchLabels[0].count
         
-        for (index, label) in batchLabels.enumerated() {
-            guard label >= 0 && label < inputDim else {
-                fatalError("Label index \(label) out of bounds for inputDim \(inputDim)")
+        var preparedBatchLabels = [[[Float]]]()
+        
+        for batch in batchLabels {
+            var batchPrepared = [[Float]](repeating: [Float](repeating: 0.0, count: inputDim), count: inputLength)
+            for (index, label) in batch.enumerated() {
+                let intLabel = Int(label)
+                guard intLabel >= 0 && intLabel < inputDim else {
+                    fatalError("Label index \(intLabel) out of bounds for inputDim \(inputDim)")
+                }
+                batchPrepared[index][intLabel] = 1.0
             }
-            preparedBatchLabels[index * inputDim + label] = 1
+            preparedBatchLabels.append(batchPrepared)
         }
         
-        return stride(from: 0, to: preparedBatchLabels.count, by: inputDim).map {
-            Array(preparedBatchLabels[$0..<$0 + inputDim])
-        }
+        return preparedBatchLabels
     }
 
-    func forward(input: [Int]) -> [[Float]] {
+    func forward(input: [[Float]]) -> [[Float]] {
         guard !input.isEmpty else { return [] }
         
+        // Ensure all input sequences are of the same length
+        let inputLength = input[0].count
+        for array in input {
+            if array.count != inputLength {
+                fatalError("Input sequences must be of the same length")
+            }
+        }
+
         inputLabels = prepareLabels(batchLabels: input)
-        var output = [[Float]](repeating: [Float](repeating: 0.0, count: outputDim), count: input.count)
         
-        for (i, inputVector) in inputLabels!.enumerated() {
-            var result = [Float](repeating: 0.0, count: outputDim)
-            vDSP_mmul(inputVector, 1, weights, 1, &result, 1, 1, vDSP_Length(outputDim), vDSP_Length(inputDim))
-            output[i] = result
+        var output = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0.0, count: outputDim), count: inputLength), count: input.count)
+        
+        for (i, batch) in inputLabels!.enumerated() {
+            for (j, inputVector) in batch.enumerated() {
+                var result = [Float](repeating: 0.0, count: outputDim)
+                vDSP_mmul(inputVector, 1, weights, 1, &result, 1, 1, vDSP_Length(outputDim), vDSP_Length(inputDim))
+                output[i][j] = result
+            }
         }
         
-        return output
+        return output.flatMap { $0 }
     }
     
-    func backward(error: [[Float]]) -> [Float]? {
+    func backward(error: [[Float]]) -> [[Float]]? {
         guard let inputLabels = inputLabels else { return nil }
         
-        let batchCount = error.count
+        let batchCount = error.count / inputLabels[0].count
+        let inputLength = error[0].count
         gradWeights = [Float](repeating: 0.0, count: weights.count)
-        var errorFlatten = error.flatMap { $0 }
         
         for i in 0..<batchCount {
-            var tempGradWeights = [Float](repeating: 0.0, count: weights.count)
-            let inputVector = inputLabels[i]
-            let errorVector = Array(errorFlatten[(i * outputDim)..<(i * outputDim + outputDim)])
-            vDSP_mmul(inputVector, 1, errorVector, 1, &tempGradWeights, 1, vDSP_Length(inputDim), vDSP_Length(outputDim), 1)
-            vDSP_vadd(gradWeights!, 1, tempGradWeights, 1, &gradWeights!, 1, vDSP_Length(weights.count))
+            for j in 0..<inputLength {
+                var tempGradWeights = [Float](repeating: 0.0, count: weights.count)
+                let inputVector = inputLabels[i][j]
+                let errorVector = error[i * inputLength + j]
+                vDSP_mmul(inputVector, 1, errorVector, 1, &tempGradWeights, 1, vDSP_Length(inputDim), vDSP_Length(outputDim), 1)
+                vDSP_vadd(gradWeights!, 1, tempGradWeights, 1, &gradWeights!, 1, vDSP_Length(weights.count))
+            }
         }
         
-        return error.flatMap { $0 }
+        return error
     }
 
     func updateWeights(layerNum: Int) -> Int {

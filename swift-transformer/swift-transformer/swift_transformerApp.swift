@@ -53,26 +53,30 @@ class TransformerViewModel: ObservableObject {
         let decDropout = 0.3
         let maxLen = 5000
 
-        let encoder = Encoder(srcVocabSize: inputDim, headsNum: encHeads, layersNum: encLayers, dModel: hidDim, dFF: ffSize, dropoutRate: Float(encDropout), maxLen: maxLen)
-        let decoder = Decoder(trgVocabSize: outputDim, headsNum: decHeads, layersNum: decLayers, dModel: hidDim, dFF: ffSize, dropoutRate: Float(decDropout), maxLen: maxLen)
+        let encoder = Encoder(srcVocabSize: inputDim, headsNum: encHeads, layersNum: encLayers, dModel: hidDim, dFF: ffSize, dropoutRate: Float(encDropout), maxLen: maxLen, dataType: Array<Float>())
+        let decoder = Decoder(trgVocabSize: outputDim, headsNum: decHeads, layersNum: decLayers, dModel: hidDim, dFF: ffSize, dropoutRate: Float(decDropout), maxLen: maxLen, dataType: Array<Float>())
 
         let model = Seq2Seq(encoder: encoder, decoder: decoder, padIdx: padIndex)
         
         model.compile(optimizer: Noam(optimizer: Adam(alpha: 1e-4, beta: 0.9, beta2: 0.98, epsilon: 1e-9), modelDim: Float(hidDim), scaleFactor: 2, warmupSteps: 4000), lossFunction: CrossEntropy(ignoreIndex: padIndex))
         
-        var train_loss_history: [Float]?, val_loss_history: [Float]?
-        (train_loss_history, val_loss_history) = model.fit(
-            trainData: trainData,
-            valData: valData,
+        // Convert data to [[Float]]
+        let trainDataFloat = (trainData.0.map { $0.map { Float($0) } }, trainData.1.map { $0.map { Float($0) } })
+        let valDataFloat = (valData.0.map { $0.map { Float($0) } }, valData.1.map { $0.map { Float($0) } })
+        
+        var trainLossHistory: [Float]?, valLossHistory: [Float]?
+        (trainLossHistory, valLossHistory) = model.fit(
+            trainData: trainDataFloat,
+            valData: valDataFloat,
             epochs: 5,
             saveEveryEpochs: 20,
             savePath: "saved models/seq2seq_model",
             validationCheck: true
         )
         
-        let (_, valLossHistory) = model.fit(trainData: (source, target), valData: valData, epochs: 5, saveEveryEpochs: 20, savePath: "saved models/seq2seq_model", validationCheck: true)
+        let (_, valLossHistoryFinal) = model.fit(trainData: trainDataFloat, valData: valDataFloat, epochs: 5, saveEveryEpochs: 20, savePath: "saved models/seq2seq_model", validationCheck: true)
 
-        print("Validation Loss History: \(valLossHistory)")
+        print("Validation Loss History: \(valLossHistoryFinal)")
         
         return model
     }

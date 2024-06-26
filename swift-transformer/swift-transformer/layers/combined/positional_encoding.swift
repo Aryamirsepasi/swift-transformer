@@ -28,7 +28,8 @@ class PositionalEncoding {
         self.pe = pe
     }
     
-    func forward(x: inout [[Float]]) {
+    func forward(x: [[Float]]) -> [[Float]] {
+        var result = x
         let batchSize = x.count
         let seqLen = x[0].count / dModel
         
@@ -45,14 +46,14 @@ class PositionalEncoding {
                             vDSP_vadd(xBuffer.baseAddress! + xIndex, 1, peBuffer.baseAddress!, 1, &temp, 1, vDSP_Length(dModel))
                         }
                     }
-                    x[b].replaceSubrange(range, with: temp)
+                    result[b].replaceSubrange(range, with: temp)
                 } else {
                     print("Range \(range) exceeds bounds for batch \(b), sequence \(s)")
                 }
             }
         }
+        return result
     }
-    
     func backward(error: [[Float]]) -> [[Float]] {
         return error
     }

@@ -1,5 +1,6 @@
 import Foundation
 import Accelerate
+import Matft
 
 class Dense {
     var unitsNum: Int
