@@ -92,36 +92,57 @@ class Seq2Seq {
     func getPadMask(x: [[Float]]) -> [[[Float]]] {
         return x.map { sequence in
             sequence.map { Int($0) != padIdx ? 1.0 : 0.0 }
-        }.map { [$0] }    }
-    
-    func getSubMask(size: Int) -> [[Float]] {
-        var mask: [[Float]] = Array(repeating: Array(repeating: 1.0, count: size), count: size)
-        for i in 0..<size {
-            for j in i+1..<size {
-                mask[i][j] = 0.0
-            }
-        }
-        return mask
+        }.map { [$0] }
     }
     
-    func forward(src: [[Float]], trg: [[Float]], training: Bool) -> ([[[Float]]], [[[[Float]]]]) {
-        let srcMask = getPadMask(x: src)
-        let trgPadMask = getPadMask(x: trg)
-        let trgSubMask = getSubMask(size: trg[0].count)
+    func getSubMask(x: [[Float]]) -> [[Float]] {
+        let seqLen = x[0].count
+        var subsequentMask = [[Float]](repeating: [Float](repeating: 0, count: seqLen), count: seqLen)
         
-        let trgMask = trgPadMask.enumerated().map { (i, mask) in
-            (0..<mask[0].count).map { j in
-                trgSubMask.map { subMaskRow in
-                    mask[0][j] * subMaskRow[j]
+        for i in 0..<seqLen {
+            for j in 0..<seqLen {
+                if i < j {
+                    subsequentMask[i][j] = 1
+                } else {
+                    subsequentMask[i][j] = 0
                 }
             }
         }
         
+        for i in 0..<seqLen {
+            for j in 0..<seqLen {
+                subsequentMask[i][j] = 1 - subsequentMask[i][j]
+            }
+        }
+        
+        return subsequentMask
+    }
+    
+    func forward(src: [[Float]], trg: [[Float]], training: Bool) -> ([[[Float]]], [[[[Float]]]]) {
+        
+        let src = src
+        let trg = trg
+        
+        let srcMask = getPadMask(x: src)
+        var trgMask = getPadMask(x: trg)
+        let subMask = getSubMask(x: trg)
+        
+        let trgMaskCount = trgMask.count
+        let trgMaskSeqLen = trgMask[0][0].count
+        let subMaskSeqLen = subMask.count
+        
+        /*for i in 0..<trgMaskCount {
+            for j in 0..<min(trgMaskSeqLen, subMaskSeqLen) {
+                for k in 0..<min(trgMaskSeqLen, subMask[j].count) {
+                    trgMask[i][0][j] *= subMask[j][k]
+                }
+            }
+        }*/
         
         let encSrc = encoder.forward(src: src, srcMask: srcMask, training: training)
         
         var allOutputs: [[[Float]]] = []
-        var allAttentions: [[[[Float]]]] = []  // Adjusted dimension for attention
+        var allAttentions: [[[[Float]]]] = []
         
         for i in 0..<src.count {
             let (output, attention) = decoder.forward(
@@ -131,7 +152,7 @@ class Seq2Seq {
                 srcMask: srcMask,
                 training: training
             )
-            allOutputs.append(output)
+            allOutputs.append(contentsOf: output)
             allAttentions.append(attention)
         }
         
@@ -139,13 +160,13 @@ class Seq2Seq {
     }
     
     func backward(error: [[[Float]]]) {
-        var decoderError = error.flatMap { $0 }
+        var decoderError = error
         for layer in decoder.layers.reversed() {
             let (layerError, encError) = layer.backward(decoderError)
             decoderError = layerError + encError
         }
         
-        let encoderError = decoderError.map { $0.map { $0 * decoder.scale } }
+        let encoderError = decoderError.map { $0.map { $0.map { $0 * decoder.scale } } }
         encoder.backward(error: encoderError)
     }
     
@@ -154,16 +175,16 @@ class Seq2Seq {
         decoder.updateWeights()
     }
     
-    func train(source: [[Float]], target: [[Float]], epoch: Int, epochs: Int) -> Float {
+    func train(source: [[[Float]]], target: [[[Float]]], epoch: Int, epochs: Int) -> Float {
         var lossHistory: [Float] = []
         
         for (sourceBatch, targetBatch) in zip(source, target) {
-            let (output, _) = forward(src: [sourceBatch], trg: [targetBatch.dropLast()], training: true)
+            let (output, _) = forward(src: sourceBatch, trg: targetBatch.dropLast(), training: true)
             let outputFlat = output.flatMap { $0.flatMap { $0 } }
-            let targetFlat = targetBatch.dropFirst().map { [Float($0)] }
+            let targetFlat = targetBatch.dropFirst().flatMap { $0 }
             
             let loss = lossFunction.loss(y: [outputFlat], t: targetFlat)
-            lossHistory.append(loss.flatMap { $0 }.reduce(0, +) / Float(loss.count))
+            lossHistory.append(loss.reduce(0, +) / Float(loss.count))
             let error = lossFunction.derivative(y: [outputFlat], t: targetFlat)
             
             backward(error: [error])
@@ -174,23 +195,23 @@ class Seq2Seq {
         return epochLoss
     }
     
-    func evaluate(source: [[Float]], target: [[Float]]) -> Float {
+    func evaluate(source: [[[Float]]], target: [[[Float]]]) -> Float {
         var lossHistory: [Float] = []
         
         for (sourceBatch, targetBatch) in zip(source, target) {
-            let (output, _) = forward(src: [sourceBatch], trg: [targetBatch.dropLast()], training: false)
+            let (output, _) = forward(src: sourceBatch, trg: targetBatch.dropLast(), training: false)
             let outputFlat = output.flatMap { $0.flatMap { $0 } }
-            let targetFlat = targetBatch.dropFirst().map { [Float($0)] }
+            let targetFlat = targetBatch.dropFirst().flatMap { $0 }
             
             let loss = lossFunction.loss(y: [outputFlat], t: targetFlat)
-            lossHistory.append(loss.flatMap { $0 }.reduce(0, +) / Float(loss.count))
+            lossHistory.append(loss.reduce(0, +) / Float(loss.count))
         }
         
         let epochLoss = lossHistory.reduce(0, +) / Float(lossHistory.count)
         return epochLoss
     }
     
-    func fit(trainData: ([[Float]], [[Float]]), valData: ([[Float]], [[Float]]), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> ([Float], [Float]) {
+    func fit(trainData: ([[[Float]]], [[[Float]]]), valData: ([[[Float]]], [[[Float]]]), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> ([Float], [Float]) {
         setOptimizer()
         
         var bestValLoss = Float.infinity
@@ -220,7 +241,6 @@ class Seq2Seq {
                 }
             }
         }
-        
         return (trainLossHistory, valLossHistory)
     }
     
@@ -234,7 +254,7 @@ class Seq2Seq {
             guard let lastOutput = output.last?.last else { continue }
             let predictedIndex = (lastOutput.enumerated().max(by: { $0.element < $1.element })?.offset) ?? eosIndex
             trgIndices.append(predictedIndex)
-            attentionWeights.append(attention.last?.last ?? [])
+            attentionWeights.append(attention.last?.last?.flatMap { $0 } ?? [])
             
             if predictedIndex == eosIndex { break }
         }

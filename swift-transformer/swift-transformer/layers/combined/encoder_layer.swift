@@ -31,7 +31,7 @@ class EncoderLayer {
         let feedForwardError = positionWiseFeedForward.backward(dropout.backward(errorNorm))
         errorNorm = addArrays(errorNorm, feedForwardError)
 
-        let attentionError = selfAttention.backward(error: dropout.backward(errorNorm))
+        let (attentionError, _, _) = selfAttention.backward(error: dropout.backward(errorNorm))
         return addArrays(attentionError, errorNorm)
     }
 
@@ -47,7 +47,7 @@ class EncoderLayer {
         layerNum = selfAttentionNorm.updateWeights(layerNum: layerNum)
         layerNum = ffLayerNorm.updateWeights(layerNum: layerNum)
         layerNum = selfAttention.updateWeights(layerNum: layerNum)
-        layerNum = positionWiseFeedForward.updateWeights(layerNum)
+        layerNum = positionWiseFeedForward.updateWeights(startingLayerNum: layerNum)
         return layerNum
     }
 

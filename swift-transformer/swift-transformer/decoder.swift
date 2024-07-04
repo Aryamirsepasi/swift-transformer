@@ -23,29 +23,32 @@ class Decoder {
         self.activation = Identity()
     }
 
-    func forward(trg: [[Float]], trgMask: [[Float]], src: [[Float]], srcMask: [[Float]], training: Bool) -> ([[Float]], [[Float]]) {
-            var trg = trg
-            trg = tokenEmbedding.forward(input: trg)
-            trg = trg.map { $0.map { $0 * self.scale } }
-            trg = positionEmbedding.forward(x: trg)
-            trg = dropout.forward(trg, training: training)
+    func forward(trg: [[Float]], trgMask: [[[Float]]], src: [[[Float]]], srcMask: [[[Float]]], training: Bool) -> ([[[Float]]], [[[Float]]]) {
+        var trg = trg
+        let batchSize = trg.count
+        let trgSeqLen = trg[0].count
 
-            var attention: [[Float]] = []
+        // Adjust input dimensions for token embedding and position embedding
+        var embeddedTrg = tokenEmbedding.forward(input: trg)
+        embeddedTrg = embeddedTrg.map { $0.map { $0.map { $0 * self.scale } } }
+        embeddedTrg = positionEmbedding.forward(x: embeddedTrg)
+        embeddedTrg = dropout.forward(embeddedTrg, training: training)
 
-            for layer in layers {
-                let (layerOutput, layerAttention) = layer.forward(trg: trg, trgMask: trgMask, src: src, srcMask: srcMask, training: training)
-                trg = layerOutput
-                attention = layerAttention
-            }
+        var attention: [[[Float]]] = []
 
-            let output = fcOut.forward(trg)
-            let activatedOutput = activation.forward(x: output)
-
-            return (activatedOutput, attention)
+        for layer in layers {
+            let (layerOutput, layerAttention) = layer.forward(trg: embeddedTrg, trgMask: trgMask, src: src, srcMask: srcMask, training: training)
+            embeddedTrg = layerOutput
+            attention = layerAttention
         }
 
+        let output = fcOut.forward(embeddedTrg)
+        let activatedOutput = activation.forward(x: output)
 
-    func backward(error: [[Float]]) {
+        return (activatedOutput, attention)
+    }
+
+    func backward(error: [[[Float]]]) {
         var error = activation.backward(grad: error)
         error = fcOut.backward(error)
 
@@ -56,7 +59,7 @@ class Decoder {
 
         error = dropout.backward(error)
         error = positionEmbedding.backward(error: error)
-        error = error.map { $0.map { $0 * self.scale } }
+        error = error.map { $0.map { $0.map { $0 * self.scale } } }
         error = tokenEmbedding.backward(error: error) ?? []
     }
 

@@ -39,11 +39,11 @@ class TransformerViewModel: ObservableObject {
         let (trainData, testData, valData) = dataPreparator.prepareData(path: "./dataset/", batchSize: batchSize, minFreq: 2)
         let (source, target) = trainData
 
-        let train_data_vocabs = dataPreparator.getVocabs()
+        let trainDataVocabs = dataPreparator.getVocabs()!
+        
+        let inputDim = trainDataVocabs.0.count
+        let outputDim = trainDataVocabs.1.count
 
-        // Use tokens as keys to access dimensions
-        let inputDim = train_data_vocabs[sosToken] ?? 5959
-        let outputDim = train_data_vocabs[eosToken] ?? 7801
         // Model dimensions and parameters
         let hidDim = 256
         let encLayers = 3
@@ -62,21 +62,17 @@ class TransformerViewModel: ObservableObject {
         
         model.compile(optimizer: Noam(optimizer: Adam(alpha: 1e-4, beta: 0.9, beta2: 0.98, epsilon: 1e-9), modelDim: Float(hidDim), scaleFactor: 2, warmupSteps: 4000), lossFunction: CrossEntropy(ignoreIndex: padIndex))
         
-        // Convert data to [[Float]]
-        let trainDataFloat = (trainData.0.map { $0.map { Float($0) } }, trainData.1.map { $0.map { Float($0) } })
-        let valDataFloat = (valData.0.map { $0.map { Float($0) } }, valData.1.map { $0.map { Float($0) } })
-        
         var trainLossHistory: [Float]?, valLossHistory: [Float]?
         (trainLossHistory, valLossHistory) = model.fit(
-            trainData: trainDataFloat,
-            valData: valDataFloat,
+            trainData: trainData,
+            valData: valData,
             epochs: 5,
             saveEveryEpochs: 20,
             savePath: "saved models/seq2seq_model",
             validationCheck: true
         )
         
-        let (_, valLossHistoryFinal) = model.fit(trainData: trainDataFloat, valData: valDataFloat, epochs: 5, saveEveryEpochs: 20, savePath: "saved models/seq2seq_model", validationCheck: true)
+        let (_, valLossHistoryFinal) = model.fit(trainData: trainData, valData: valData, epochs: 5, saveEveryEpochs: 20, savePath: "saved models/seq2seq_model", validationCheck: true)
 
         print("Validation Loss History: \(valLossHistoryFinal)")
         

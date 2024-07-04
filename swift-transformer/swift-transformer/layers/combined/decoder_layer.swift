@@ -20,7 +20,7 @@ class DecoderLayer {
         self.dropout = Dropout(rate: dropoutRate, dataType: dataType)
     }
 
-    func forward(trg: [[Float]], trgMask: [[Float]], src: [[Float]], srcMask: [[Float]], training: Bool) -> ([[Float]], [[Float]]) {
+    func forward(trg: [[[Float]]], trgMask: [[[Float]]], src: [[[Float]]], srcMask: [[[Float]]], training: Bool) -> ([[[Float]]], [[[Float]]]) {
         var trg = trg
         
         let (selfAttnOutput, _) = self.selfAttention.forward(query: trg, key: trg, value: trg, mask: trgMask, training: training)
@@ -38,43 +38,22 @@ class DecoderLayer {
         return (trg, attention)
     }
 
-    func backward(_ error: [[Float]]) -> ([[Float]], [[Float]]) {
-        var error = error
+    func backward(_ error: [[[Float]]]) -> ([[[Float]]], [[[Float]]]) {
+        var error = self.ffLayerNorm.backward(error)
 
-        // FF Layer Norm Backward
-        error = ffLayerNorm.backward(error)
+        var _error = self.positionWiseFeedForward.backward(self.dropout.backward(error))
+        error = self.encAttnLayerNorm.backward(error + _error)
 
-        // Positionwise Feedforward Backward
-        let feedForwardError = positionWiseFeedForward.backward(dropout.backward(error))
-        error = error + feedForwardError
+        var encError1: [[[Float]]]
+        var encError2: [[[Float]]]
+        (_error, encError1, encError2) = self.encoderAttention.backward(error: self.dropout.backward(error))
+        error = self.selfAttentionNorm.backward(error + _error)
 
-        // Encoder Attention Layer Norm Backward
-        error = encAttnLayerNorm.backward(error)
-
-        //NEEDS CORRECTION. THE ERRORS RESULT FROM BACKWARD MUST HAVE 3 Variables
-        // Encoder Attention Backward
-        //let (encoderAttnError, encError1, encError2) = encoderAttention.backward(dropout.backward(error))
-        let encoderAttnError = encoderAttention.backward(error: dropout.backward(error))
-        let encError1 = encoderAttention.backward(error: dropout.backward(error))
-        let encError2 = encoderAttention.backward(error: dropout.backward(error))
+        var _error2: [[[Float]]]
+        var _error3: [[[Float]]]
+        (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(error))
         
-        error = error + encoderAttnError
-
-        // Self Attention Layer Norm Backward
-        error = selfAttentionNorm.backward(error)
-        
-        //NEEDS CORRECTION. THE ERRORS RESULT FROM BACKWARD MUST HAVE 3 Variables
-        // Self Attention Backward
-        //let (selfAttnError, selfError1, selfError2) = selfAttention.backward(dropout.backward(error))
-        let selfAttnError = selfAttention.backward(error: dropout.backward(error))
-        let selfError1 = selfAttention.backward(error: dropout.backward(error))
-        let selfError2 = selfAttention.backward(error: dropout.backward(error))
-
-        // Combine all errors
-        let combinedError = selfAttnError + selfError1 + selfError2 + error
-        let encoderCombinedError = encError1 + encError2
-
-        return (combinedError, encoderCombinedError)
+        return (addArrays(_error, _error2, _error3, error), addArrays(encError1, encError2))
     }
 
     func setOptimizer(_ optimizer: Optimizer) {
@@ -98,13 +77,20 @@ class DecoderLayer {
     }
 }
 
-// Helper function to add two 2D arrays element-wise
-func addArrays(_ arr1: [[Float]], _ arr2: [[Float]]) -> [[Float]] {
-    guard arr1.count == arr2.count, arr1[0].count == arr2[0].count else { return [] }
-    var result = arr1
-    for i in 0..<arr1.count {
-        for j in 0..<arr1[0].count {
-            result[i][j] = arr1[i][j] + arr2[i][j]
+// Helper function to add multiple 3D arrays element-wise
+func addArrays(_ arrays: [[[Float]]]...) -> [[[Float]]] {
+    guard let firstArray = arrays.first else { return [] }
+    let resultShape = (firstArray.count, firstArray[0].count, firstArray[0][0].count)
+    
+    var result = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0.0, count: resultShape.2), count: resultShape.1), count: resultShape.0)
+    
+    for array in arrays {
+        for i in 0..<resultShape.0 {
+            for j in 0..<resultShape.1 {
+                for k in 0..<resultShape.2 {
+                    result[i][j][k] += array[i][j][k]
+                }
+            }
         }
     }
     return result

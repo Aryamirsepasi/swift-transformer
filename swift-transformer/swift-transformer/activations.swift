@@ -495,29 +495,34 @@ class LogSoftmax: Activation {
     
     func forward(x: [[[Float]]]) -> [[[Float]]] {
         self.x = x
-        return x.map { matrix in
+        self.softmax = x.map { matrix in
             matrix.map { row in
                 var maxVal = row.max() ?? 0
                 var shiftedRow = row.map { $0 - maxVal }
                 var exps = [Float](repeating: 0.0, count: row.count)
                 vvexpf(&exps, shiftedRow, [Int32(row.count)])
                 let sumExps = exps.reduce(0, +)
-                self.softmax = [exps.map { $0 / sumExps }]
-                return self.softmax!.map { log($0) }[0]
+                return exps.map { $0 / sumExps }
+            }
+        }
+        return self.softmax!.map { matrix in
+            matrix.map { row in
+                row.map { log($0) }
             }
         }
     }
     
     func backward(grad: [[[Float]]]) -> [[[Float]]] {
-        guard let softmax = self.softmax, let x = self.x else { return [] }
+        guard let softmax = self.softmax else { return [] }
         return zip(softmax, grad).map { (softmaxMatrix, gradMatrix) in
             zip(softmaxMatrix, gradMatrix).map { (softmaxRow, gradRow) in
                 let sumGradSoftmax = gradRow.reduce(0, +)
-                return gradRow.map { $0 - sumGradSoftmax }
+                return zip(gradRow, softmaxRow).map { ($0 - sumGradSoftmax) * $1 }
             }
         }
     }
 }
+
 
 let activations: [String: Activation] = [
     "sigmoid": Sigmoid(),

@@ -1,6 +1,4 @@
 import Foundation
-import Matft
-
 import Accelerate
 
 class DataPreparator {
@@ -15,7 +13,7 @@ class DataPreparator {
     var unkIndex: Int
 
     var tokensAndIndices: [String: Int]
-    var vocabs: [String: Int]
+    var vocabs: ([String: Int], [String: Int])?
 
     init(tokens: [String], indexes: [Int]) {
         self.padToken = tokens[0]
@@ -34,31 +32,42 @@ class DataPreparator {
             eosToken: eosIndex,
             unkToken: unkIndex
         ]
-        
-        self.vocabs = [:]
     }
 
-    func prepareData(path: String = "dataset/", batchSize: Int = 1, minFreq: Int = 10) -> (([[Int]], [[Int]]), ([[Int]], [[Int]]), ([[Int]], [[Int]])) {
+    func prepareData(path: String = "dataset/", batchSize: Int = 1, minFreq: Int = 10) -> (([[[Float]]], [[[Float]]]), ([[[Float]]], [[[Float]]]), ([[[Float]]], [[[Float]]])) {
         let (trainData, valData, testData) = importMulti30kDataset(path: path)
         let clearedTrainData = clearDataset(data: trainData)
         let clearedValData = clearDataset(data: valData)
         let clearedTestData = clearDataset(data: testData)
 
         print("Train data sequences num = \(clearedTrainData.count)")
-        
-        let vocabs = buildVocab(dataset: clearedTrainData, minFreq: minFreq)
-        print("EN vocab length = \(vocabs.count); DE vocab length = \(vocabs.count)") // Assuming one vocab for simplification
-        
+
+        self.vocabs = buildVocab(dataset: clearedTrainData, minFreq: minFreq)
+        print("EN vocab length = \(self.vocabs!.0.count); DE vocab length = \(self.vocabs!.1.count)")
+
         let trainDataBatches = addTokens(data: clearedTrainData, batchSize: batchSize)
         print("Batch num = \(trainDataBatches.count)")
 
-        let trainSourceTarget = buildDataset(data: trainDataBatches)
+        let trainSourceTarget = buildDataset(data: trainDataBatches, vocabs: self.vocabs!)
         let testDataBatches = addTokens(data: clearedTestData, batchSize: batchSize)
-        let testSourceTarget = buildDataset(data: testDataBatches)
+        let testSourceTarget = buildDataset(data: testDataBatches, vocabs: self.vocabs!)
         let valDataBatches = addTokens(data: clearedValData, batchSize: batchSize)
-        let valSourceTarget = buildDataset(data: valDataBatches)
+        let valSourceTarget = buildDataset(data: valDataBatches, vocabs: self.vocabs!)
 
         return (trainSourceTarget, testSourceTarget, valSourceTarget)
+    }
+
+    func getVocabs() -> ([String: Int], [String: Int])? {
+        return self.vocabs
+    }
+
+    func filterSeq(seq: String) -> String {
+        let charsToRemove = CharacterSet(charactersIn: "!”#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\t\n")
+        return seq.components(separatedBy: charsToRemove).joined()
+    }
+
+    func lowercaseSeq(seq: String) -> String {
+        return seq.lowercased()
     }
 
     func importMulti30kDataset(path: String) -> ([(String, String)], [(String, String)], [(String, String)]) {
@@ -95,43 +104,35 @@ class DataPreparator {
         return data.map { (en, de) in
             let filteredEn = filterSeq(seq: en)
             let filteredDe = filterSeq(seq: de)
-            let lowercasedEn = filteredEn.lowercased()
-            let lowercasedDe = filteredDe.lowercased()
+            let lowercasedEn = lowercaseSeq(seq: filteredEn)
+            let lowercasedDe = lowercaseSeq(seq: filteredDe)
             return (lowercasedEn, lowercasedDe)
         }
     }
-    
-    func getVocabs() -> [String: Int] {
-        return vocabs
-    }
 
-    func lowercaseSeq(seq: String) -> String {
-        return seq.lowercased()
-    }
-
-    func filterSeq(seq: String) -> String {
-        let charsToRemove = CharacterSet(charactersIn: "!”#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\t\n")
-        return seq.components(separatedBy: charsToRemove).joined()
-    }
-
-    func buildVocab(dataset: [(String, String)], minFreq: Int = 1) -> [String: Int] {
-        var vocab: [String: Int] = tokensAndIndices
-        var freqs: [String: Int] = [:]
+    func buildVocab(dataset: [(String, String)], minFreq: Int = 1) -> ([String: Int], [String: Int]) {
+        var enVocab: [String: Int] = tokensAndIndices
+        var deVocab: [String: Int] = tokensAndIndices
+        var enFreqs: [String: Int] = [:]
+        var deFreqs: [String: Int] = [:]
 
         for (en, de) in dataset {
-            let words = en.split(separator: " ") + de.split(separator: " ")
-            for word in words {
-                freqs[String(word), default: 0] += 1
+            for word in en.split(separator: " ") {
+                enFreqs[String(word), default: 0] += 1
+            }
+            for word in de.split(separator: " ") {
+                deFreqs[String(word), default: 0] += 1
             }
         }
 
-        for (word, freq) in freqs {
-            if freq >= minFreq && vocab[word] == nil {
-                vocab[word] = vocab.count
-            }
+        for (word, freq) in enFreqs where freq >= minFreq && enVocab[word] == nil {
+            enVocab[word] = enVocab.count
+        }
+        for (word, freq) in deFreqs where freq >= minFreq && deVocab[word] == nil {
+            deVocab[word] = deVocab.count
         }
 
-        return vocab
+        return (enVocab, deVocab)
     }
 
     func addTokens(data: [(String, String)], batchSize: Int) -> [[(String, String)]] {
@@ -146,23 +147,23 @@ class DataPreparator {
         }
     }
 
-    func buildDataset(data: [[(String, String)]]) -> ([[Int]], [[Int]]) {
-        var source: [[Int]] = []
-        var target: [[Int]] = []
+    func buildDataset(data: [[(String, String)]], vocabs: ([String: Int], [String: Int])) -> ([[[Float]]], [[[Float]]]) {
+        var source: [[[Float]]] = []
+        var target: [[[Float]]] = []
 
         for batch in data {
-            var sourceBatch: [[Int]] = []
-            var targetBatch: [[Int]] = []
+            var sourceBatch: [[Float]] = []
+            var targetBatch: [[Float]] = []
 
             for (en, de) in batch {
-                let enIndices = en.split(separator: " ").map { vocabs[String($0)] ?? unkIndex }
-                let deIndices = de.split(separator: " ").map { vocabs[String($0)] ?? unkIndex }
+                let enIndices = en.split(separator: " ").map { Float(vocabs.0[String($0)] ?? unkIndex) }
+                let deIndices = de.split(separator: " ").map { Float(vocabs.1[String($0)] ?? unkIndex) }
                 sourceBatch.append(enIndices)
                 targetBatch.append(deIndices)
             }
 
-            source.append(contentsOf: sourceBatch)
-            target.append(contentsOf: targetBatch)
+            source.append(sourceBatch)
+            target.append(targetBatch)
         }
 
         return (source, target)
