@@ -13,8 +13,6 @@ class Dense {
     
     var v, m, vHat, mHat: [Float]
     var vb, mb, vbHat, mbHat: [Float]
-    var outputShape: (Int, Int)
-    
     var gradW: [Float]
     var gradB: [Float]
     
@@ -33,7 +31,6 @@ class Dense {
         self.mb = []
         self.vbHat = []
         self.mbHat = []
-        self.outputShape = (1, unitsNum)
         self.gradW = []
         self.gradB = []
         
@@ -64,61 +61,72 @@ class Dense {
         self.mbHat = zerosLike(b)
     }
     
-    func forward(_ X: [[Float]], training: Bool = true) -> [[Float]] {
+    func forward(_ X: [[[Float]]], training: Bool = true) -> [[[Float]]] {
         guard let inputsNum = self.inputsNum else {
             fatalError("inputsNum is nil")
         }
         
-        let rows = X.count
-        let cols = X[0].count
+        let batchSize = X.count
+        let seqLen = X[0].count
         
-        var result = [[Float]](repeating: [Float](repeating: 0, count: unitsNum), count: rows)
+        var result = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0, count: unitsNum), count: seqLen), count: batchSize)
         
-        for i in 0..<rows {
-            var singleResult = [Float](repeating: 0, count: unitsNum)
-            vDSP_mmul(X[i], 1, w, 1, &singleResult, 1, vDSP_Length(1), vDSP_Length(unitsNum), vDSP_Length(cols))
-            result[i] = singleResult
+        for b in 0..<batchSize {
+            for s in 0..<seqLen {
+                var singleResult = [Float](repeating: 0, count: unitsNum)
+                vDSP_mmul(X[b][s], 1, w, 1, &singleResult, 1, vDSP_Length(1), vDSP_Length(unitsNum), vDSP_Length(inputsNum))
+                result[b][s] = singleResult
+            }
         }
         
         if useBias {
-            for i in 0..<rows {
-                var biasAddedResult = [Float](repeating: 0, count: unitsNum)
-                vDSP_vadd(result[i], 1, b, 1, &biasAddedResult, 1, vDSP_Length(unitsNum))
-                result[i] = biasAddedResult
+            for bIndex in 0..<batchSize {
+                for s in 0..<seqLen {
+                    result[bIndex][s].withUnsafeMutableBufferPointer { resultBuffer in
+                        b.withUnsafeBufferPointer { biasBuffer in
+                            vDSP_vadd(resultBuffer.baseAddress!, 1, biasBuffer.baseAddress!, 1, resultBuffer.baseAddress!, 1, vDSP_Length(unitsNum))
+                        }
+                    }
+                }
             }
         }
+
         
         return result
     }
     
-    func backward(_ error: [[Float]]) -> [[Float]] {
+    func backward(_ error: [[[Float]]]) -> [[[Float]]] {
         guard let inputsNum = self.inputsNum else {
             return []
         }
         
-        let rows = error.count
-        let cols = error[0].count
+        let batchSize = error.count
+        let seqLen = error[0].count
         
-        var outputError = [[Float]](repeating: [Float](repeating: 0, count: inputsNum), count: rows)
+        var outputError = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0, count: inputsNum), count: seqLen), count: batchSize)
         var transposedW = [Float](repeating: 0, count: inputsNum * unitsNum)
         
         vDSP_mtrans(w, 1, &transposedW, 1, vDSP_Length(inputsNum), vDSP_Length(unitsNum))
         
-        for i in 0..<rows {
-            var singleError = [Float](repeating: 0, count: inputsNum)
-            vDSP_mmul(error[i], 1, transposedW, 1, &singleError, 1, vDSP_Length(1), vDSP_Length(inputsNum), vDSP_Length(unitsNum))
-            outputError[i] = singleError
+        for b in 0..<batchSize {
+            for s in 0..<seqLen {
+                var singleError = [Float](repeating: 0, count: inputsNum)
+                vDSP_mmul(error[b][s], 1, transposedW, 1, &singleError, 1, vDSP_Length(1), vDSP_Length(inputsNum), vDSP_Length(unitsNum))
+                outputError[b][s] = singleError
+            }
         }
         
         gradW = zerosLike(w)
         gradB = zerosLike(b)
         
-        for i in 0..<rows {
-            var tempGradW = [Float](repeating: 0, count: inputsNum * unitsNum)
-            vDSP_mmul(error[i], 1, w, 1, &tempGradW, 1, vDSP_Length(unitsNum), vDSP_Length(inputsNum), 1)
-            vDSP_vadd(gradW, 1, tempGradW, 1, &gradW, 1, vDSP_Length(gradW.count))
-            
-            vDSP_vadd(gradB, 1, error[i], 1, &gradB, 1, vDSP_Length(unitsNum))
+        for b in 0..<batchSize {
+            for s in 0..<seqLen {
+                var tempGradW = [Float](repeating: 0, count: inputsNum * unitsNum)
+                vDSP_mmul(error[b][s], 1, w, 1, &tempGradW, 1, vDSP_Length(unitsNum), vDSP_Length(inputsNum), 1)
+                vDSP_vadd(gradW, 1, tempGradW, 1, &gradW, 1, vDSP_Length(gradW.count))
+                
+                vDSP_vadd(gradB, 1, error[b][s], 1, &gradB, 1, vDSP_Length(unitsNum))
+            }
         }
         
         return outputError

@@ -34,7 +34,7 @@ class Seq2Seq {
         self.decoder = decoder
         self.padIdx = padIdx
         self.optimizer = Adam()
-        self.lossFunction = CrossEntropy(ignoreIndex: padIdx)
+        self.lossFunction = CrossEntropy()
     }
     
     func setOptimizer() {
@@ -89,11 +89,10 @@ class Seq2Seq {
         print("Saved to \"\(path)\"")
     }
     
-    func getPadMask(x: [[Float]]) -> [[Float]] {
+    func getPadMask(x: [[Float]]) -> [[[Float]]] {
         return x.map { sequence in
-            sequence.map { $0 != Float(self.padIdx) ? 1.0 : 0.0 }
-        }
-    }
+            sequence.map { Int($0) != padIdx ? 1.0 : 0.0 }
+        }.map { [$0] }    }
     
     func getSubMask(size: Int) -> [[Float]] {
         var mask: [[Float]] = Array(repeating: Array(repeating: 1.0, count: size), count: size)
@@ -105,14 +104,24 @@ class Seq2Seq {
         return mask
     }
     
-    func forward(src: [[Float]], trg: [[Float]], training: Bool) -> ([[[Float]]], [[[Float]]]) {
+    func forward(src: [[Float]], trg: [[Float]], training: Bool) -> ([[[Float]]], [[[[Float]]]]) {
         let srcMask = getPadMask(x: src)
-        let trgMask = getPadMask(x: trg).map { $0 } + getSubMask(size: trg[0].count)
-
+        let trgPadMask = getPadMask(x: trg)
+        let trgSubMask = getSubMask(size: trg[0].count)
+        
+        let trgMask = trgPadMask.enumerated().map { (i, mask) in
+            (0..<mask[0].count).map { j in
+                trgSubMask.map { subMaskRow in
+                    mask[0][j] * subMaskRow[j]
+                }
+            }
+        }
+        
+        
         let encSrc = encoder.forward(src: src, srcMask: srcMask, training: training)
         
         var allOutputs: [[[Float]]] = []
-        var allAttentions: [[[Float]]] = []
+        var allAttentions: [[[[Float]]]] = []  // Adjusted dimension for attention
         
         for i in 0..<src.count {
             let (output, attention) = decoder.forward(

@@ -1,0 +1,13 @@
+disabled_rules:
+  - line_length
+  - vertical_whitespace
+identifier_name:
+  excluded:
+    - id
+    - pi
+    - to
+included:
+  - Example
+  - Pickle
+excluded:
+  - Pods

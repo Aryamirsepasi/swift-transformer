@@ -20,47 +20,46 @@ class Dropout {
         self.outputShape = self.inputShape
     }
     
-    func forward(_ X: [[Float]], training: Bool = true) -> [[Float]] {
-        self.inputShape = shape(X)
-        
+    func forward(_ X: [[[Float]]], training: Bool = true) -> [[[Float]]] {
         if !training {
             return X
         }
         
-        let maskAny = binomial(n: 1, p: 1 - self.rate, size: self.inputShape)
+        let inputShape = shape(X)
+        let maskAny = binomial(n: 1, p: 1 - self.rate, size: inputShape)
         
-        // Cast the mask to the appropriate type
+        // Flattening and reshaping mask to match the input shape
+        let flatMask: [Float]
         if let maskArray = maskAny as? [Int] {
-            self.mask = maskArray.map { Float($0) }
-        } else if let maskArray2D = maskAny as? [[Int]] {
-            self.mask = maskArray2D.flatMap { $0.map { Float($0) } }
+            flatMask = maskArray.map { Float($0) }
+        } else if let maskArray3D = maskAny as? [[[Int]]] {
+            flatMask = maskArray3D.flatMap { $0.flatMap { $0.map { Float($0) } } }
         } else {
             fatalError("Invalid mask type")
         }
         
-        let flatX = X.flatMap { $0 }
+        let flatX = X.flatMap { $0.flatMap { $0 } }
         var output = [Float](repeating: 0.0, count: flatX.count)
-        vDSP_vmul(flatX, 1, mask, 1, &output, 1, vDSP_Length(flatX.count))
+        vDSP_vmul(flatX, 1, flatMask, 1, &output, 1, vDSP_Length(flatX.count))
         
-        return convert(output, to: self.inputShape)
+        return convert(output, to: inputShape) as! [[[Float]]]
     }
     
-    func backward(_ error: [[Float]]) -> [[Float]] {
-        let flatError = error.flatMap { $0 }
+    func backward(_ error: [[[Float]]]) -> [[[Float]]] {
+        let flatError = error.flatMap { $0.flatMap { $0 } }
         var outputError = [Float](repeating: 0.0, count: flatError.count)
-        vDSP_vmul(flatError, 1, mask, 1, &outputError, 1, vDSP_Length(flatError.count))
+        vDSP_vmul(flatError, 1, mask.flatMap { $0 }, 1, &outputError, 1, vDSP_Length(flatError.count))
         
-        return convert(outputError, to: self.inputShape)
+        return convert(outputError, to: shape(error)) as! [[[Float]]]
     }
     
-    func convert(_ array: [Float], to shape: [Int]) -> [[Float]] {
-        var reshapedArray: [[Float]] = []
-        var start = 0
-        for count in shape {
-            let end = start + count
-            reshapedArray.append(Array(array[start..<end]))
-            start = end
+    func convert<T>(_ array: [T], to shape: [Int]) -> Any {
+        var result: Any = array
+        for s in shape.reversed() {
+            if let flatResult = result as? [T] {
+                result = reshape(flatResult, newShape: [s]) as Any
+            }
         }
-        return reshapedArray
+        return result
     }
 }

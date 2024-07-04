@@ -14,7 +14,7 @@ class PositionwiseFeedforward {
         self.dropout = Dropout(rate: dropoutRate)
     }
 
-    func forward(_ X: [[Float]], training: Bool = true) -> [[Float]] {
+    func forward(_ X: [[[Float]]], training: Bool = true) -> [[[Float]]] {
         var x = fc1.forward(X, training: training)
         x = activation.forward(x: x)
         x = dropout.forward(x, training: training)
@@ -22,7 +22,7 @@ class PositionwiseFeedforward {
         return x
     }
 
-    func backward(_ error: [[Float]]) -> [[Float]] {
+    func backward(_ error: [[[Float]]]) -> [[[Float]]] {
         var err = fc2.backward(error)
         err = dropout.backward(err)
         err = activation.backward(grad: err)

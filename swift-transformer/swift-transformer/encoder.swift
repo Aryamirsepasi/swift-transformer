@@ -18,26 +18,26 @@ class Encoder {
         self.scale = sqrt(Float(dModel))
     }
 
-    func forward(src: [[Float]], srcMask: [[Float]], training: Bool) -> [[Float]] {
+    func forward(src: [[Float]], srcMask: [[[Float]]], training: Bool) -> [[[Float]]] {
         var src = tokenEmbedding.forward(input: src)
         src = src.map { $0.map { $0 * self.scale } }
         src = positionEmbedding.forward(x: src)
         src = dropout.forward(src, training: training)
 
         for layer in layers {
-            src = layer.forward(src, srcMask: srcMask, training: training)
+            src = layer.forward(src: src, srcMask: srcMask, training: training)
         }
 
         return src
     }
 
-    func backward(error: [[Float]]) -> [[Float]] {
+    func backward(error: [[[Float]]]) -> [[[Float]]] {
         var error = error
         for layer in layers.reversed() {
-            error = layer.backward(error)
+            error = layer.backward(error: error)
         }
         
-        error = dropout.backward(error)
+        error = dropout.backward(error: error)
         error = positionEmbedding.backward(error: error).map { $0.map { $0 * self.scale } }
         return tokenEmbedding.backward(error: error) ?? []
     }
@@ -57,3 +57,5 @@ class Encoder {
         }
     }
 }
+
+

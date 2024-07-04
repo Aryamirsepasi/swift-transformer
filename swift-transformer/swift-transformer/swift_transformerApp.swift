@@ -22,6 +22,8 @@ class TransformerViewModel: ObservableObject {
         let sosToken = "<sos>"
         let eosToken = "<eos>"
         let unkToken = "<unk>"
+        
+        let batchSize = 128
 
         let padIndex = 0
         let sosIndex = 1
@@ -29,19 +31,19 @@ class TransformerViewModel: ObservableObject {
         let unkIndex = 3
 
         let tokens = [padToken, sosToken, eosToken, unkToken]
-        print(FileManager.default.currentDirectoryPath) // checking my directory
+        print(FileManager.default.currentDirectoryPath) // checking directory
         let indexes = [padIndex, sosIndex, eosIndex, unkIndex]
 
         let dataPreparator = DataPreparator(tokens: tokens, indexes: indexes)
         
-        let (trainData, _, valData) = dataPreparator.prepareData(path: "./dataset/", batchSize: 128, minFreq: 2)
+        let (trainData, testData, valData) = dataPreparator.prepareData(path: "./dataset/", batchSize: batchSize, minFreq: 2)
         let (source, target) = trainData
 
-        let vocabs = dataPreparator.getVocabs()
+        let train_data_vocabs = dataPreparator.getVocabs()
 
         // Use tokens as keys to access dimensions
-        let inputDim = vocabs[sosToken] ?? 5959
-        let outputDim = vocabs[eosToken] ?? 7801
+        let inputDim = train_data_vocabs[sosToken] ?? 5959
+        let outputDim = train_data_vocabs[eosToken] ?? 7801
         // Model dimensions and parameters
         let hidDim = 256
         let encLayers = 3

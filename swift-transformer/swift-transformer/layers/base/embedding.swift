@@ -56,7 +56,7 @@ class Embedding {
         return preparedBatchLabels
     }
 
-    func forward(input: [[Float]]) -> [[Float]] {
+    func forward(input: [[Float]]) -> [[[Float]]] {
         guard !input.isEmpty else { return [] }
         
         // Ensure all input sequences are of the same length
@@ -79,21 +79,21 @@ class Embedding {
             }
         }
         
-        return output.flatMap { $0 }
+        return output
     }
     
-    func backward(error: [[Float]]) -> [[Float]]? {
+    func backward(error: [[[Float]]]) -> [[[Float]]]? {
         guard let inputLabels = inputLabels else { return nil }
         
-        let batchCount = error.count / inputLabels[0].count
-        let inputLength = error[0].count
+        let batchCount = inputLabels.count
+        let inputLength = inputLabels[0].count
         gradWeights = [Float](repeating: 0.0, count: weights.count)
         
         for i in 0..<batchCount {
             for j in 0..<inputLength {
                 var tempGradWeights = [Float](repeating: 0.0, count: weights.count)
                 let inputVector = inputLabels[i][j]
-                let errorVector = error[i * inputLength + j]
+                let errorVector = error[i][j]
                 vDSP_mmul(inputVector, 1, errorVector, 1, &tempGradWeights, 1, vDSP_Length(inputDim), vDSP_Length(outputDim), 1)
                 vDSP_vadd(gradWeights!, 1, tempGradWeights, 1, &gradWeights!, 1, vDSP_Length(weights.count))
             }
