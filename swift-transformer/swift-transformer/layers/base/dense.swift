@@ -1,22 +1,23 @@
 import Foundation
 import Accelerate
-//import Matft
- //needed 
+import MLX
+
+ //needed
 class Dense {
     var unitsNum: Int
-    var inputsNum: Int?
+    var inputsNum: Int
     var useBias: Bool
-    var w: [Float]
-    var b: [Float]
+    var w: MLXArray
+    var b: MLXArray
     var optimizer: Optimizer?
-    var dataType: [Float]
+    var dataType: DType
     
-    var v, m, vHat, mHat: [Float]
-    var vb, mb, vbHat, mbHat: [Float]
-    var gradW: [Float]
-    var gradB: [Float]
+    var v, m, vHat, mHat: MLXArray
+    var vb, mb, vbHat, mbHat: MLXArray
+    var gradW: MLXArray
+    var gradB: MLXArray
     
-    init(unitsNum: Int, inputsNum: Int? = nil, useBias: Bool = true, dataType: [Float]) {
+    init(unitsNum: Int, inputsNum: Int = 0, useBias: Bool = true, dataType: DType) {
         self.unitsNum = unitsNum
         self.inputsNum = inputsNum
         self.useBias = useBias
@@ -42,13 +43,10 @@ class Dense {
     }
     
     func build() {
-        guard let inputsNum = self.inputsNum else {
-            return
-        }
         
-        let stdv = 1 / sqrt(Float(inputsNum))
+        var stdv = 1 / sqrt(Float(inputsNum))
         self.w = uniform(-stdv, stdv, inputsNum * unitsNum)
-        self.b = zeros((1, unitsNum)).flatMap { $0 }
+        self.b = MLX.zeros([unitsNum]).asType(dataType)
         
         self.v = zerosLike(w)
         self.m = zerosLike(w)

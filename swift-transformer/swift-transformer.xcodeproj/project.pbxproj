@@ -32,7 +32,6 @@
 		2A2912902BDEC184008A505C /* swift_transformerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29128F2BDEC184008A505C /* swift_transformerTests.swift */; };
 		2A29129A2BDEC184008A505C /* swift_transformerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2912992BDEC184008A505C /* swift_transformerUITests.swift */; };
 		2A29129C2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29129B2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift */; };
-		2A2912AA2BDEC1FB008A505C /* Matft in Frameworks */ = {isa = PBXBuildFile; productRef = 2A2912A92BDEC1FB008A505C /* Matft */; };
 		2A2912AC2BDEC237008A505C /* prepare_data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2912AB2BDEC237008A505C /* prepare_data.swift */; };
 		2A3220A02BDFD7BF00739465 /* activations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A32209F2BDFD7BF00739465 /* activations.swift */; };
 		2A42066A2BEF97AA00F914ED /* dense.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4206692BEF97AA00F914ED /* dense.swift */; };
@@ -125,7 +124,6 @@
 				2A1EF4502C62A7DF00C17B25 /* MLXNN in Frameworks */,
 				2A1EF44E2C62A7DF00C17B25 /* MLXLinalg in Frameworks */,
 				2A1EF4482C62A7DF00C17B25 /* MLX in Frameworks */,
-				2A2912AA2BDEC1FB008A505C /* Matft in Frameworks */,
 				2A1EF44C2C62A7DF00C17B25 /* MLXFast in Frameworks */,
 				2A1EF44A2C62A7DF00C17B25 /* MLXFFT in Frameworks */,
 			);
@@ -294,7 +292,6 @@
 			);
 			name = "swift-transformer";
 			packageProductDependencies = (
-				2A2912A92BDEC1FB008A505C /* Matft */,
 				2A1EF4472C62A7DF00C17B25 /* MLX */,
 				2A1EF4492C62A7DF00C17B25 /* MLXFFT */,
 				2A1EF44B2C62A7DF00C17B25 /* MLXFast */,
@@ -827,11 +824,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */;
 			productName = MLXNN;
-		};
-		2A2912A92BDEC1FB008A505C /* Matft */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2A2912A82BDEC1FB008A505C /* XCRemoteSwiftPackageReference "Matft" */;
-			productName = Matft;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
