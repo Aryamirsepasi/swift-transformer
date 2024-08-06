@@ -1,6 +1,7 @@
 import Foundation
 import Accelerate
 
+//needed 
 class Dropout {
     var rate: Float
     var inputShape: [Int]

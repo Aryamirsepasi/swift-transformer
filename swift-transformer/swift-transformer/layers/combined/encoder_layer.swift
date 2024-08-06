@@ -1,6 +1,7 @@
 import Foundation
 import Accelerate
 
+//needed
 class EncoderLayer {
     var selfAttentionNorm: LayerNormalization
     var ffLayerNorm: LayerNormalization

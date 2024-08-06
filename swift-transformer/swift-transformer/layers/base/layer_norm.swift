@@ -1,6 +1,7 @@
 import Foundation
 import Accelerate
 
+//needed
 class LayerNormalization {
     var normalizedShape: [Int]?
     var epsilon: Float

@@ -1,6 +1,7 @@
 import Foundation
 import Accelerate
 
+//needed
 class Decoder {
     var tokenEmbedding: Embedding
     var positionEmbedding: PositionalEncoding

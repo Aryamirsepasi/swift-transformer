@@ -2,11 +2,15 @@ import Foundation
 import Accelerate
 
 protocol Activation {
-    func forward(x: [[[Float]]]) -> [[[Float]]]
-    func backward(grad: [[[Float]]]) -> [[[Float]]]
+    associatedtype Input
+    associatedtype Output
+    
+    func forward(x: Input) -> Output
+    func backward(grad: Input) -> Output
 }
 
-class ReLU: Activation {
+
+class ReLU: Activation { //needed
     private var input: [[[Float]]]?
     
     func forward(x: [[[Float]]]) -> [[[Float]]] {
@@ -103,35 +107,39 @@ class Tanh: Activation {
 }
 
 class Softmax: Activation {
-    private var output: [[[Float]]]?
+    private var output: [[[[Float]]]]?
     
-    func forward(x: [[[Float]]]) -> [[[Float]]] {
+    func forward(x: [[[[Float]]]]) -> [[[[Float]]]] {
         output = x.map { matrix in
-            matrix.map { row in
-                var result = row
-                let maxElement = row.max() ?? 0
-                var maxArray = [Float](repeating: maxElement, count: row.count)
-                vDSP_vsub(row, 1, &maxArray, 1, &result, 1, vDSP_Length(row.count))
-                vvexpf(&result, result, [Int32(row.count)])
-                var sumExp = result.reduce(0, +)
-                vDSP_vsdiv(result, 1, &sumExp, &result, 1, vDSP_Length(row.count))
-                return result
+            matrix.map { submatrix in
+                submatrix.map { row in
+                    var result = row
+                    let maxElement = row.max() ?? 0
+                    var maxArray = [Float](repeating: maxElement, count: row.count)
+                    vDSP_vsub(row, 1, &maxArray, 1, &result, 1, vDSP_Length(row.count))
+                    vvexpf(&result, result, [Int32(row.count)])
+                    var sumExp = result.reduce(0, +)
+                    vDSP_vsdiv(result, 1, &sumExp, &result, 1, vDSP_Length(row.count))
+                    return result
+                }
             }
         }
         return output!
     }
     
-    func backward(grad: [[[Float]]]) -> [[[Float]]] {
+    func backward(grad: [[[[Float]]]]) -> [[[[Float]]]] {
         guard let softmax = self.output else { return [] }
         return zip(softmax, grad).map { (softmaxMatrix, gradMatrix) in
-            zip(softmaxMatrix, gradMatrix).map { (softmaxRow, gradRow) in
-                var gradSum: Float = 0
-                vDSP_dotpr(gradRow, 1, softmaxRow, 1, &gradSum, vDSP_Length(gradRow.count))
-                var gradSumArray = [Float](repeating: gradSum, count: gradRow.count)
-                var result = [Float](repeating: 0.0, count: gradRow.count)
-                vDSP_vsub(gradRow, 1, &gradSumArray, 1, &result, 1, vDSP_Length(gradRow.count))
-                vDSP_vmul(result, 1, softmaxRow, 1, &result, 1, vDSP_Length(gradRow.count))
-                return result
+            zip(softmaxMatrix, gradMatrix).map { (softmaxSubMatrix, gradSubMatrix) in
+                zip(softmaxSubMatrix, gradSubMatrix).map { (softmaxRow, gradRow) in
+                    var gradSum: Float = 0
+                    vDSP_dotpr(gradRow, 1, softmaxRow, 1, &gradSum, vDSP_Length(gradRow.count))
+                    var gradSumArray = [Float](repeating: gradSum, count: gradRow.count)
+                    var result = [Float](repeating: 0.0, count: gradRow.count)
+                    vDSP_vsub(gradRow, 1, &gradSumArray, 1, &result, 1, vDSP_Length(gradRow.count))
+                    vDSP_vmul(result, 1, softmaxRow, 1, &result, 1, vDSP_Length(gradRow.count))
+                    return result
+                }
             }
         }
     }
@@ -145,7 +153,7 @@ class Softplus: Activation {
         return x.map { matrix in
             matrix.map { row in
                 var result = [Float](repeating: 0.0, count: row.count)
-                var one = Float(1.0)
+                let one = Float(1.0)
                 vvlog1pf(&result, row.map { $0 + one }, [Int32(row.count)])
                 return result
             }
@@ -157,7 +165,7 @@ class Softplus: Activation {
         return zip(x, grad).map { (xMatrix, gradMatrix) in
             zip(xMatrix, gradMatrix).map { (xRow, gradRow) in
                 var result = [Float](repeating: 0.0, count: xRow.count)
-                var one = Float(1.0)
+                let one = Float(1.0)
                 var expX = [Float](repeating: 0.0, count: xRow.count)
                 vvexpf(&expX, xRow, [Int32(xRow.count)])
                 vDSP_vdiv(expX, 1, expX.map { $0 + one }, 1, &result, 1, vDSP_Length(xRow.count))
@@ -479,7 +487,7 @@ class GELU: Activation {
     }
 }
 
-class Identity: Activation {
+class Identity: Activation { //needed
     func forward(x: [[[Float]]]) -> [[[Float]]] {
         return x
     }
@@ -489,7 +497,7 @@ class Identity: Activation {
     }
 }
 
-class LogSoftmax: Activation {
+class LogSoftmax: Activation { //needed
     private var x: [[[Float]]]?
     private var softmax: [[[Float]]]?
     
@@ -497,8 +505,8 @@ class LogSoftmax: Activation {
         self.x = x
         self.softmax = x.map { matrix in
             matrix.map { row in
-                var maxVal = row.max() ?? 0
-                var shiftedRow = row.map { $0 - maxVal }
+                let maxVal = row.max() ?? 0
+                let shiftedRow = row.map { $0 - maxVal }
                 var exps = [Float](repeating: 0.0, count: row.count)
                 vvexpf(&exps, shiftedRow, [Int32(row.count)])
                 let sumExps = exps.reduce(0, +)
@@ -524,7 +532,7 @@ class LogSoftmax: Activation {
 }
 
 
-let activations: [String: Activation] = [
+let activations: [String: any Activation] = [
     "sigmoid": Sigmoid(),
     "tanh": Tanh(),
     "softmax": Softmax(),

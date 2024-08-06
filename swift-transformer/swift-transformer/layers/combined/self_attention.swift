@@ -1,6 +1,7 @@
 import Foundation
 import Accelerate
 
+//needed
 class MultiHeadAttention {
     var dModel: Int
     var headsNum: Int
@@ -184,16 +185,16 @@ class MultiHeadAttention {
         
         error = groupHeadsBackward(error).flatMap { $0 }
         
-        var VError = [[[Float]]]()
+        let VError = [[[Float]]]()
         
         var transposedSplitV = splitV.transposed()
         
         error = dropout.backward(error)
         error = activation.backward(grad: error.flatMap { $0 })
         
-        var QError = [[[Float]]]()
+        let QError = [[[Float]]]()
         
-        var KError = [[[Float]]]()
+        let KError = [[[Float]]]()
         
         let VErrorFinal = splitHeadsBackward(VError.flatMap { $0 })
         let QErrorFinal = splitHeadsBackward(QError.flatMap { $0 })

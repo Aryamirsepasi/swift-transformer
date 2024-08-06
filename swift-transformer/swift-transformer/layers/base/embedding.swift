@@ -10,7 +10,7 @@ class Embedding {
     var m: [Float]
     var vHat: [Float]
     var mHat: [Float]
-    var inputLabels: [[[Float]]]?  // 3D array to hold the prepared labels
+    var inputLabels: [[[Float]]]? 
     var gradWeights: [Float]?
 
     init(inputDim: Int, outputDim: Int, dataType: [Float]) {

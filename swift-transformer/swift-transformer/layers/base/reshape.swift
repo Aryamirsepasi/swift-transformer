@@ -1,4 +1,5 @@
 import Accelerate
+//not needed (only the numpy variant
 
 // Utility function to calculate the shape of a flat array
 func calculateShape<T>(_ array: [T], newShape: [Int]) -> [Int] {

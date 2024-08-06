@@ -1,7 +1,7 @@
 import Foundation
 import Accelerate
-import Matft
-
+//import Matft
+ //needed 
 class Dense {
     var unitsNum: Int
     var inputsNum: Int?

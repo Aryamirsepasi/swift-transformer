@@ -1,6 +1,7 @@
 import Foundation
 import Accelerate
 
+//needed
 class PositionalEncoding {
     var dModel: Int
     var dropoutRate: Float

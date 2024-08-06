@@ -20,6 +20,11 @@
 		2A08A9FC2BED9A2400E4C2D7 /* val.de in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9EE2BED9A2400E4C2D7 /* val.de */; };
 		2A08A9FD2BED9A2400E4C2D7 /* val.en in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9EF2BED9A2400E4C2D7 /* val.en */; };
 		2A08A9FE2BED9A2400E4C2D7 /* validation.tar.gz in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9F02BED9A2400E4C2D7 /* validation.tar.gz */; };
+		2A1EF4482C62A7DF00C17B25 /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = 2A1EF4472C62A7DF00C17B25 /* MLX */; };
+		2A1EF44A2C62A7DF00C17B25 /* MLXFFT in Frameworks */ = {isa = PBXBuildFile; productRef = 2A1EF4492C62A7DF00C17B25 /* MLXFFT */; };
+		2A1EF44C2C62A7DF00C17B25 /* MLXFast in Frameworks */ = {isa = PBXBuildFile; productRef = 2A1EF44B2C62A7DF00C17B25 /* MLXFast */; };
+		2A1EF44E2C62A7DF00C17B25 /* MLXLinalg in Frameworks */ = {isa = PBXBuildFile; productRef = 2A1EF44D2C62A7DF00C17B25 /* MLXLinalg */; };
+		2A1EF4502C62A7DF00C17B25 /* MLXNN in Frameworks */ = {isa = PBXBuildFile; productRef = 2A1EF44F2C62A7DF00C17B25 /* MLXNN */; };
 		2A29127E2BDEC183008A505C /* swift_transformerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29127D2BDEC183008A505C /* swift_transformerApp.swift */; };
 		2A2912802BDEC183008A505C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29127F2BDEC183008A505C /* ContentView.swift */; };
 		2A2912822BDEC184008A505C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A2912812BDEC184008A505C /* Assets.xcassets */; };
@@ -117,7 +122,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A1EF4502C62A7DF00C17B25 /* MLXNN in Frameworks */,
+				2A1EF44E2C62A7DF00C17B25 /* MLXLinalg in Frameworks */,
+				2A1EF4482C62A7DF00C17B25 /* MLX in Frameworks */,
 				2A2912AA2BDEC1FB008A505C /* Matft in Frameworks */,
+				2A1EF44C2C62A7DF00C17B25 /* MLXFast in Frameworks */,
+				2A1EF44A2C62A7DF00C17B25 /* MLXFFT in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,6 +295,11 @@
 			name = "swift-transformer";
 			packageProductDependencies = (
 				2A2912A92BDEC1FB008A505C /* Matft */,
+				2A1EF4472C62A7DF00C17B25 /* MLX */,
+				2A1EF4492C62A7DF00C17B25 /* MLXFFT */,
+				2A1EF44B2C62A7DF00C17B25 /* MLXFast */,
+				2A1EF44D2C62A7DF00C17B25 /* MLXLinalg */,
+				2A1EF44F2C62A7DF00C17B25 /* MLXNN */,
 			);
 			productName = "swift-transformer";
 			productReference = 2A29127A2BDEC183008A505C /* swift-transformer.app */;
@@ -361,6 +376,7 @@
 			packageReferences = (
 				2A2912A82BDEC1FB008A505C /* XCRemoteSwiftPackageReference "Matft" */,
 				2AE7DE1B2BF18300000BB02D /* XCRemoteSwiftPackageReference "swiftplot" */,
+				2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */,
 			);
 			productRefGroup = 2A29127B2BDEC183008A505C /* Products */;
 			projectDirPath = "";
@@ -760,6 +776,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.16.0;
+			};
+		};
 		2A2912A82BDEC1FB008A505C /* XCRemoteSwiftPackageReference "Matft" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/jjjkkkjjj/Matft";
@@ -779,6 +803,31 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		2A1EF4472C62A7DF00C17B25 /* MLX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLX;
+		};
+		2A1EF4492C62A7DF00C17B25 /* MLXFFT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXFFT;
+		};
+		2A1EF44B2C62A7DF00C17B25 /* MLXFast */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXFast;
+		};
+		2A1EF44D2C62A7DF00C17B25 /* MLXLinalg */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXLinalg;
+		};
+		2A1EF44F2C62A7DF00C17B25 /* MLXNN */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLXNN;
+		};
 		2A2912A92BDEC1FB008A505C /* Matft */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2A2912A82BDEC1FB008A505C /* XCRemoteSwiftPackageReference "Matft" */;

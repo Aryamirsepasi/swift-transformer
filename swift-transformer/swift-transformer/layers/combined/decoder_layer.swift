@@ -1,6 +1,7 @@
 import Foundation
 import Accelerate
 
+//needed 
 class DecoderLayer {
     var selfAttentionNorm: LayerNormalization
     var encAttnLayerNorm: LayerNormalization

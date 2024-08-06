@@ -78,7 +78,7 @@ class CategoricalCrossEntropy: LossFunction {
     }
 }
 
-class CrossEntropy: LossFunction {
+class CrossEntropy: LossFunction { //needed CrossEntropyLoss
     var ignoreIndex: Int?
     let logSoftmax = LogSoftmax()
     

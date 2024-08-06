@@ -1,6 +1,8 @@
 import Foundation
 import Accelerate
 
+//needed
+
 // Data types
 let dataType = Float.self
 let batchSize = 128
@@ -245,7 +247,7 @@ class Seq2Seq {
     }
     
     func predict(sentence: [Int], vocabs: ([String: Int], [String: Int]), maxLength: Int = 50) -> ([String], [[Float]]) {
-        var srcIndices = [sosIndex] + sentence + [eosIndex]
+        let srcIndices = [sosIndex] + sentence + [eosIndex]
         var trgIndices = [sosIndex]
         
         var attentionWeights = [[Float]]()
