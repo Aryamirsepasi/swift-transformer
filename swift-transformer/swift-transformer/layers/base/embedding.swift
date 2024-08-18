@@ -1,121 +1,120 @@
 import Foundation
 import Accelerate
+import MLX
+import MLXRandom
 
 class Embedding {
     var inputDim: Int
+    var inputData: MLXArray
+    var outputData: MLXArray
     var outputDim: Int
-    var weights: [Float]
+    var gradW: MLXArray
+    var gradB: MLXArray
+    var w: MLXArray
     var optimizer: Optimizer?
-    var v: [Float]
-    var m: [Float]
-    var vHat: [Float]
-    var mHat: [Float]
-    var inputLabels: [[[Float]]]? 
-    var gradWeights: [Float]?
+    var v: MLXArray
+    var m: MLXArray
+    var vHat: MLXArray
+    var mHat: MLXArray
+    var inputLabels: MLXArray
+    var gradWeights: MLXArray
+    var dataType: DType
+    var batchSize: Int
+    var currentInputLength: Int
 
-    init(inputDim: Int, outputDim: Int, dataType: [Float]) {
+    init(inputDim: Int, outputDim: Int, dataType: DType = DType.float32) {
         self.inputDim = inputDim
         self.outputDim = outputDim
-        self.weights = [Float](repeating: 0.0, count: inputDim * outputDim)
-        self.v = [Float](repeating: 0.0, count: inputDim * outputDim)
-        self.m = [Float](repeating: 0.0, count: inputDim * outputDim)
-        self.vHat = [Float](repeating: 0.0, count: inputDim * outputDim)
-        self.mHat = [Float](repeating: 0.0, count: inputDim * outputDim)
         
-        build()
+        self.dataType = dataType
+        self.w = []
+        self.v = []
+        self.m = []
+        self.vHat = []
+        self.mHat = []
+        self.inputData = []
+        self.outputData = []
+        self.gradB = []
+        self.gradW = []
+        self.inputLabels = []
+        self.gradWeights = []
+        self.batchSize = 0
+        self.currentInputLength = 0
+        
+        self.build()
     }
     
     func setOptimizer(optimizer: Optimizer) {
         self.optimizer = optimizer
     }
     
-    private func build() {
-        let scale = sqrt(1.0 / Float(inputDim))
-        let distribution = NormalDistribution(mean: 0, standardDeviation: scale)
-        weights = (0..<weights.count).map { _ in distribution.next() }
+    func build() {
+        
+        self.w = MLXRandom.normal(loc: 0, scale: pow(Float(self.inputDim), -0.5), key: MLXArray([self.inputDim, self.outputDim])).asType(self.dataType)
+        
+        self.v = MLX.zeros(like: self.w).asType(self.dataType)
+        self.m = MLX.zeros(like: self.w).asType(self.dataType)
+        
+        self.vHat = MLX.zeros(like: self.w).asType(self.dataType)
+        self.mHat = MLX.zeros(like: self.w).asType(self.dataType)
+        
+        
     }
     
-    private func prepareLabels(batchLabels: [[Float]]) -> [[[Float]]] {
-        let batchCount = batchLabels.count
-        let inputLength = batchLabels[0].count
+    func prepareLabels(batchLabels: MLXArray) -> MLXArray {
         
-        var preparedBatchLabels = [[[Float]]]()
+        var batchLabelsvar = batchLabels.asType(DType.int32)
         
-        for batch in batchLabels {
-            var batchPrepared = [[Float]](repeating: [Float](repeating: 0.0, count: inputDim), count: inputLength)
-            for (index, label) in batch.enumerated() {
-                let intLabel = Int(label)
-                guard intLabel >= 0 && intLabel < inputDim else {
-                    fatalError("Label index \(intLabel) out of bounds for inputDim \(inputDim)")
-                }
-                batchPrepared[index][intLabel] = 1.0
-            }
-            preparedBatchLabels.append(batchPrepared)
-        }
+        var prepareBatchLabels = MLX.zeros([batchLabels.size, self.inputDim])
+        prepareBatchLabels[MLXArray(batchLabels.size), batchLabels.reshaped([1, -1])] = MLXArray(1)
         
-        return preparedBatchLabels
+        return prepareBatchLabels.reshaped([self.batchSize, self.currentInputLength, self.inputDim]).asType(self.dataType)
     }
 
-    func forward(input: [[Float]]) -> [[[Float]]] {
-        guard !input.isEmpty else { return [] }
+    func forward(X: MLXArray) -> MLXArray {
         
-        // Ensure all input sequences are of the same length
-        let inputLength = input[0].count
-        for array in input {
-            if array.count != inputLength {
+        self.inputData = X
+        
+        for i in 0..<self.inputData.count{
+            var arr = self.inputData[i]
+            
+            if !(MLX.equal(self.inputData[0].count, arr.count).all().item()){
                 fatalError("Input sequences must be of the same length")
             }
         }
-
-        inputLabels = prepareLabels(batchLabels: input)
         
-        var output = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0.0, count: outputDim), count: inputLength), count: input.count)
+        self.currentInputLength = self.inputData[0].count
+        self.batchSize = self.inputData.count
         
-        for (i, batch) in inputLabels!.enumerated() {
-            for (j, inputVector) in batch.enumerated() {
-                var result = [Float](repeating: 0.0, count: outputDim)
-                vDSP_mmul(inputVector, 1, weights, 1, &result, 1, 1, vDSP_Length(outputDim), vDSP_Length(inputDim))
-                output[i][j] = result
-            }
-        }
+        self.inputData = self.prepareLabels(batchLabels: self.inputData)
         
-        return output
+        self.outputData = MLX.matmul(self.inputData, self.w)
+        
+        return self.outputData
+        
     }
     
-    func backward(error: [[[Float]]]) -> [[[Float]]]? {
-        guard let inputLabels = inputLabels else { return nil }
+    func backward(error: MLXArray) -> MLXArray {
         
-        let batchCount = inputLabels.count
-        let inputLength = inputLabels[0].count
-        gradWeights = [Float](repeating: 0.0, count: weights.count)
+        self.gradW = MLX.matmul(MLX.transposed(self.inputData, axes: [0,2,1]), error).logSumExp(axis: 0)
         
-        for i in 0..<batchCount {
-            for j in 0..<inputLength {
-                var tempGradWeights = [Float](repeating: 0.0, count: weights.count)
-                let inputVector = inputLabels[i][j]
-                let errorVector = error[i][j]
-                vDSP_mmul(inputVector, 1, errorVector, 1, &tempGradWeights, 1, vDSP_Length(inputDim), vDSP_Length(outputDim), 1)
-                vDSP_vadd(gradWeights!, 1, tempGradWeights, 1, &gradWeights!, 1, vDSP_Length(weights.count))
-            }
-        }
-        
-        return error
+        return []
     }
 
     func updateWeights(layerNum: Int) -> Int {
-        if let optimizer = optimizer, let gradWeights = gradWeights {
+        if let optimizer = optimizer {
             var templayerNum = layerNum
-            (weights, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradWeights, weights: &weights, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: layerNum)
+            (w, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradWeights, weights: &w, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: layerNum)
         }
         return layerNum + 1
     }
     
-    func getGrads() -> [Float]? {
-        return gradWeights
+    func getGrads() -> (MLXArray, MLXArray) {
+        return (self.gradW, self.gradB)
     }
 
-    func setGrads(_ grads: [Float]) {
-        gradWeights = grads
+    func setGrads(grads: (MLXArray, MLXArray)) {
+        (self.gradW, self.gradB) = grads
     }
 }
 

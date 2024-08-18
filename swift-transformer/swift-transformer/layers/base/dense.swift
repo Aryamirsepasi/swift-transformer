@@ -22,7 +22,7 @@ class Dense {
     var gradW: MLXArray
     var gradB: MLXArray
     
-    init(unitsNum: Int, inputsNum: Int = 0, useBias: Bool = true, dataType: DType) {
+    init(unitsNum: Int, inputsNum: Int = 0, useBias: Bool = true, dataType: DType = DType.float32) {
         self.unitsNum = unitsNum
         self.inputsNum = inputsNum
         self.useBias = useBias

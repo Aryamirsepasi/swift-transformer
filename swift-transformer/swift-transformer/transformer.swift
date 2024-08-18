@@ -1,10 +1,11 @@
 import Foundation
 import Accelerate
+import MLX
 
 //needed
 
 // Data types
-let dataType = Float.self
+let dataType = DType.float32
 let batchSize = 128
 
 // Special tokens and their indices
@@ -18,10 +19,16 @@ let sosIndex = 1
 let eosIndex = 2
 let unkIndex = 3
 
+var tokens = [padToken, sosToken, eosToken, unkToken]
+var indexes = [padIndex, sosIndex, eosIndex, unkIndex]
+
 // Prepare data
-let dataPreparator = DataPreparator(tokens: [padToken, sosToken, eosToken, unkToken], indexes: [padIndex, sosIndex, eosIndex, unkIndex])
+let dataPreparator = DataPreparator(tokens: tokens, indexes: indexes)
+
 let (trainData, testData, valData) = dataPreparator.prepareData(path: "dataset/", batchSize: batchSize, minFreq: 2)
 let (source, target) = trainData
+
+var trainDataVocabs = dataPreparator.getVocabs()
 
 // Define Seq2Seq class
 class Seq2Seq {
@@ -41,7 +48,7 @@ class Seq2Seq {
     
     func setOptimizer() {
         encoder.setOptimizer(optimizer)
-        decoder.setOptimizer(optimizer)
+        decoder.setOptimizer(optimizer: optimizer)
     }
     
     func compile(optimizer: Optimizer, lossFunction: LossFunction) {

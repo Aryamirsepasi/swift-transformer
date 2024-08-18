@@ -11,7 +11,7 @@ class Dropout {
     var mask: MLXArray
     var dataType: DType
     
-    init(rate: Float = 0.1, dataType: DType) {
+    init(rate: Float = 0.1, dataType: DType = DType.float32) {
         self.rate = rate
         self.inputShape = []
         self.outputShape = []

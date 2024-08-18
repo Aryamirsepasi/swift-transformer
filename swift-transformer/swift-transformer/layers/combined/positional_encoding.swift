@@ -1,53 +1,43 @@
 import Foundation
 import Accelerate
+import MLX
 
 //needed
 class PositionalEncoding {
     var dModel: Int
     var dropoutRate: Float
     var maxLen: Int
-    var dataType: [Float]
-    var pe: [[[Float]]]
+    var dataType: DType
+    var pe: MLXArray
     
-    init(maxLen: Int, dModel: Int, dropoutRate: Float = 0.1, dataType: [Float] = []) {
+    init(maxLen: Int, dModel: Int, dropoutRate: Float = 0.1, dataType: DType) {
         self.dModel = dModel
         self.dropoutRate = dropoutRate
         self.maxLen = maxLen
         self.dataType = dataType
         
-        var pe = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0.0, count: dModel), count: 1), count: maxLen)
+        var pe = MLX.zeros([maxLen, dModel])
         
-        for pos in 0..<maxLen {
-            for i in stride(from: 0, to: dModel, by: 2) {
-                let divTerm = exp(Float(i) * (-log(10000.0) / Float(dModel)))
-                pe[pos][0][i] = sin(Float(pos) * divTerm)
-                if i + 1 < dModel {
-                    pe[pos][0][i + 1] = cos(Float(pos) * divTerm)
-                }
-            }
-        }
-        self.pe = pe
+        var position = MLXArray(0 ..< maxLen)[0..., .newAxis]
+        
+        var divTermValues = stride(from: 0, to: dModel, by: 2).map { Float($0) * (-log(10000.0) / Float(dModel)) }
+        var divTerm = MLX.exp(MLXArray(divTermValues))
+        
+        pe[0..., 0..<2] = MLX.sin(position * divTerm)
+        pe[0..., 1..<2] = MLX.cos(position * divTerm)
+        
+        self.pe = pe[0..., .newAxis, 0...]
     }
     
-    func forward(x: [[[Float]]]) -> [[[Float]]] {
-        var result = x
-        let batchSize = x.count
-        let seqLen = x[0].count
+    func forward(x: MLXArray) -> MLXArray {
+        var xvar = x
         
-        for b in 0..<batchSize {
-            for s in 0..<seqLen {
-                let peIndex = s
-                for d in 0..<dModel {
-                    if peIndex < pe.count && d < pe[peIndex][0].count {
-                        result[b][s][d] += pe[peIndex][0][d]
-                    }
-                }
-            }
-        }
-        return result
+        xvar += self.pe[..<x.shape[0], 0...]
+        
+        return xvar
     }
 
-    func backward(error: [[[Float]]]) -> [[[Float]]] {
+    func backward(error: MLXArray) -> MLXArray {
         return error
     }
 }
