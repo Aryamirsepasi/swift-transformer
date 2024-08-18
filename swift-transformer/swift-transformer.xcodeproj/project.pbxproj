@@ -372,7 +372,6 @@
 			mainGroup = 2A2912712BDEC183008A505C;
 			packageReferences = (
 				2A2912A82BDEC1FB008A505C /* XCRemoteSwiftPackageReference "Matft" */,
-				2AE7DE1B2BF18300000BB02D /* XCRemoteSwiftPackageReference "swiftplot" */,
 				2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */,
 			);
 			productRefGroup = 2A29127B2BDEC183008A505C /* Products */;
@@ -787,14 +786,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 0.3.3;
-			};
-		};
-		2AE7DE1B2BF18300000BB02D /* XCRemoteSwiftPackageReference "swiftplot" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/KarthikRIyer/swiftplot.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

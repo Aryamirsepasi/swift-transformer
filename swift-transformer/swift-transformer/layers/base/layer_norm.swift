@@ -1,29 +1,30 @@
 import Foundation
 import Accelerate
+import MLX
 
 //needed
 class LayerNormalization {
-    var normalizedShape: [Int]?
+    var normalizedShape: [Int]
     var epsilon: Float
-    var gamma: [Float]
-    var beta: [Float]
-    var mean: [Float]?
-    var variance: [Float]?
+    var gamma: MLXArray
+    var beta: MLXArray
+    var mean: MLXArray
+    var variance: MLXArray
     var optimizer: Optimizer?
-    var dataType: [Float]
+    var dataType: DType
     var featureSize: Int?
-    var inputData: [[[Float]]]?
-    var outputData: [[[Float]]]?
-    var gradGamma: [Float]?
-    var gradBeta: [Float]?
-    var vg, mg, vgHat, mgHat: [Float]
-    var vb, mb, vbHat, mbHat: [Float]
-    var stddevInv: [Float]?
-    var XCentered: [[[Float]]]?
-    var XHatT: [[[Float]]]?
-    var XHat: [[[Float]]]?
+    var inputData: MLXArray
+    var outputData: MLXArray
+    var gradGamma: MLXArray
+    var gradBeta: MLXArray
+    var vg, mg, vgHat, mgHat: MLXArray
+    var vb, mb, vbHat, mbHat: MLXArray
+    var stddevInv: MLXArray
+    var XCentered: MLXArray
+    var XHatT: MLXArray
+    var XHat: MLXArray
 
-    init(normalizedShape: [Int]? = nil, epsilon: Float = 0.001, dataType: [Float]) {
+    init(normalizedShape: [Int] = [], epsilon: Float = 0.001, dataType: DType) {
         self.normalizedShape = normalizedShape
         self.epsilon = epsilon
         self.dataType = dataType
@@ -45,18 +46,27 @@ class LayerNormalization {
     }
 
     func build() {
-        if let normalizedShape = normalizedShape {
-            let size = normalizedShape.reduce(1, *)
-            self.gamma = ones((1, size)).flatMap { $0 }
-            self.beta = zeros((1, size)).flatMap { $0 }
-            self.vg = zerosLike(self.gamma)
-            self.mg = zerosLike(self.gamma)
-            self.vgHat = zerosLike(self.gamma)
-            self.mgHat = zerosLike(self.gamma)
-            self.vb = zerosLike(self.beta)
-            self.mb = zerosLike(self.beta)
-            self.vbHat = zerosLike(self.beta)
-            self.mbHat = zerosLike(self.beta)
+        
+        self.featureSize = 0
+        
+        if (self.normalizedShape != []){
+            
+            self.gamma = MLX.ones(self.normalizedShape).asType(self.dataType)
+            self.beta = MLX.zeros(self.normalizedShape).asType(self.dataType)
+            
+            self.vg = MLX.zeros(like: self.gamma).asType(self.dataType)
+            self.mg = MLX.zeros(like: self.gamma).asType(self.dataType)
+            
+            self.vgHat = MLX.zeros(like: self.gamma).asType(self.dataType)
+            self.mgHat = MLX.zeros(like: self.gamma).asType(self.dataType)
+            
+            self.vb = MLX.zeros(like: self.gamma).asType(self.dataType)
+            self.mb = MLX.zeros(like: self.gamma).asType(self.dataType)
+            
+            self.vbHat = MLX.zeros(like: self.gamma).asType(self.dataType)
+            self.mbHat = MLX.zeros(like: self.gamma).asType(self.dataType)
+            
+            
         }
     }
 

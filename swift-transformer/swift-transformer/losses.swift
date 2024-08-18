@@ -43,6 +43,19 @@ class CrossEntropy: LossFunction { //needed CrossEntropyLoss
             }
         }
          */
+        
+        // Custom logic to replace np.isin and np.where
+            for i in 0..<batch_size {
+                if t[i].item(Int.self) != ignore_index {
+                    let targetIndex = t[i].item(Int.self)
+                    if y[i, targetIndex].item(Float.self) == y[i, targetIndex].item(Float.self) {
+                        // Equivalent of np.isin logic
+                        // Not sure if correct:
+                        nll_loss_der[i, targetIndex] = MLXArray(-err)
+                    }
+                }
+            }
+        
         var output_err = self.log_softmax.backward(grad: nll_loss_der)
         
         return MLX.where(t.reshaped(-1, 1) .== self.ignore_index, 0, output_err)

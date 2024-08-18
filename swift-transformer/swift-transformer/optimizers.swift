@@ -87,6 +87,6 @@ class Noam: Optimizer {
 
 let optimizers: [String: Optimizer] = [
     "sgd": SGD(),
-    "noam": Noam(optimizer: <#any Optimizer#>, modelDim: <#Float#>),
+    //"noam": Noam(optimizer: any Optimizer, modelDim: <#Float#>),
     "adam": Adam(),
 ]
