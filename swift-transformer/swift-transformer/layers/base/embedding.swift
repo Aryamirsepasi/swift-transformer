@@ -50,8 +50,8 @@ class Embedding {
     
     func build() {
         
-        self.w = MLXRandom.normal(loc: 0, scale: pow(Float(self.inputDim), -0.5), key: MLXArray([self.inputDim, self.outputDim])).asType(self.dataType)
-        
+        self.w = MLXRandom.normal([self.inputDim, self.outputDim], loc: 0, scale: pow(Float(self.inputDim), -0.5)).asType(self.dataType)
+
         self.v = MLX.zeros(like: self.w).asType(self.dataType)
         self.m = MLX.zeros(like: self.w).asType(self.dataType)
         

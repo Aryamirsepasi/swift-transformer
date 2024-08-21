@@ -52,7 +52,7 @@ class Decoder {
         return (activatedOutput, attention)
     }
 
-    func backward(error: MLXArray) {
+    func backward(error: MLXArray) -> MLXArray {
         
         var errorvar = activation.backward(grad: error)
         errorvar = fcOut.backward(errorvar)
@@ -68,6 +68,8 @@ class Decoder {
         
         errorvar = positionEmbedding.backward(error: errorvar) * self.scale
         errorvar = tokenEmbedding.backward(error: errorvar)
+        
+        return errorvar
     }
 
     func setOptimizer(optimizer: Optimizer) {

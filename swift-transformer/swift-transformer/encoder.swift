@@ -10,15 +10,25 @@ class Encoder {
 
     init(srcVocabSize: Int, headsNum: Int, layersNum: Int, dModel: Int, dFF: Int, dropoutRate: Float, maxLen: Int = 5000, dataType: DType = DType.float32) {
         
+        print ("entered encoder init")
+
         self.tokenEmbedding = Embedding(inputDim: srcVocabSize, outputDim: dModel, dataType: dataType)
+        
+        print ("step1")
         self.positionEmbedding = PositionalEncoding(maxLen: maxLen, dModel: dModel, dropoutRate: dropoutRate, dataType: dataType)
         
+        print ("step2")
         self.layers = []
         for _ in 0..<layersNum {
             self.layers.append(EncoderLayer(dModel: dModel, headsNum: headsNum, dFF: dFF, dropoutRate: dropoutRate, dataType: dataType))
         }
+        print ("step3")
         self.dropout = Dropout(rate: dropoutRate, dataType: dataType)
+        print ("step4")
         self.scale = sqrt(Float(dModel))
+        
+        print ("exited encoder init")
+
     }
 
     func forward(src: MLXArray, srcMask: MLXArray, training: Bool) -> MLXArray {

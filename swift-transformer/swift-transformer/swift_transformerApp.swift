@@ -1,5 +1,6 @@
 import SwiftUI
 import Accelerate
+import MLX
 
 @main
 struct swift_transformerApp: App {
@@ -18,6 +19,7 @@ struct swift_transformerApp: App {
 class TransformerViewModel: ObservableObject {
     func setupTransformer() -> Seq2Seq {
         // Token and index setup
+        let dataType = DType.float32
         let padToken = "<pad>"
         let sosToken = "<sos>"
         let eosToken = "<eos>"
@@ -36,9 +38,11 @@ class TransformerViewModel: ObservableObject {
 
         let dataPreparator = DataPreparator(tokens: tokens, indexes: indexes)
         
+        print ("run prepareData")
         let (trainData, testData, valData) = dataPreparator.prepareData(path: "./dataset/", batchSize: batchSize, minFreq: 2)
         let (source, target) = trainData
 
+        print ("run getVocabs")
         let trainDataVocabs = dataPreparator.getVocabs()!
         
         let inputDim = trainDataVocabs.0.count
@@ -55,14 +59,19 @@ class TransformerViewModel: ObservableObject {
         let decDropout = 0.3
         let maxLen = 5000
 
-        let encoder = Encoder(srcVocabSize: inputDim, headsNum: encHeads, layersNum: encLayers, dModel: hidDim, dFF: ffSize, dropoutRate: Float(encDropout), maxLen: maxLen, dataType: Array<Float>())
-        let decoder = Decoder(trgVocabSize: outputDim, headsNum: decHeads, layersNum: decLayers, dModel: hidDim, dFF: ffSize, dropoutRate: Float(decDropout), maxLen: maxLen, dataType: Array<Float>())
+        print ("create encoder, deocder objects")
+        let encoder = Encoder(srcVocabSize: inputDim, headsNum: encHeads, layersNum: encLayers, dModel: hidDim, dFF: ffSize, dropoutRate: Float(encDropout), maxLen: maxLen, dataType: dataType)
+        let decoder = Decoder(trgVocabSize: outputDim, headsNum: decHeads, layersNum: decLayers, dModel: hidDim, dFF: ffSize, dropoutRate: Float(decDropout), maxLen: maxLen, dataType: dataType)
+
+        print ("create Seq2Seq object")
 
         let model = Seq2Seq(encoder: encoder, decoder: decoder, padIdx: padIndex)
         
-        model.compile(optimizer: Noam(optimizer: Adam(alpha: 1e-4, beta: 0.9, beta2: 0.98, epsilon: 1e-9), modelDim: Float(hidDim), scaleFactor: 2, warmupSteps: 4000), lossFunction: CrossEntropy(ignoreIndex: padIndex))
+        print ("run compile")
+        model.compile(optimizer: Noam(optimizer: Adam(alpha: 1e-4, beta: 0.9, beta2: 0.98, epsilon: 1e-9), modelDim: Float(hidDim), scaleFactor: 2, warmupSteps: 4000), lossFunction: CrossEntropy(ignore_index: padIndex))
         
-        var trainLossHistory: [Float]?, valLossHistory: [Float]?
+        print ("run fit")
+        var trainLossHistory: MLXArray, valLossHistory: MLXArray
         (trainLossHistory, valLossHistory) = model.fit(
             trainData: trainData,
             valData: valData,
@@ -72,9 +81,7 @@ class TransformerViewModel: ObservableObject {
             validationCheck: true
         )
         
-        let (_, valLossHistoryFinal) = model.fit(trainData: trainData, valData: valData, epochs: 5, saveEveryEpochs: 20, savePath: "saved models/seq2seq_model", validationCheck: true)
-
-        print("Validation Loss History: \(valLossHistoryFinal)")
+        print("Validation Loss History: \(valLossHistory)")
         
         return model
     }
