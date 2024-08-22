@@ -88,14 +88,14 @@ class DataPreparator {
         return seq.lowercased()
     }
 
-    func importMulti30kDataset(path: String) -> ([(String, String)], [(String, String)], [(String, String)]) {
-        
+    func importMulti30kDataset(path: String) -> ([[String: String]], [[String: String]], [[String: String]]) {
+
         print("entered importMulti30kDataset")
 
         let filenames = ["train", "val", "test"]
-        var trainResults: [(String, String)] = []
-        var valResults: [(String, String)] = []
-        var testResults: [(String, String)] = []
+        var trainResults: [[String: String]] = []
+        var valResults: [[String: String]] = []
+        var testResults: [[String: String]] = []
 
         for filename in filenames {
             let enPath = "\(path)/\(filename).en"
@@ -105,7 +105,7 @@ class DataPreparator {
                let deLines = try? String(contentsOfFile: dePath).split(separator: "\n"),
                enLines.count == deLines.count {
 
-                let pairs = zip(enLines, deLines).map { (String($0), String($1)) }
+                let pairs = zip(enLines, deLines).map { ["en": String($0), "de": String($1)] }
                 switch filename {
                 case "train":
                     trainResults.append(contentsOf: pairs)
@@ -119,25 +119,27 @@ class DataPreparator {
         }
         
         print("exited importMulti30kDataset")
+        
+
+        print("First entry in trainResults: \(trainResults[0])")
 
         return (trainResults, valResults, testResults)
     }
 
-    func clearDataset(dataset: [(String, String)]) -> [(String, String)] {
-        
+    func clearDataset(dataset: [[String: String]]) -> [[String: String]] {
+
         print("exited clearDataset")
         
-        return dataset.map { (en, de) in
-            let filteredEn = filterSeq(seq: en)
-            let filteredDe = filterSeq(seq: de)
-            let lowercasedEn = lowercaseSeq(seq: filteredEn)
-            let lowercasedDe = lowercaseSeq(seq: filteredDe)
-            return (lowercasedEn, lowercasedDe)
-        }
+        return dataset.map { example in
+                    var clearedExample = example
+                    clearedExample["en"] = lowercaseSeq(seq: filterSeq(seq: example["en"]!)).split(separator: " ").map(String.init).joined(separator: " ")
+                    clearedExample["de"] = lowercaseSeq(seq: filterSeq(seq: example["de"]!)).split(separator: " ").map(String.init).joined(separator: " ")
+                    return clearedExample
+                }
     }
 
-    func buildVocab(dataset: [(String, String)], minFreq: Int = 1) -> ([String: Int], [String: Int]) {
-        
+    func buildVocab(dataset: [[String: String]], minFreq: Int = 1) -> ([String: Int], [String: Int]) {
+
         print("entered buildVocab")
         
         var enVocab: [String: Int] = tokensAndIndices
@@ -145,14 +147,14 @@ class DataPreparator {
         var enFreqs: [String: Int] = [:]
         var deFreqs: [String: Int] = [:]
 
-        for (en, de) in dataset {
-            for word in en.split(separator: " ") {
-                enFreqs[String(word), default: 0] += 1
-            }
-            for word in de.split(separator: " ") {
-                deFreqs[String(word), default: 0] += 1
-            }
-        }
+        for example in dataset {
+                    for word in example["en"]!.split(separator: " ") {
+                        enFreqs[String(word), default: 0] += 1
+                    }
+                    for word in example["de"]!.split(separator: " ") {
+                        deFreqs[String(word), default: 0] += 1
+                    }
+                }
 
         for (word, freq) in enFreqs where freq >= minFreq && enVocab[word] == nil {
             enVocab[word] = enVocab.count
@@ -166,40 +168,41 @@ class DataPreparator {
         return (enVocab, deVocab)
     }
 
-    func addTokens(dataset: [(String, String)], batchSize: Int) -> [[(String, String)]] {
+    func addTokens(dataset: [[String: String]], batchSize: Int) -> [[[String: String]]] {
         print("entered addTokens")
 
         // Step 1: Add special tokens (SOS, EOS) to each sequence
-        let paddedData = dataset.map { (en, de) -> (String, String) in
-            let paddedEn = "\(sosToken) \(en) \(eosToken)"
-            let paddedDe = "\(sosToken) \(de) \(eosToken)"
-            return (paddedEn, paddedDe)
-        }
+        let paddedData = dataset.map { example -> [String: String] in
+                    var paddedExample = example
+                    paddedExample["en"] = "\(sosToken) \(example["en"]!) \(eosToken)"
+                    paddedExample["de"] = "\(sosToken) \(example["de"]!) \(eosToken)"
+                    return paddedExample
+                }
         
         // Step 2: Split data into batches
-        var batchedData: [[(String, String)]] = stride(from: 0, to: paddedData.count, by: batchSize).map {
-            Array(paddedData[$0..<min($0 + batchSize, paddedData.count)])
-        }
+        var batchedData: [[[String: String]]] = stride(from: 0, to: paddedData.count, by: batchSize).map {
+                    Array(paddedData[$0..<min($0 + batchSize, paddedData.count)])
+                }
 
         // Step 3: For each batch, find the max length of the sequences and pad them
         for i in 0..<batchedData.count {
             let batch = batchedData[i]
 
             // Determine the maximum sequence lengths in the current batch
-            let maxEnSeqLen = batch.map { $0.0.split(separator: " ").count }.max() ?? 0
-            let maxDeSeqLen = batch.map { $0.1.split(separator: " ").count }.max() ?? 0
+            let maxEnSeqLen = batch.map { $0["en"]!.split(separator: " ").count }.max() ?? 0
+            let maxDeSeqLen = batch.map { $0["de"]!.split(separator: " ").count }.max() ?? 0
 
             // Pad sequences in the batch to the maximum length
-            batchedData[i] = batch.map { (en, de) in
-                let enWords = en.split(separator: " ").map(String.init)
-                let deWords = de.split(separator: " ").map(String.init)
+            batchedData[i] = batch.map { example in
+                            var paddedExample = example
+                            let enWords = example["en"]!.split(separator: " ").map(String.init)
+                            let deWords = example["de"]!.split(separator: " ").map(String.init)
 
-                // Pad English and German sequences with padToken to max length
-                let paddedEn = enWords + Array(repeating: padToken, count: maxEnSeqLen - enWords.count)
-                let paddedDe = deWords + Array(repeating: padToken, count: maxDeSeqLen - deWords.count)
+                            paddedExample["en"] = (enWords + Array(repeating: padToken, count: maxEnSeqLen - enWords.count)).joined(separator: " ")
+                            paddedExample["de"] = (deWords + Array(repeating: padToken, count: maxDeSeqLen - deWords.count)).joined(separator: " ")
 
-                return (paddedEn.joined(separator: " "), paddedDe.joined(separator: " "))
-            }
+                            return paddedExample
+                        }
         }
 
         print("exited addTokens")
@@ -207,59 +210,35 @@ class DataPreparator {
     }
 
 
-    func buildDataset(dataset: [[(String, String)]], vocabs: ([String: Int], [String: Int])) -> (MLXArray, MLXArray) {
-        
-        print("entered buildDataset")
+    func buildDataset(dataset: [[[String: String]]], vocabs: ([String: Int], [String: Int])) -> (MLXArray, MLXArray) {
 
+        print("entered buildDataset")
+        
         var source: MLXArray = []
         var target: MLXArray = []
-        var sourceBatchnew : MLXArray = []
-        var targetBatchnew : MLXArray = []
+        
+        var sourceBatch: MLXArray = []
+        var targetBatch: MLXArray = []
 
         for batch in dataset {
-            var sourceBatch: MLXArray = []
-            var targetBatch: MLXArray = []
+            
+            sourceBatch = []
+            targetBatch = []
+            for example in batch {
+                let enIndices = example["en"]!.split(separator: " ").map { vocabs.0[String($0)] ?? unkIndex }
+                let deIndices = example["de"]!.split(separator: " ").map { vocabs.1[String($0)] ?? unkIndex }
 
-            for (en, de) in batch {
-                let enIndices = en.split(separator: " ").map { vocabs.0[String($0)] ?? unkIndex }
-                let deIndices = de.split(separator: " ").map { vocabs.1[String($0)] ?? unkIndex }
+                sourceBatch = MLXArray(enIndices)
                 
-                for i in 0..<sourceBatch.count{
-                    sourceBatchnew[i] = sourceBatch[i]
-                }
-                
-                for i in 0..<enIndices.count{
-                    sourceBatchnew[i + sourceBatch.count] = MLXArray(enIndices[i])
-                }
-                
-                for i in 0..<targetBatch.count{
-                    targetBatchnew[i] = targetBatch[i]
-                }
-                
-                for i in 0..<deIndices.count{
-                    targetBatchnew[i + targetBatch.count] = MLXArray(deIndices[i])
-                }
+                targetBatch = MLXArray(deIndices)
             }
             
-            var sourcenew : MLXArray = []
-            for i in 0..<source.count{
-                sourcenew[i] = source[i]
-            }
+            source = concatenated([source,sourceBatch])
             
-            for i in 0..<sourceBatchnew.count{
-                sourcenew[i + sourceBatchnew.count] = sourceBatchnew[i]
-            }
-            
-            var targetnew : MLXArray = []
-            for i in 0..<target.count{
-                targetnew[i] = target[i]
-            }
-            
-            for i in 0..<targetBatchnew.count{
-                targetnew[i + targetBatchnew.count] = targetBatchnew[i]
-            }
+            target = concatenated([target,targetBatch])
+
         }
-        
+                
         print("exited buildDataset")
 
         return (source, target)
