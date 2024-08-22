@@ -1,10 +1,28 @@
 import Foundation
 import Accelerate
+import MLX
 
 protocol Optimizer {
     var alpha: Float { get set }
-    func update(gradient: [Float], weights: inout [Float], v: inout [Float], m: inout [Float], vHat: inout [Float], mHat: inout [Float], t: Int) -> ([Float], [Float], [Float], [Float], [Float], Int)
+    func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int)
 }
+
+class SGD: Optimizer {
+    var alpha: Float
+    
+    init(alpha: Float = 0.001) {
+        self.alpha = alpha
+    }
+    
+    func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray,MLXArray, MLXArray, MLXArray, MLXArray, Int) {
+        
+        weights -= gradient * alpha
+        
+        return (weights, v, m, vHat, mHat, t)
+
+    }
+}
+
 
 class Adam: Optimizer { //after
     var alpha: Float
@@ -19,46 +37,17 @@ class Adam: Optimizer { //after
         self.epsilon = epsilon
     }
     
-    func update(gradient: [Float], weights: inout [Float], v: inout [Float], m: inout [Float], vHat: inout [Float], mHat: inout [Float], t: Int) -> ([Float], [Float], [Float], [Float], [Float], Int) {
-        var oneMinusBeta = 1 - beta
-        var oneMinusBeta2 = 1 - beta2
-         
-        // Update biased first moment estimate
-        vDSP_vsmul(m, 1, &beta, &m, 1, vDSP_Length(m.count))
-        var scaledGradient = [Float](repeating: 0, count: gradient.count)
-        vDSP_vsmul(gradient, 1, &oneMinusBeta, &scaledGradient, 1, vDSP_Length(gradient.count))
-        vDSP_vadd(m, 1, scaledGradient, 1, &m, 1, vDSP_Length(m.count))
+    func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
+        v = beta * m + (1 - beta) * gradient
+        v = beta2 * v + (1 - beta2) * MLX.pow(gradient, 2)
+
+        mHat = m / (1 - Float(pow(Double(beta), Double(t))))
+        vHat = v / (1 - Float(pow(Double(beta2), Double(t))))
+
+        var temp = alpha * mHat / (MLX.sqrt(vHat) + epsilon)
+        weights -= temp
         
-        // Update biased second raw moment estimate
-        var gradSquared = [Float](repeating: 0, count: gradient.count)
-        vDSP_vsq(gradient, 1, &gradSquared, 1, vDSP_Length(gradient.count))
-        vDSP_vsmul(v, 1, &beta2, &v, 1, vDSP_Length(v.count))
-        var scaledGradSquared = [Float](repeating: 0, count: gradSquared.count)
-        vDSP_vsmul(gradSquared, 1, &oneMinusBeta2, &scaledGradSquared, 1, vDSP_Length(gradSquared.count))
-        vDSP_vadd(v, 1, scaledGradSquared, 1, &v, 1, vDSP_Length(v.count))
-        
-        // Compute bias-corrected first moment estimate
-        var mHatCorrected = m
-        let betaTPower = pow(beta, Float(t))
-        var betaCorrection = 1 / (1 - betaTPower)
-        vDSP_vsmul(m, 1, &betaCorrection, &mHatCorrected, 1, vDSP_Length(m.count))
-        
-        // Compute bias-corrected second raw moment estimate
-        var vHatCorrected = v
-        let beta2TPower = pow(beta2, Float(t))
-        var beta2Correction = 1 / (1 - beta2TPower)
-        vDSP_vsmul(v, 1, &beta2Correction, &vHatCorrected, 1, vDSP_Length(v.count))
-        
-        // Update weights
-        var sqrtVHatPlusEpsilon = [Float](repeating: epsilon, count: vHatCorrected.count)
-        vDSP_vsadd(vHatCorrected, 1, &epsilon, &sqrtVHatPlusEpsilon, 1, vDSP_Length(vHatCorrected.count))
-        vvsqrtf(&sqrtVHatPlusEpsilon, sqrtVHatPlusEpsilon, [Int32(sqrtVHatPlusEpsilon.count)])
-        var updateValues = [Float](repeating: 0, count: weights.count)
-        vDSP_vdiv(sqrtVHatPlusEpsilon, 1, mHatCorrected, 1, &updateValues, 1, vDSP_Length(updateValues.count))
-        var negAlpha: Float = -alpha
-        vDSP_vsma(updateValues, 1, &negAlpha, weights, 1, &weights, 1, vDSP_Length(weights.count))
-        
-        return (weights, v, m, vHatCorrected, mHatCorrected , t)
+        return (weights, v, m, vHat, mHat , t)
     }
 }
 
@@ -79,16 +68,25 @@ class Noam: Optimizer {
         self.alpha = 0.0  // Initial alpha value, will be updated
     }
     
-    func update(gradient: [Float], weights: inout [Float], v: inout [Float], m: inout [Float], vHat: inout [Float], mHat: inout [Float], t: Int) -> ([Float], [Float], [Float], [Float], [Float], Int) {
+    func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
         stepsNum += 1
-        let factor = scaleFactor * pow(modelDim, -0.5) * min(pow(Float(stepsNum), -0.5), Float(stepsNum) * pow(Float(warmupSteps), -1.5))
-        optimizer.alpha = factor
-        self.alpha = factor
-        return optimizer.update(gradient: gradient, weights: &weights, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: t)
+        var model_dim_component = Float(pow(modelDim, -0.5))
+        var steps_num_component = Int(pow(Double(stepsNum), -0.5))
+        var warmup_component = stepsNum * Int(pow(Double(warmupSteps), -1.5))
+            
+        var min_component = min(steps_num_component, warmup_component)
+            
+        var lr = scaleFactor * Float(model_dim_component) * Float(min_component)
+            
+        self.optimizer.alpha = lr
+        
+        return self.optimizer.update(gradient: gradient, weights: &weights, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: t)
     }
 }
 
 
 let optimizers: [String: Optimizer] = [
+    "sgd": SGD(),
+    //"noam": Noam(optimizer: any Optimizer, modelDim: <#Float#>),
     "adam": Adam(),
 ]

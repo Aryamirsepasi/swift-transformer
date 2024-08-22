@@ -1,6 +1,6 @@
 import Foundation
 import Accelerate
-
+import MLX
 //needed
 class Decoder {
     var tokenEmbedding: Embedding
@@ -10,61 +10,69 @@ class Decoder {
     var dropout: Dropout
     var scale: Float
     var activation: Identity
+    var encoderError: MLXArray
 
-    init(trgVocabSize: Int, headsNum: Int, layersNum: Int, dModel: Int, dFF: Int, dropoutRate: Float, maxLen: Int = 5000, dataType: [Float]) {
+    init(trgVocabSize: Int, headsNum: Int, layersNum: Int, dModel: Int, dFF: Int, dropoutRate: Float, maxLen: Int = 5000, dataType: DType = DType.float32) {
+        
         self.tokenEmbedding = Embedding(inputDim: trgVocabSize, outputDim: dModel, dataType: dataType)
         self.positionEmbedding = PositionalEncoding(maxLen: maxLen, dModel: dModel, dropoutRate: dropoutRate, dataType: dataType)
+        
         self.layers = []
+        
         for _ in 0..<layersNum {
             self.layers.append(DecoderLayer(dModel: dModel, headsNum: headsNum, dFF: dFF, dropoutRate: dropoutRate, dataType: dataType))
         }
         self.fcOut = Dense(unitsNum: trgVocabSize, inputsNum: dModel, useBias: true, dataType: dataType)
         self.dropout = Dropout(rate: dropoutRate, dataType: dataType)
         self.scale = sqrt(Float(dModel))
+        
+        self.encoderError = []
+        
         self.activation = Identity()
+        
     }
 
-    func forward(trg: [[Float]], trgMask: [[[Float]]], src: [[[Float]]], srcMask: [[[Float]]], training: Bool) -> ([[[Float]]], [[[Float]]]) {
-        var trg = trg
-        let batchSize = trg.count
-        let trgSeqLen = trg[0].count
-
-        // Adjust input dimensions for token embedding and position embedding
-        var embeddedTrg = tokenEmbedding.forward(input: trg)
-        embeddedTrg = embeddedTrg.map { $0.map { $0.map { $0 * self.scale } } }
-        embeddedTrg = positionEmbedding.forward(x: embeddedTrg)
-        embeddedTrg = dropout.forward(embeddedTrg, training: training)
-
-        var attention: [[[Float]]] = []
-
-        for layer in layers {
-            let (layerOutput, layerAttention) = layer.forward(trg: embeddedTrg, trgMask: trgMask, src: src, srcMask: srcMask, training: training)
-            embeddedTrg = layerOutput
-            attention = layerAttention
+    func forward(trg: MLXArray, trgMask: MLXArray, src: MLXArray, srcMask: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
+        
+        var trgvar = trg
+        
+        trgvar = self.tokenEmbedding.forward(X: trg) * self.scale
+        trgvar = self.positionEmbedding.forward(x: trgvar)
+        trgvar = self.dropout.forward(X: trgvar, training: training)
+        var attention : MLXArray = []
+        
+        for layer in self.layers{
+            (trgvar, attention) = layer.forward(trg: trgvar, trgMask: trgMask, src: src, srcMask: srcMask, training: training)
         }
-
-        let output = fcOut.forward(embeddedTrg)
-        let activatedOutput = activation.forward(x: output)
-
+        
+        var output = self.fcOut.forward(X: trgvar)
+        
+        var activatedOutput = self.activation.forward(x: output)
+        
         return (activatedOutput, attention)
     }
 
-    func backward(error: [[[Float]]]) {
-        var error = activation.backward(grad: error)
-        error = fcOut.backward(error)
+    func backward(error: MLXArray) -> MLXArray {
+        
+        var errorvar = activation.backward(grad: error)
+        errorvar = fcOut.backward(errorvar)
 
-        for layer in layers.reversed() {
-            let (layerError, encError) = layer.backward(error)
-            error = layerError + encError
+        self.encoderError = zeros(error.shape)
+        
+        for layer in self.layers.reversed() {
+            let (layerError, encError) = layer.backward(error: error)
+            self.encoderError += encError
         }
 
-        error = dropout.backward(error)
-        error = positionEmbedding.backward(error: error)
-        error = error.map { $0.map { $0.map { $0 * self.scale } } }
-        error = tokenEmbedding.backward(error: error) ?? []
+        errorvar = self.dropout.backward(errorvar)
+        
+        errorvar = positionEmbedding.backward(error: errorvar) * self.scale
+        errorvar = tokenEmbedding.backward(error: errorvar)
+        
+        return errorvar
     }
 
-    func setOptimizer(_ optimizer: Optimizer) {
+    func setOptimizer(optimizer: Optimizer) {
         tokenEmbedding.setOptimizer(optimizer: optimizer)
         for layer in layers {
             layer.setOptimizer(optimizer)
@@ -75,9 +83,9 @@ class Decoder {
     func updateWeights() {
         var layerNum = 1
         layerNum = tokenEmbedding.updateWeights(layerNum: layerNum)
-        for layer in layers {
+        for layer in self.layers {
             layerNum = layer.updateWeights(layerNum)
         }
-        fcOut.updateWeights(layerNum: layerNum)
+        self.fcOut.updateWeights(layerNum: layerNum)
     }
 }

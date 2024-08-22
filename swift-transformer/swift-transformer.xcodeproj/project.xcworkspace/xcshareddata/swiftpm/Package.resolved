@@ -1,5 +1,5 @@
 {
-  "originHash" : "99a31a15ddc62ce0b5f6f8cfd8e35f59c64bda8b99efe0fcfc1b76109a5b5202",
+  "originHash" : "e58993622a6da371630f21738b5b6534e68fe63e357fda0437a2c2810ced9789",
   "pins" : [
     {
       "identity" : "matft",
@@ -38,12 +38,12 @@
       }
     },
     {
-      "identity" : "swiftplot",
+      "identity" : "swift-tqdm",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/KarthikRIyer/swiftplot.git",
+      "location" : "https://github.com/ebraraktas/swift-tqdm.git",
       "state" : {
-        "revision" : "c5424eb8688217029d44e941d3a1d2ccc18c3a82",
-        "version" : "2.0.0"
+        "revision" : "71f0a47e1c1149cc486be2e436d7369e90ca4449",
+        "version" : "0.1.2"
       }
     }
   ],

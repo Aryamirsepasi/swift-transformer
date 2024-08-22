@@ -1,22 +1,28 @@
 import Foundation
 import Accelerate
-//import Matft
- //needed 
+import MLX
+import MLXRandom
+
+ //needed
 class Dense {
     var unitsNum: Int
-    var inputsNum: Int?
+    var inputsNum: Int
     var useBias: Bool
-    var w: [Float]
-    var b: [Float]
+    var outputShape: (Int,Int)
+    var w: MLXArray
+    var b: MLXArray
     var optimizer: Optimizer?
-    var dataType: [Float]
+    var dataType: DType
     
-    var v, m, vHat, mHat: [Float]
-    var vb, mb, vbHat, mbHat: [Float]
-    var gradW: [Float]
-    var gradB: [Float]
+    var inputData, outputData: MLXArray
+    var batchSize: Int
     
-    init(unitsNum: Int, inputsNum: Int? = nil, useBias: Bool = true, dataType: [Float]) {
+    var v, m, vHat, mHat: MLXArray
+    var vb, mb, vbHat, mbHat: MLXArray
+    var gradW: MLXArray
+    var gradB: MLXArray
+    
+    init(unitsNum: Int, inputsNum: Int = 0, useBias: Bool = true, dataType: DType = DType.float32) {
         self.unitsNum = unitsNum
         self.inputsNum = inputsNum
         self.useBias = useBias
@@ -34,6 +40,11 @@ class Dense {
         self.gradW = []
         self.gradB = []
         
+        self.inputData = []
+        self.outputData = []
+        self.batchSize = 0
+        self.outputShape = (0,0)
+        
         self.build()
     }
     
@@ -42,90 +53,65 @@ class Dense {
     }
     
     func build() {
-        guard let inputsNum = self.inputsNum else {
-            return
+        
+        var stdv = 1 / sqrt(Float(inputsNum))
+        // need replacement for uniform
+        /*func randomUniform(low: Float, high: Float, count: Int) -> [Float] {
+                return (0..<count).map { _ in
+                    Float.random(in: low...high)
+                }
         }
+        let wArray = randomUniform(low: -stdv, high: stdv, count: inputsNum * unitsNum)*/
+        self.w = MLXRandom.uniform(low: -stdv, high: stdv,[self.inputsNum, self.unitsNum], dtype: self.dataType)
+        self.b = MLX.zeros([unitsNum]).asType(dataType)
         
-        let stdv = 1 / sqrt(Float(inputsNum))
-        self.w = uniform(-stdv, stdv, inputsNum * unitsNum)
-        self.b = zeros((1, unitsNum)).flatMap { $0 }
+        self.v = MLX.zeros(like:w).asType(dataType)
+        self.m = MLX.zeros(like:w).asType(dataType)
+        self.vHat = MLX.zeros(like:w).asType(dataType)
+        self.mHat = MLX.zeros(like:w).asType(dataType)
         
-        self.v = zerosLike(w)
-        self.m = zerosLike(w)
-        self.vHat = zerosLike(w)
-        self.mHat = zerosLike(w)
+        self.vb = MLX.zeros(like:b).asType(dataType)
+        self.mb = MLX.zeros(like:b).asType(dataType)
+        self.vbHat = MLX.zeros(like:b).asType(dataType)
+        self.mbHat = MLX.zeros(like:b).asType(dataType)
         
-        self.vb = zerosLike(b)
-        self.mb = zerosLike(b)
-        self.vbHat = zerosLike(b)
-        self.mbHat = zerosLike(b)
+        self.outputShape = (1, self.unitsNum)
     }
     
-    func forward(_ X: [[[Float]]], training: Bool = true) -> [[[Float]]] {
-        guard let inputsNum = self.inputsNum else {
-            fatalError("inputsNum is nil")
-        }
+    func forward(X: MLXArray , training: Bool = true) -> MLXArray {
+        self.inputData = X
         
-        let batchSize = X.count
-        let seqLen = X[0].count
+        self.batchSize = self.inputData.count
         
-        var result = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0, count: unitsNum), count: seqLen), count: batchSize)
+        self.outputData = MLX.zeros([batchSize, self.b.count])
         
-        for b in 0..<batchSize {
-            for s in 0..<seqLen {
-                var singleResult = [Float](repeating: 0, count: unitsNum)
-                vDSP_mmul(X[b][s], 1, w, 1, &singleResult, 1, vDSP_Length(1), vDSP_Length(unitsNum), vDSP_Length(inputsNum))
-                result[b][s] = singleResult
-            }
-        }
-        
-        if useBias {
-            for bIndex in 0..<batchSize {
-                for s in 0..<seqLen {
-                    result[bIndex][s].withUnsafeMutableBufferPointer { resultBuffer in
-                        b.withUnsafeBufferPointer { biasBuffer in
-                            vDSP_vadd(resultBuffer.baseAddress!, 1, biasBuffer.baseAddress!, 1, resultBuffer.baseAddress!, 1, vDSP_Length(unitsNum))
-                        }
-                    }
+        for i in 0..<self.batchSize {
+            for j in 0..<self.b.count {
+                for k in 0..<self.w.count {
+                    self.outputData[i,j] = MLX.sum(self.inputData[i, k] * self.w[k, j])
                 }
             }
         }
-
         
-        return result
+        self.outputData += self.b
+
+        return self.outputData
     }
     
-    func backward(_ error: [[[Float]]]) -> [[[Float]]] {
-        guard let inputsNum = self.inputsNum else {
-            return []
-        }
+    func backward(_ error: MLXArray) -> MLXArray {
+        self.gradW = MLX.sum(MLX.matmul(self.inputData.transposed(0, 2, 1), error), axes: [0])
         
-        let batchSize = error.count
-        let seqLen = error[0].count
+        self.gradB = MLX.sum(error, axes: [0,1])
         
-        var outputError = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0, count: inputsNum), count: seqLen), count: batchSize)
-        var transposedW = [Float](repeating: 0, count: inputsNum * unitsNum)
-        
-        vDSP_mtrans(w, 1, &transposedW, 1, vDSP_Length(inputsNum), vDSP_Length(unitsNum))
-        
-        for b in 0..<batchSize {
-            for s in 0..<seqLen {
-                var singleError = [Float](repeating: 0, count: inputsNum)
-                vDSP_mmul(error[b][s], 1, transposedW, 1, &singleError, 1, vDSP_Length(1), vDSP_Length(inputsNum), vDSP_Length(unitsNum))
-                outputError[b][s] = singleError
-            }
-        }
-        
-        gradW = zerosLike(w)
-        gradB = zerosLike(b)
-        
-        for b in 0..<batchSize {
-            for s in 0..<seqLen {
-                var tempGradW = [Float](repeating: 0, count: inputsNum * unitsNum)
-                vDSP_mmul(error[b][s], 1, w, 1, &tempGradW, 1, vDSP_Length(unitsNum), vDSP_Length(inputsNum), 1)
-                vDSP_vadd(gradW, 1, tempGradW, 1, &gradW, 1, vDSP_Length(gradW.count))
-                
-                vDSP_vadd(gradB, 1, error[b][s], 1, &gradB, 1, vDSP_Length(unitsNum))
+        var outputError = MLX.zeros([error.shape[0], error.shape[1], self.w.shape[0]])
+
+        for i in 0..<error.shape[0] {
+            for j in 0..<error.shape[1] {
+                for k in 0..<self.w.shape[0] {
+                    for l in 0..<self.w.shape[1] {
+                        outputError[i,j,k] = MLX.sum(error[i, j, l] * self.w[k, l])
+                    }
+                }
             }
         }
         
@@ -143,11 +129,11 @@ class Dense {
         return layerNum + 1
     }
     
-    func getGrads() -> ([Float], [Float]) {
+    func getGrads() -> (MLXArray, MLXArray) {
         return (gradW, gradB)
     }
     
-    func setGrads(grads: ([Float], [Float])) {
+    func setGrads(grads: (MLXArray, MLXArray)) {
         (gradW, gradB) = grads
     }
 }

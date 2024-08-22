@@ -32,7 +32,6 @@
 		2A2912902BDEC184008A505C /* swift_transformerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29128F2BDEC184008A505C /* swift_transformerTests.swift */; };
 		2A29129A2BDEC184008A505C /* swift_transformerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2912992BDEC184008A505C /* swift_transformerUITests.swift */; };
 		2A29129C2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29129B2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift */; };
-		2A2912AA2BDEC1FB008A505C /* Matft in Frameworks */ = {isa = PBXBuildFile; productRef = 2A2912A92BDEC1FB008A505C /* Matft */; };
 		2A2912AC2BDEC237008A505C /* prepare_data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2912AB2BDEC237008A505C /* prepare_data.swift */; };
 		2A3220A02BDFD7BF00739465 /* activations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A32209F2BDFD7BF00739465 /* activations.swift */; };
 		2A42066A2BEF97AA00F914ED /* dense.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4206692BEF97AA00F914ED /* dense.swift */; };
@@ -47,6 +46,7 @@
 		2A59D3282BF0158300048D26 /* encoder_layer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59D3272BF0158300048D26 /* encoder_layer.swift */; };
 		2A59D32A2BF015A200048D26 /* positionwise_feed_forward.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59D3292BF015A200048D26 /* positionwise_feed_forward.swift */; };
 		2A9B22802C37033300D4651C /* Cartfile in Resources */ = {isa = PBXBuildFile; fileRef = 2A9B227F2C37033300D4651C /* Cartfile */; };
+		2AB0D84C2C73D4E400E99AFD /* Tqdm in Frameworks */ = {isa = PBXBuildFile; productRef = 2AB0D84B2C73D4E400E99AFD /* Tqdm */; };
 		2ABF1CA92BE048B000C700DD /* losses.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABF1CA82BE048B000C700DD /* losses.swift */; };
 		2ABF1CAB2BE0582100C700DD /* optimizers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABF1CAA2BE0582100C700DD /* optimizers.swift */; };
 		2ABF1CAD2BE0613900C700DD /* transformer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABF1CAC2BE0613900C700DD /* transformer.swift */; };
@@ -125,8 +125,8 @@
 				2A1EF4502C62A7DF00C17B25 /* MLXNN in Frameworks */,
 				2A1EF44E2C62A7DF00C17B25 /* MLXLinalg in Frameworks */,
 				2A1EF4482C62A7DF00C17B25 /* MLX in Frameworks */,
-				2A2912AA2BDEC1FB008A505C /* Matft in Frameworks */,
 				2A1EF44C2C62A7DF00C17B25 /* MLXFast in Frameworks */,
+				2AB0D84C2C73D4E400E99AFD /* Tqdm in Frameworks */,
 				2A1EF44A2C62A7DF00C17B25 /* MLXFFT in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -294,12 +294,12 @@
 			);
 			name = "swift-transformer";
 			packageProductDependencies = (
-				2A2912A92BDEC1FB008A505C /* Matft */,
 				2A1EF4472C62A7DF00C17B25 /* MLX */,
 				2A1EF4492C62A7DF00C17B25 /* MLXFFT */,
 				2A1EF44B2C62A7DF00C17B25 /* MLXFast */,
 				2A1EF44D2C62A7DF00C17B25 /* MLXLinalg */,
 				2A1EF44F2C62A7DF00C17B25 /* MLXNN */,
+				2AB0D84B2C73D4E400E99AFD /* Tqdm */,
 			);
 			productName = "swift-transformer";
 			productReference = 2A29127A2BDEC183008A505C /* swift-transformer.app */;
@@ -375,8 +375,8 @@
 			mainGroup = 2A2912712BDEC183008A505C;
 			packageReferences = (
 				2A2912A82BDEC1FB008A505C /* XCRemoteSwiftPackageReference "Matft" */,
-				2AE7DE1B2BF18300000BB02D /* XCRemoteSwiftPackageReference "swiftplot" */,
 				2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */,
+				2AB0D84A2C73D4E400E99AFD /* XCRemoteSwiftPackageReference "swift-tqdm" */,
 			);
 			productRefGroup = 2A29127B2BDEC183008A505C /* Products */;
 			projectDirPath = "";
@@ -792,12 +792,12 @@
 				minimumVersion = 0.3.3;
 			};
 		};
-		2AE7DE1B2BF18300000BB02D /* XCRemoteSwiftPackageReference "swiftplot" */ = {
+		2AB0D84A2C73D4E400E99AFD /* XCRemoteSwiftPackageReference "swift-tqdm" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/KarthikRIyer/swiftplot.git";
+			repositoryURL = "https://github.com/ebraraktas/swift-tqdm.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
+				minimumVersion = 0.1.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -828,10 +828,10 @@
 			package = 2A1EF4462C62A7DF00C17B25 /* XCRemoteSwiftPackageReference "mlx-swift" */;
 			productName = MLXNN;
 		};
-		2A2912A92BDEC1FB008A505C /* Matft */ = {
+		2AB0D84B2C73D4E400E99AFD /* Tqdm */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2A2912A82BDEC1FB008A505C /* XCRemoteSwiftPackageReference "Matft" */;
-			productName = Matft;
+			package = 2AB0D84A2C73D4E400E99AFD /* XCRemoteSwiftPackageReference "swift-tqdm" */;
+			productName = Tqdm;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,7 +1,7 @@
 import Foundation
 import Accelerate
-
-//needed 
+import MLX
+//needed
 class DecoderLayer {
     var selfAttentionNorm: LayerNormalization
     var encAttnLayerNorm: LayerNormalization
@@ -11,7 +11,8 @@ class DecoderLayer {
     var positionWiseFeedForward: PositionwiseFeedforward
     var dropout: Dropout
 
-    init(dModel: Int, headsNum: Int, dFF: Int, dropoutRate: Float, dataType: [Float]) {
+    init(dModel: Int, headsNum: Int, dFF: Int, dropoutRate: Float, dataType: DType) {
+                
         self.selfAttentionNorm = LayerNormalization(normalizedShape: [dModel], epsilon: 1e-6, dataType: dataType)
         self.encAttnLayerNorm = LayerNormalization(normalizedShape: [dModel], epsilon: 1e-6, dataType: dataType)
         self.ffLayerNorm = LayerNormalization(normalizedShape: [dModel], epsilon: 1e-6, dataType: dataType)
@@ -21,40 +22,37 @@ class DecoderLayer {
         self.dropout = Dropout(rate: dropoutRate, dataType: dataType)
     }
 
-    func forward(trg: [[[Float]]], trgMask: [[[Float]]], src: [[[Float]]], srcMask: [[[Float]]], training: Bool) -> ([[[Float]]], [[[Float]]]) {
-        var trg = trg
+    func forward(trg: MLXArray, trgMask: MLXArray, src: MLXArray, srcMask: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
+        var _trg : MLXArray
+        (_trg, _) = self.selfAttention.forward(query: trg, key: trg, value: trg, mask: trgMask, training: training)
+        var trgvar = trg
+        trgvar = self.selfAttentionNorm.forward(X: trgvar + self.dropout.forward(X: _trg, training: training))
         
-        let (selfAttnOutput, _) = self.selfAttention.forward(query: trg, key: trg, value: trg, mask: trgMask, training: training)
-        let droppedSelfAttnOutput = dropout.forward(selfAttnOutput, training: training)
-        trg = selfAttentionNorm.forward(trg + droppedSelfAttnOutput)
-
-        let (encoderAttnOutput, attention) = self.encoderAttention.forward(query: trg, key: src, value: src, mask: srcMask, training: training)
-        let droppedEncoderAttnOutput = dropout.forward(encoderAttnOutput, training: training)
-        trg = encAttnLayerNorm.forward(trg + droppedEncoderAttnOutput)
-
-        let feedForwardOutput = positionWiseFeedForward.forward(trg, training: training)
-        let droppedFeedForwardOutput = dropout.forward(feedForwardOutput, training: training)
-        trg = ffLayerNorm.forward(trg + droppedFeedForwardOutput)
-
+        
+        var attention : MLXArray
+        (_trg, attention) = self.encoderAttention.forward(query: trgvar, key: src, value: src, mask: srcMask, training: training)
+        trgvar = self.encAttnLayerNorm.forward(X: trg + self.dropout.forward(X: _trg, training: training))
+        
         return (trg, attention)
     }
 
-    func backward(_ error: [[[Float]]]) -> ([[[Float]]], [[[Float]]]) {
-        var error = self.ffLayerNorm.backward(error)
+    func backward(error: MLXArray) -> (MLXArray,MLXArray) {
+        var errorvar = self.ffLayerNorm.backward(error: error)
 
-        var _error = self.positionWiseFeedForward.backward(self.dropout.backward(error))
-        error = self.encAttnLayerNorm.backward(error + _error)
-
-        var encError1: [[[Float]]]
-        var encError2: [[[Float]]]
-        (_error, encError1, encError2) = self.encoderAttention.backward(error: self.dropout.backward(error))
-        error = self.selfAttentionNorm.backward(error + _error)
-
-        var _error2: [[[Float]]]
-        var _error3: [[[Float]]]
-        (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(error))
+        var _error = self.positionWiseFeedForward.backward(error: self.dropout.backward(errorvar))
         
-        return (addArrays(_error, _error2, _error3, error), addArrays(encError1, encError2))
+        errorvar = self.encAttnLayerNorm.backward(error: errorvar + _error)
+
+        var encError1: MLXArray
+        var encError2: MLXArray
+        (_error, encError1, encError2) = self.encoderAttention.backward(error: self.dropout.backward(errorvar))
+        errorvar = self.selfAttentionNorm.backward(error: errorvar + _error)
+
+        var _error2: MLXArray
+        var _error3: MLXArray
+        (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(errorvar))
+        
+        return (_error + _error2 + _error3 + error, encError1 + encError2)
     }
 
     func setOptimizer(_ optimizer: Optimizer) {
@@ -76,23 +74,4 @@ class DecoderLayer {
         layerNum = positionWiseFeedForward.updateWeights(startingLayerNum: layerNum)
         return layerNum
     }
-}
-
-// Helper function to add multiple 3D arrays element-wise
-func addArrays(_ arrays: [[[Float]]]...) -> [[[Float]]] {
-    guard let firstArray = arrays.first else { return [] }
-    let resultShape = (firstArray.count, firstArray[0].count, firstArray[0][0].count)
-    
-    var result = [[[Float]]](repeating: [[Float]](repeating: [Float](repeating: 0.0, count: resultShape.2), count: resultShape.1), count: resultShape.0)
-    
-    for array in arrays {
-        for i in 0..<resultShape.0 {
-            for j in 0..<resultShape.1 {
-                for k in 0..<resultShape.2 {
-                    result[i][j][k] += array[i][j][k]
-                }
-            }
-        }
-    }
-    return result
 }

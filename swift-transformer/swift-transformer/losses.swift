@@ -1,125 +1,67 @@
 import Foundation
 import Accelerate
+import MLX
 
 protocol LossFunction {
-    func loss(y: [[Float]], t: [Float]) -> [Float]
-    func derivative(y: [[Float]], t: [Float]) -> [[Float]]
+    func loss(y: MLXArray, t: MLXArray) -> MLXArray
+    func derivative(y: MLXArray, t: MLXArray) -> MLXArray
 }
 
-class MSE: LossFunction {
-    func loss(y: [[Float]], t: [Float]) -> [Float] {
-        return zip(y, t).map { (yRow, tVal) in
-            zip(yRow, Array(repeating: tVal, count: yRow.count)).map { (yVal, tVal) in
-                pow(tVal - yVal, 2)
-            }.reduce(0, +) / Float(yRow.count)
-        }
-    }
-    
-    func derivative(y: [[Float]], t: [Float]) -> [[Float]] {
-        return zip(y, t).map { (yRow, tVal) in
-            zip(yRow, Array(repeating: tVal, count: yRow.count)).map { (yVal, tVal) in
-                -2 * (tVal - yVal) / Float(yRow.count)
-            }
-        }
-    }
-}
-
-class BinaryCrossEntropy: LossFunction {
-    func loss(y: [[Float]], t: [Float]) -> [Float] {
-        let epsilon: Float = 1e-8
-        return zip(y, t).map { (yRow, tVal) in
-            zip(yRow, Array(repeating: tVal, count: yRow.count)).map { (yVal, tVal) in
-                let yPlusEps = yVal + epsilon
-                return -(tVal * log(yPlusEps) + (1 - tVal) * log(1 - yPlusEps))
-            }.reduce(0, +) / Float(yRow.count)
-        }
-    }
-    
-    func derivative(y: [[Float]], t: [Float]) -> [[Float]] {
-        let epsilon: Float = 1e-8
-        return zip(y, t).map { (yRow, tVal) in
-            zip(yRow, Array(repeating: tVal, count: yRow.count)).map { (yVal, tVal) in
-                let yPlusEps = yVal + epsilon
-                return -tVal / yPlusEps + (1 - tVal) / (1 - yPlusEps)
-            }
-        }
-    }
-}
-
-class CategoricalCrossEntropy: LossFunction {
-    var ignoreIndex: Int?
-    
-    init(ignoreIndex: Int? = nil) {
-        self.ignoreIndex = ignoreIndex
-    }
-    
-    func loss(y: [[Float]], t: [Float]) -> [Float] {
-        return zip(y, t).map { (yRow, tVal) in
-            zip(yRow, Array(repeating: tVal, count: yRow.count)).map { (yVal, tVal) in
-                if let ignore = ignoreIndex, Int(tVal) == ignore {
-                    return 0.0
-                } else {
-                    return -tVal * log(yVal)
-                }
-            }.reduce(0, +) / Float(yRow.count)
-        }
-    }
-    
-    func derivative(y: [[Float]], t: [Float]) -> [[Float]] {
-        return zip(y, t).map { (yRow, tVal) in
-            zip(yRow, Array(repeating: tVal, count: yRow.count)).map { (yVal, tVal) in
-                if let ignore = ignoreIndex, Int(tVal) == ignore {
-                    return 0.0
-                } else {
-                    return -tVal / yVal
-                }
-            }
-        }
-    }
-}
 
 class CrossEntropy: LossFunction { //needed CrossEntropyLoss
-    var ignoreIndex: Int?
-    let logSoftmax = LogSoftmax()
+    var ignore_index: Int
+    let log_softmax = LogSoftmax()
     
-    init(ignoreIndex: Int? = nil) {
-        self.ignoreIndex = ignoreIndex
+    init(ignore_index: Int = 0) {
+        self.ignore_index = ignore_index
     }
     
-    func loss(y: [[Float]], t: [Float]) -> [Float] {
-        let logSoft = logSoftmax.forward(x: [y])[0]
-        return zip(logSoft, t).map { (logSoftRow, tVal) in
-            zip(logSoftRow, Array(repeating: tVal, count: logSoftRow.count)).map { (logSoftVal, tVal) in
-                if Int(tVal) == ignoreIndex {
-                    return 0.0
-                } else {
-                    return -logSoftVal
-                }
-            }.reduce(0, +) / Float(logSoftRow.count)
-        }
-    }
-    
-    func derivative(y: [[Float]], t: [Float]) -> [[Float]] {
-        let batchSize = y.count
-        let err: Float = 1 / Float(batchSize)
-        let nllLossDer = Array(repeating: Array(repeating: -err, count: y[0].count), count: y.count)
+    func loss(y: MLXArray, t: MLXArray) -> MLXArray {
         
-        let outputErr = logSoftmax.backward(grad: [nllLossDer])[0]
-        return zip(outputErr, t).map { (outputErrRow, tVal) in
-            zip(outputErrRow, Array(repeating: tVal, count: outputErrRow.count)).map { (outputErrVal, tVal) in
-                if Int(tVal) == ignoreIndex {
-                    return 0.0
-                } else {
-                    return outputErrVal
-                }
+        var log_softmax = self.log_softmax.forward(x: y)
+        var nll_loss = MLX.zeros([t.count])
+        for i in 0..<t.count{
+            nll_loss[i] = -log_softmax[i, t[i]]
+        }
+        var loss_output = MLX.where(t .== self.ignore_index, 0, nll_loss)
+        return loss_output
+    }
+    
+    func derivative(y: MLXArray, t: MLXArray) -> MLXArray {
+        var batch_size = y.shape[0]
+        var err = 1 / batch_size
+                
+        var nll_loss_der = MLX.zeros(like: y)
+        
+        /*
+         has 2 errors:
+         - Cannot convert value of type 'MLXArray' to expected condition type 'Bool'
+         - Cannot assign value of type 'Int' to subscript of type 'MLXArray'
+        for i in 0..<t.count{
+            if (ti .!= self.ignore_index){
+                nll_loss_der[i, t[i]] = -err
             }
         }
+         */
+        
+        // Custom logic to replace np.isin and np.where
+            for i in 0..<batch_size {
+                if t[i].item(Int.self) != ignore_index {
+                    let targetIndex = t[i].item(Int.self)
+                    if y[i, targetIndex].item(Float.self) == y[i, targetIndex].item(Float.self) {
+                        // Equivalent of np.isin logic
+                        // Not sure if correct:
+                        nll_loss_der[i, targetIndex] = MLXArray(-err)
+                    }
+                }
+            }
+        
+        var output_err = self.log_softmax.backward(grad: nll_loss_der)
+        
+        return MLX.where(t.reshaped(-1, 1) .== self.ignore_index, 0, output_err)
     }
 }
 
 let lossFunctions: [String: LossFunction] = [
-    "mse": MSE(),
-    "binary_crossentropy": BinaryCrossEntropy(),
-    "categorical_crossentropy": CategoricalCrossEntropy(),
     "cross_entropy": CrossEntropy()
 ]

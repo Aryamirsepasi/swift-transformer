@@ -1,4 +1,5 @@
 import Accelerate
+import MLX
 
 class Encoder {
     var tokenEmbedding: Embedding
@@ -7,43 +8,59 @@ class Encoder {
     var dropout: Dropout
     var scale: Float
 
-    init(srcVocabSize: Int, headsNum: Int, layersNum: Int, dModel: Int, dFF: Int, dropoutRate: Float, maxLen: Int = 5000, dataType: [Float]) {
+    init(srcVocabSize: Int, headsNum: Int, layersNum: Int, dModel: Int, dFF: Int, dropoutRate: Float, maxLen: Int = 5000, dataType: DType = DType.float32) {
+        
+        print ("entered encoder init")
+
         self.tokenEmbedding = Embedding(inputDim: srcVocabSize, outputDim: dModel, dataType: dataType)
+        
+        print ("step1")
         self.positionEmbedding = PositionalEncoding(maxLen: maxLen, dModel: dModel, dropoutRate: dropoutRate, dataType: dataType)
+        
+        print ("step2")
         self.layers = []
         for _ in 0..<layersNum {
             self.layers.append(EncoderLayer(dModel: dModel, headsNum: headsNum, dFF: dFF, dropoutRate: dropoutRate, dataType: dataType))
         }
+        print ("step3")
         self.dropout = Dropout(rate: dropoutRate, dataType: dataType)
+        print ("step4")
         self.scale = sqrt(Float(dModel))
+        
+        print ("exited encoder init")
+
     }
 
-    func forward(src: [[Float]], srcMask: [[[Float]]], training: Bool) -> [[[Float]]] {
-        var src = tokenEmbedding.forward(input: src)
-        src = src.map { $0.map { $0.map { $0 * self.scale } } }
-        src = positionEmbedding.forward(x: src)
-        src = dropout.forward(src, training: training)
-
+    func forward(src: MLXArray, srcMask: MLXArray, training: Bool) -> MLXArray {
+        
+        var srcvar = self.tokenEmbedding.forward(X: src) * self.scale
+        srcvar = self.positionEmbedding.forward(x: srcvar)
+        srcvar = self.dropout.forward(X: srcvar, training: training)
+        
         for layer in layers {
-            src = layer.forward(src, srcMask: srcMask, training: training)
+            srcvar = layer.forward(src: src, srcMask: srcMask, training: training)
         }
 
         return src
     }
 
-    func backward(error: [[[Float]]]) -> [[[Float]]] {
-        var error = error
+    func backward(error: MLXArray) -> MLXArray {
+        
+        var errorvar = error
+        
         for layer in layers.reversed() {
-            error = layer.backward(error)
+            errorvar = layer.backward(error: error)
         }
         
-        error = dropout.backward(error)
-        error = positionEmbedding.backward(error: error).map { $0.map { $0.map { $0 * self.scale } } }
-        return tokenEmbedding.backward(error: error) ?? []
+        errorvar = dropout.backward(errorvar)
+        errorvar = positionEmbedding.backward(error: errorvar) * self.scale
+        return tokenEmbedding.backward(error: errorvar)
     }
 
     func setOptimizer(_ optimizer: Optimizer) {
+        
         tokenEmbedding.setOptimizer(optimizer: optimizer)
+        
         for layer in layers {
             layer.setOptimizer(optimizer)
         }
@@ -52,8 +69,9 @@ class Encoder {
     func updateWeights() {
         var layerNum = 1
         layerNum = tokenEmbedding.updateWeights(layerNum: layerNum)
+        
         for layer in layers {
-            layerNum = layer.updateWeights(layerNum)
+            layerNum = layer.updateWeights(layerNum: layerNum)
         }
     }
 }
