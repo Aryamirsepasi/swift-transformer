@@ -33,6 +33,8 @@ class Encoder {
 
     func forward(src: MLXArray, srcMask: MLXArray, training: Bool) -> MLXArray {
         
+        print ("entered encoder forward")
+
         var srcvar = self.tokenEmbedding.forward(X: src) * self.scale
         srcvar = self.positionEmbedding.forward(x: srcvar)
         srcvar = self.dropout.forward(X: srcvar, training: training)
@@ -40,12 +42,17 @@ class Encoder {
         for layer in layers {
             srcvar = layer.forward(src: src, srcMask: srcMask, training: training)
         }
+        
+        print ("exited encoder forward")
+
 
         return src
     }
 
     func backward(error: MLXArray) -> MLXArray {
         
+        print ("entered encoder backward")
+
         var errorvar = error
         
         for layer in layers.reversed() {
@@ -54,6 +61,9 @@ class Encoder {
         
         errorvar = dropout.backward(errorvar)
         errorvar = positionEmbedding.backward(error: errorvar) * self.scale
+        
+        print ("exited encoder backward")
+
         return tokenEmbedding.backward(error: errorvar)
     }
 

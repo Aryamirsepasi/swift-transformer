@@ -23,6 +23,8 @@ class DecoderLayer {
     }
 
     func forward(trg: MLXArray, trgMask: MLXArray, src: MLXArray, srcMask: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
+        print ("entered decoder_layer forward")
+
         var _trg : MLXArray
         (_trg, _) = self.selfAttention.forward(query: trg, key: trg, value: trg, mask: trgMask, training: training)
         var trgvar = trg
@@ -33,6 +35,8 @@ class DecoderLayer {
         (_trg, attention) = self.encoderAttention.forward(query: trgvar, key: src, value: src, mask: srcMask, training: training)
         trgvar = self.encAttnLayerNorm.forward(X: trg + self.dropout.forward(X: _trg, training: training))
         
+        print ("exited decoder_layer forward")
+
         return (trg, attention)
     }
 

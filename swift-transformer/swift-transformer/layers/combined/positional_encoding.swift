@@ -42,10 +42,15 @@ class PositionalEncoding {
     }
     
     func forward(x: MLXArray) -> MLXArray {
+        
+        print ("entered positional_encoding forward")
+
         var xvar = x
         
         xvar += self.pe[..<x.shape[0], 0...]
         
+        print ("exited positional_encoding forward")
+
         return xvar
     }
 

@@ -87,6 +87,8 @@ class MultiHeadAttention {
     
     func forward(query: MLXArray, key: MLXArray, value: MLXArray, mask: MLXArray, training: Bool = true) -> (MLXArray, MLXArray) {
         
+        print ("entered self_attention forward")
+
         self.keyLen = key.shape[1]
         self.queryLen = query.shape[1]
         self.valueLen = value.shape[1]
@@ -120,6 +122,8 @@ class MultiHeadAttention {
         
         var O = self.OLinear.forward(X: concat_output)
         
+        print ("exited self_attention forward")
+
         return (O, attention)
     }
     

@@ -24,6 +24,9 @@ class Dropout {
     }
     
     func forward(X: MLXArray, training: Bool = true) -> MLXArray {
+        
+        print ("entered dropout forward")
+
         var tempmask = 1.0
         
         if (training){
@@ -32,6 +35,8 @@ class Dropout {
             return X * self.mask
         }
         
+        print ("exited dropout forward")
+
         return X * tempmask
         
     }

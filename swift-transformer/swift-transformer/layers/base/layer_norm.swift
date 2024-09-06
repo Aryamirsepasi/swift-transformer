@@ -83,6 +83,9 @@ class LayerNormalization {
     }
 
     func forward(X: MLXArray) -> MLXArray {
+        
+        print ("entered layer_norm forward")
+
         self.inputData = X
         var x_T = self.inputData.T
         
@@ -111,6 +114,8 @@ class LayerNormalization {
         
         self.outputData = self.gamma * self.XHat + self.beta
         
+        print ("exited layer_norm forward")
+
         return self.outputData
     }
 

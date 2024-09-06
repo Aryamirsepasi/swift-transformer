@@ -93,33 +93,75 @@ class Seq2Seq {
     }
     
     func getPadMask(x: MLXArray) -> MLXArray {
+        print("entered getPadMask")
+
         return (x .!= self.padIdx).asType(Int.self)[0..., .newAxis, 0...]
     }
     
     func getSubMask(x: MLXArray) -> MLXArray {
+        
+        print("entered getSubMask")
+
         let seqLen = x.shape[1]
         var subsequentMask = MLX.triu(MLX.ones([seqLen, seqLen]), k: 1).asType(Int.self)
         
         subsequentMask = MLX.logicalNot(subsequentMask)
         
+        print("exited getSubMask")
+
         return subsequentMask
     }
     
-    func forward(src: MLXArray, trg: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
-        
+    /*func forward(src: MLXArray, trg: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
+        print("entered forward")
+
         let srcvar = src.asType(dataType)
         let trgvar = trg.asType(dataType)
         
+        print(srcvar[0])
+        
+        //currently wrong result:
         let srcMask = self.getPadMask(x: srcvar)
-        let trgMask = self.getPadMask(x: trgvar) & self.getSubMask(x: trgvar)
+        
+        let trgMask = getPadMask(x: trgvar) & getSubMask(x: trgvar)
         
         
         let encSrc = encoder.forward(src: srcvar, srcMask: srcMask, training: training)
         
         let (out, attention) = self.decoder.forward(trg: trgvar, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: training)
         
+        print("exited forward")
+
+        return (out, attention)
+    }*/
+    
+    func forward(src: MLXArray, trg: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
+        print("entered forward")
+
+        let srcvar = src.asType(dataType)
+        let trgvar = trg.asType(dataType)
+        
+        print(srcvar[0])
+        
+        // Correct shape for srcMask
+        let srcMask = self.getPadMask(x: srcvar)
+        
+        // Ensure trgMask is broadcastable: (batch_size, 1, seq_len) & (seq_len, seq_len)
+        let padMask = getPadMask(x: trgvar)
+        let subMask = getSubMask(x: trgvar)
+        
+        // Adjust trgMask shape: (batch_size, seq_len, seq_len)
+        let trgMask = broadcast(padMask, to: [trgvar.shape[0], trgvar.shape[1], trgvar.shape[1]]) & broadcast(subMask, to: [trgvar.shape[0], trgvar.shape[1], trgvar.shape[1]])
+        
+        let encSrc = encoder.forward(src: srcvar, srcMask: srcMask, training: training)
+        
+        let (out, attention) = self.decoder.forward(trg: trgvar, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: training)
+        
+        print("exited forward")
+
         return (out, attention)
     }
+
     
     func backward(error: MLXArray)-> MLXArray {
         var error = error
@@ -134,23 +176,23 @@ class Seq2Seq {
         decoder.updateWeights()
     }
     
-    func train(source: MLXArray, target: MLXArray, epoch: Int, epochs: Int) -> MLXArray {
-        print("Starting training for epoch \(epoch + 1) of \(epochs)")
+    func train(source: [MLXArray], target: [MLXArray], epoch: Int, epochs: Int) -> MLXArray {
         var lossHistory: MLXArray = []
         let totalBatches = source.count
         var epochLoss : MLXArray = []
 
-        var zipped = enumerateZippedMLXArrays(source: source, target: target)
-        
-        print("first zip: \(zipped[0])")
-        
+        var zipped = zip(source, target).enumerated()
+                
         let tqdmRange = TqdmSequence(sequence: zipped, description: "Training", unit: "batch", color: .cyan)
                 
-        for (batchNum, (sourceBatch, targetBatch)) in zipped {
+        for (batchNum, (sourceBatch, targetBatch)) in tqdmRange {
             print("Processing batch \(batchNum + 1)")
             
+            print(sourceBatch.shape)
+            print(targetBatch[0..., 0..<(targetBatch.shape[1] - 1)].shape)
             // Perform forward pass
-            let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch[0..<targetBatch.count - 1], training: true)
+            let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch[0..., 0..<(targetBatch.shape[1] - 1)], training: true)
+            //let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch, training: true)
             
             // Reshape the output
             let _output = output.reshaped([output.shape[0] * output.shape[1], output.shape[2]])
@@ -181,41 +223,52 @@ class Seq2Seq {
 
             }
         }
+        
+        print("exited train")
+
         return epochLoss
     }
 
-    func enumerateZippedMLXArrays(source: MLXArray, target: MLXArray) -> [(Int, (MLXArray, MLXArray))] {
-        
+    func enumerateZippedMLXArrays(source: [MLXArray], target: [MLXArray], batchSize: Int) -> [(Int, (MLXArray, MLXArray))] {
         print("entered enumerateZippedMLXArrays")
         var enumeratedPairs: [(Int, (MLXArray, MLXArray))] = []
-        
-        
-        for i in 0..<source.shape[0] {
-            // Extract each pair of elements (sequences) from source and target
-            let sourceElement = source[i]
-            let targetElement = target[i]
-            
-            // Append the index and the pair as a tuple to the result list
-            enumeratedPairs.append((i, (sourceElement, targetElement)))
+
+        // Total number of batches
+        let totalBatches = Int(ceil(Double(source.count) / Double(batchSize)))
+
+        for i in 0..<totalBatches {
+            let start = i * batchSize
+            let end = min(start + batchSize, source.count) // Ensure the end does not exceed the total count
+
+            // Create batches for source and target
+            let sourceBatchList = Array(source[start..<end])
+            let targetBatchList = Array(target[start..<end])
+
+            // Concatenate the list of MLXArrays into a single MLXArray for source and target respectively
+            let sourceBatch = MLX.concatenated(sourceBatchList, axis: 0)
+            let targetBatch = MLX.concatenated(targetBatchList, axis: 0)
+
+            enumeratedPairs.append((i, (sourceBatch, targetBatch)))
         }
-        
-        
+
+        print("exited enumerateZippedMLXArrays")
         return enumeratedPairs
     }
 
+
     
-    func evaluate(source: MLXArray, target: MLXArray) -> MLXArray {
+    func evaluate(source: [MLXArray], target: [MLXArray]) -> MLXArray {
         print("entered evaluate")
 
         var lossHistory: MLXArray = []
         
-        var zipped = enumerateZippedMLXArrays(source: source, target: target)
+        var zipped =  zip(source, target).enumerated()
         
         let tqdmRange = TqdmSequence(sequence: zipped, description: "Training", unit: "batch", color: .cyan)
         
         var epochLoss : MLXArray = []
         
-        for (batchNum, (sourceBatch, targetBatch)) in zipped {
+        for (batchNum, (sourceBatch, targetBatch)) in tqdmRange {
             
             let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch[0..<targetBatch.count - 1], training: false)
             
@@ -248,7 +301,7 @@ class Seq2Seq {
         
     }
     
-    func fit(trainData: (MLXArray, MLXArray), valData: (MLXArray, MLXArray), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> (MLXArray,MLXArray) {
+    func fit(trainData: ([MLXArray], [MLXArray]), valData: ([MLXArray], [MLXArray]), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> (MLXArray,MLXArray) {
         
         print("entered fit")
         

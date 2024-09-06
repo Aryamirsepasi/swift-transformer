@@ -19,12 +19,17 @@ class PositionwiseFeedforward {
     }
 
     func forward(X: MLXArray, training: Bool = true) -> MLXArray {
+        
+        print ("entered positionwise_feed_forward forward")
+
         var x = X
         x = self.fc1.forward(X: x)
         x = self.activation.forward(x: x)
         x = self.dropout.forward(X: x)
         x = self.fc2.forward(X: x)
         
+        print ("exited positionwise_feed_forward forward")
+
         return x
     }
 
