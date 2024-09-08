@@ -121,7 +121,7 @@ class DataPreparator {
         print("exited importMulti30kDataset")
         
         
-        print("First entry in trainResults: \(trainResults[0])")
+        //print("First entry in trainResults: \(trainResults[0])")
         
         return (trainResults, valResults, testResults)
     }

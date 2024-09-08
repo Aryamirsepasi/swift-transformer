@@ -22,6 +22,10 @@ class EncoderLayer {
         
         print ("entered encoder_layer forward")
 
+        //print(src.shape)
+        //print(src.shape)
+        //print(src.shape)
+
         var (_src, _) = self.selfAttention.forward(query: src, key: src, value: src, mask: srcMask, training: training)
         
         var srcvar = self.selfAttentionNorm.forward(X: src + self.dropout.forward(X: _src, training: training))
@@ -37,6 +41,8 @@ class EncoderLayer {
 
     func backward(error: MLXArray) -> MLXArray {
         
+        print("entered encoder_layer backward")
+
         var errorvar = self.ffLayerNorm.backward(error: error)
         
         var _error = self.positionWiseFeedForward.backward(error: self.dropout.backward(errorvar))
@@ -47,6 +53,8 @@ class EncoderLayer {
         
         (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(errorvar))
         
+        print("exited encoder_layer backward")
+
         return _error + _error2 + _error3 + error
         
     }

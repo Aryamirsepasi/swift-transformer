@@ -93,6 +93,10 @@ class MultiHeadAttention {
         self.queryLen = query.shape[1]
         self.valueLen = value.shape[1]
         
+        //print(key.shape)
+        //print(query.shape)
+        //print(value.shape)
+
         let K = KLinear.forward(X: key, training: training)
         let Q = QLinear.forward(X: query, training: training)
         let V = VLinear.forward(X: value, training: training)
@@ -103,14 +107,16 @@ class MultiHeadAttention {
         
         var energy = MLX.matmul(self.Q, self.K.transposed(0,1,3,2)) / self.scale
         
-        // if self.mask is not None:
+        // Assign the mask
         self.mask = mask
         
-        // Not sure if correct:
-        self.mask = self.mask[0..., .newAxis]
+        // Corrected: Apply the new axis and ellipsis correctly
+        self.mask = self.mask[0..., .newAxis, .ellipsis]
         
+        // Handle negative infinity
         let negativeInfinity = Double.leastNormalMagnitude * -1
         
+        // Apply the mask
         energy = MLX.which(self.mask .== 0, negativeInfinity, energy)
         
         var attention = self.activation.forward(x: energy)
@@ -126,9 +132,13 @@ class MultiHeadAttention {
 
         return (O, attention)
     }
+
     
     func backward(error: MLXArray) -> (MLXArray,MLXArray,MLXArray) {
-        var error = self.OLinear.backward(error)
+        
+        print("entered self_attention backward")
+
+        var error = self.OLinear.backward(error: error)
         
         error = self.groupHeadsBackward(x: error)
         
@@ -151,10 +161,12 @@ class MultiHeadAttention {
         QError = self.splitHeadsBackward(x: QError)
         KError = self.splitHeadsBackward(x: KError)
         
-        VError = self.VLinear.backward(VError)
-        QError = self.QLinear.backward(QError)
-        KError = self.KLinear.backward(KError)
+        VError = self.VLinear.backward(error: VError)
+        QError = self.QLinear.backward(error: QError)
+        KError = self.KLinear.backward(error: KError)
         
+        print("exited self_attention backward")
+
         return (QError, KError, VError)
     }
     

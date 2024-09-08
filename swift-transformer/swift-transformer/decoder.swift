@@ -54,13 +54,15 @@ class Decoder {
 
     func backward(error: MLXArray) -> MLXArray {
         
-        var errorvar = activation.backward(grad: error)
-        errorvar = fcOut.backward(errorvar)
+        print("entered decoder backward")
 
-        self.encoderError = zeros(error.shape)
+        var errorvar = activation.backward(grad: error)
+        errorvar = fcOut.backward(error: errorvar)
+
+        self.encoderError = zeros(errorvar.shape)
         
         for layer in self.layers.reversed() {
-            let (layerError, encError) = layer.backward(error: error)
+            let (layerError, encError) = layer.backward(error: errorvar)
             self.encoderError += encError
         }
 
@@ -69,6 +71,8 @@ class Decoder {
         errorvar = positionEmbedding.backward(error: errorvar) * self.scale
         errorvar = tokenEmbedding.backward(error: errorvar)
         
+        print("exited decoder backward")
+
         return errorvar
     }
 

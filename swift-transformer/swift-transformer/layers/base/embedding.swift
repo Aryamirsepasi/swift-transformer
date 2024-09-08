@@ -113,8 +113,12 @@ class Embedding {
     
     func backward(error: MLXArray) -> MLXArray {
         
+        print("entered embedding backward")
+
         self.gradW = MLX.matmul(MLX.transposed(self.inputData, axes: [0,2,1]), error).logSumExp(axis: 0)
         
+        print("exited embedding backward")
+
         return []
     }
 

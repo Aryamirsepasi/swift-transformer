@@ -34,11 +34,16 @@ class PositionwiseFeedforward {
     }
 
     func backward(error: MLXArray) -> MLXArray{
-        var err = fc2.backward(error)
+        
+        print("entered positionwise_feed_forward backward")
+        print("PWFF ERROR: ", error.shape)
+        var err = fc2.backward(error: error)
         err = dropout.backward(err)
         err = activation.backward(grad: err)
-        err = fc1.backward(err)
+        err = fc1.backward(error: err)
         
+        print("exited positionwise_feed_forward backward")
+
         return err
     }
 

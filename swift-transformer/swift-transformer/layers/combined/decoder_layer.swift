@@ -41,6 +41,9 @@ class DecoderLayer {
     }
 
     func backward(error: MLXArray) -> (MLXArray,MLXArray) {
+        
+        print("entered decoder_layer backward")
+
         var errorvar = self.ffLayerNorm.backward(error: error)
 
         var _error = self.positionWiseFeedForward.backward(error: self.dropout.backward(errorvar))
@@ -56,6 +59,8 @@ class DecoderLayer {
         var _error3: MLXArray
         (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(errorvar))
         
+        print("exited decoder_layer backward")
+
         return (_error + _error2 + _error3 + error, encError1 + encError2)
     }
 

@@ -3,30 +3,55 @@ import Accelerate
 import MLX
 import MLXRandom
 
+class DenseGlobalVars {
+    static let shared = DenseGlobalVars() // Singleton instance
+
+    // State variables
+    var outputShape: (Int, Int) = (0, 0)
+    var w: MLXArray = []
+    var b: MLXArray = []
+    var optimizer: Optimizer?
+    var v: MLXArray = []
+    var m: MLXArray = []
+    var vHat: MLXArray = []
+    var mHat: MLXArray = []
+    var vb: MLXArray = []
+    var mb: MLXArray = []
+    var vbHat: MLXArray = []
+    var mbHat: MLXArray = []
+    var XHatT: MLXArray = []
+    var gradW: MLXArray = []
+    var gradB: MLXArray = []
+    var inputData: MLXArray = []
+    var outputData: MLXArray = []
+    var batchSize: Int = 0
+
+    private init() {} // Private initializer to prevent creating multiple instances
+}
 class Dense {
     var unitsNum: Int
     var inputsNum: Int
     var useBias: Bool
-    var outputShape: (Int, Int)
-    var w: MLXArray
-    var b: MLXArray
-    var optimizer: Optimizer?
+    //var outputShape: (Int, Int)
+    //var w: MLXArray
+    //var b: MLXArray
+    //var optimizer: Optimizer?
     var dataType: DType
     
-    var inputData, outputData: MLXArray
-    var batchSize: Int
+    //var inputData, outputData: MLXArray
+    //var batchSize: Int
     
-    var v, m, vHat, mHat: MLXArray
-    var vb, mb, vbHat, mbHat: MLXArray
-    var gradW: MLXArray
-    var gradB: MLXArray
+    //var v, m, vHat, mHat: MLXArray
+    //var vb, mb, vbHat, mbHat: MLXArray
+    //var gradW: MLXArray
+    //var gradB: MLXArray
     
     init(unitsNum: Int, inputsNum: Int = 0, useBias: Bool = true, dataType: DType = DType.float32) {
         self.unitsNum = unitsNum
         self.inputsNum = inputsNum
         self.useBias = useBias
         self.dataType = dataType
-        self.w = []
+        /*self.w = []
         self.b = []
         self.v = []
         self.m = []
@@ -42,7 +67,7 @@ class Dense {
         self.inputData = []
         self.outputData = []
         self.batchSize = 0
-        self.outputShape = (0, 0)
+        self.outputShape = (0, 0)*/
         
         // Ensure inputsNum is set correctly before calling build()
         if self.inputsNum > 0 {
@@ -51,7 +76,7 @@ class Dense {
     }
     
     func setOptimizer(optimizer: Optimizer) {
-        self.optimizer = optimizer
+        DenseGlobalVars.shared.optimizer = optimizer
     }
     
     func build() {
@@ -61,86 +86,84 @@ class Dense {
         }
         
         let stdv = 1 / sqrt(Float(inputsNum))
-        self.w = MLXRandom.uniform(low: -stdv, high: stdv, [self.inputsNum, self.unitsNum], dtype: self.dataType)
-        self.b = MLX.zeros([unitsNum]).asType(dataType)
+        DenseGlobalVars.shared.w = MLXRandom.uniform(low: -stdv, high: stdv, [self.inputsNum, self.unitsNum], dtype: self.dataType)
+        DenseGlobalVars.shared.b = MLX.zeros([unitsNum]).asType(dataType)
         
-        self.v = MLX.zeros(like: w).asType(dataType)
-        self.m = MLX.zeros(like: w).asType(dataType)
-        self.vHat = MLX.zeros(like: w).asType(dataType)
-        self.mHat = MLX.zeros(like: w).asType(dataType)
+        DenseGlobalVars.shared.v = MLX.zeros(like: DenseGlobalVars.shared.w).asType(dataType)
+        DenseGlobalVars.shared.m = MLX.zeros(like: DenseGlobalVars.shared.w).asType(dataType)
+        DenseGlobalVars.shared.vHat = MLX.zeros(like: DenseGlobalVars.shared.w).asType(dataType)
+        DenseGlobalVars.shared.mHat = MLX.zeros(like: DenseGlobalVars.shared.w).asType(dataType)
         
-        self.vb = MLX.zeros(like: b).asType(dataType)
-        self.mb = MLX.zeros(like: b).asType(dataType)
-        self.vbHat = MLX.zeros(like: b).asType(dataType)
-        self.mbHat = MLX.zeros(like: b).asType(dataType)
+        DenseGlobalVars.shared.vb = MLX.zeros(like: DenseGlobalVars.shared.b).asType(dataType)
+        DenseGlobalVars.shared.mb = MLX.zeros(like: DenseGlobalVars.shared.b).asType(dataType)
+        DenseGlobalVars.shared.vbHat = MLX.zeros(like: DenseGlobalVars.shared.b).asType(dataType)
+        DenseGlobalVars.shared.mbHat = MLX.zeros(like: DenseGlobalVars.shared.b).asType(dataType)
         
-        self.outputShape = (1, self.unitsNum)
+        DenseGlobalVars.shared.outputShape = (1, self.unitsNum)
     }
     
     func forward(X: MLXArray, training: Bool = true) -> MLXArray {
         print("entered dense forward")
 
-        self.inputData = X
+        DenseGlobalVars.shared.inputData = X
         
-        self.batchSize = self.inputData.count
+        //print(self.w)
+        //print(self.b)
+        //print("inputData shape: ", self.inputData.shape)
+        //print("w shape: ", self.w.shape)
+        //print("b shape: ", self.b.shape)
         
+        DenseGlobalVars.shared.batchSize = DenseGlobalVars.shared.inputData.count
+        
+        //print(self.batchSize)
         // Ensure outputData has the correct size before using it
-        self.outputData = MLX.zeros([batchSize, self.unitsNum])
+        DenseGlobalVars.shared.outputData = MLX.tensordot(DenseGlobalVars.shared.inputData, DenseGlobalVars.shared.w) + DenseGlobalVars.shared.b
         
-        // Compute the output with weights and biases
-        for i in 0..<self.batchSize {
-            for j in 0..<self.unitsNum {
-                for k in 0..<self.inputsNum {
-                    self.outputData[i, j] += self.inputData[i, k] * self.w[k, j]
-                }
-            }
-        }
-        
-        // Add bias if useBias is true
-        if useBias {
-            self.outputData += self.b
-        }
+        //print(self.outputData)
 
         print("exited dense forward")
 
-        return self.outputData
+        return DenseGlobalVars.shared.outputData
     }
     
-    func backward(_ error: MLXArray) -> MLXArray {
-        self.gradW = MLX.sum(MLX.matmul(self.inputData.transposed(0, 2, 1), error), axes: [0])
-        self.gradB = MLX.sum(error, axes: [0, 1])
-        
-        var outputError = MLX.zeros([error.shape[0], error.shape[1], self.w.shape[0]])
+    func backward(error: MLXArray) -> MLXArray {
+        print("entered dense backward")
+        print("DENSE ERROR: ", error.shape)
 
-        for i in 0..<error.shape[0] {
-            for j in 0..<error.shape[1] {
-                for k in 0..<self.w.shape[0] {
-                    for l in 0..<self.w.shape[1] {
-                        outputError[i, j, k] += error[i, j, l] * self.w[k, l]
-                    }
-                }
-            }
-        }
+        // Compute gradients for weights and biases
+        DenseGlobalVars.shared.gradW = MLX.sum(MLX.matmul(DenseGlobalVars.shared.inputData.transposed(0, 2, 1), error), axes: [0])
+        DenseGlobalVars.shared.gradB = MLX.sum(error, axes: [0, 1])
         
+        // Perform matrix multiplication equivalent to np.dot(error, self.w.T)
+        // Transpose w to match the required shape for multiplication
+        let wT = DenseGlobalVars.shared.w.transposed(1, 0) // wT shape: [7802, 256]
+        
+        // Perform matrix multiplication
+        let outputError = MLX.matmul(error, wT)
+
+        print("exited dense backward")
+        print("DENSE BACKWARD OUTPUT: ", outputError.shape)
+
         return outputError
     }
+
     
     func updateWeights(layerNum: Int) -> Int {
-        if let optimizer = self.optimizer {
+        if let optimizer = DenseGlobalVars.shared.optimizer {
             var templayerNum = layerNum
-            (w, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradW, weights: &w, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: layerNum)
+            (DenseGlobalVars.shared.w, DenseGlobalVars.shared.v, DenseGlobalVars.shared.m, DenseGlobalVars.shared.vHat, DenseGlobalVars.shared.mHat, templayerNum) = optimizer.update(gradient: DenseGlobalVars.shared.gradW, weights: &DenseGlobalVars.shared.w, v: &DenseGlobalVars.shared.v, m: &DenseGlobalVars.shared.m, vHat: &DenseGlobalVars.shared.vHat, mHat: &DenseGlobalVars.shared.mHat, t: layerNum)
             if useBias {
-                (b, vb, mb, vbHat, mbHat, templayerNum) = optimizer.update(gradient: gradB, weights: &b, v: &vb, m: &mb, vHat: &vbHat, mHat: &mbHat, t: layerNum)
+                (DenseGlobalVars.shared.b, DenseGlobalVars.shared.vb, DenseGlobalVars.shared.mb, DenseGlobalVars.shared.vbHat, DenseGlobalVars.shared.mbHat, templayerNum) = optimizer.update(gradient: DenseGlobalVars.shared.gradB, weights: &DenseGlobalVars.shared.b, v: &DenseGlobalVars.shared.vb, m: &DenseGlobalVars.shared.mb, vHat: &DenseGlobalVars.shared.vbHat, mHat: &DenseGlobalVars.shared.mbHat, t: layerNum)
             }
         }
         return layerNum + 1
     }
     
     func getGrads() -> (MLXArray, MLXArray) {
-        return (gradW, gradB)
+        return (DenseGlobalVars.shared.gradW, DenseGlobalVars.shared.gradB)
     }
     
     func setGrads(grads: (MLXArray, MLXArray)) {
-        (gradW, gradB) = grads
+        (DenseGlobalVars.shared.gradW, DenseGlobalVars.shared.gradB) = grads
     }
 }
