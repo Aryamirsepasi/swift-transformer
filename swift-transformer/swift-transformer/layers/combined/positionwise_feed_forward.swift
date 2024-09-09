@@ -19,21 +19,31 @@ class PositionwiseFeedforward {
     }
 
     func forward(X: MLXArray, training: Bool = true) -> MLXArray {
+        
+        print ("entered positionwise_feed_forward forward")
+
         var x = X
         x = self.fc1.forward(X: x)
         x = self.activation.forward(x: x)
         x = self.dropout.forward(X: x)
         x = self.fc2.forward(X: x)
         
+        print ("exited positionwise_feed_forward forward")
+
         return x
     }
 
     func backward(error: MLXArray) -> MLXArray{
-        var err = fc2.backward(error)
+        
+        print("entered positionwise_feed_forward backward")
+        print("PWFF ERROR: ", error.shape)
+        var err = fc2.backward(error: error)
         err = dropout.backward(err)
         err = activation.backward(grad: err)
-        err = fc1.backward(err)
+        err = fc1.backward(error: err)
         
+        print("exited positionwise_feed_forward backward")
+
         return err
     }
 
@@ -43,10 +53,15 @@ class PositionwiseFeedforward {
     }
 
     func updateWeights(startingLayerNum: Int) -> Int {
+        
+        print("entered positionwise... updateWeights")
+
         var layerNum = startingLayerNum
         layerNum = fc1.updateWeights(layerNum: layerNum)
         layerNum = fc2.updateWeights(layerNum: layerNum)
         
+        print("exited positionwise... updateWeights")
+
         return layerNum
     }
 }

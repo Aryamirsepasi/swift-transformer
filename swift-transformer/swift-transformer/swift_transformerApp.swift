@@ -71,7 +71,7 @@ class TransformerViewModel: ObservableObject {
         model.compile(optimizer: Noam(optimizer: Adam(alpha: 1e-4, beta: 0.9, beta2: 0.98, epsilon: 1e-9), modelDim: Float(hidDim), scaleFactor: 2, warmupSteps: 4000), lossFunction: CrossEntropy(ignore_index: padIndex))
         
         print ("run fit")
-        var trainLossHistory: MLXArray, valLossHistory: MLXArray
+        var trainLossHistory: [MLXArray], valLossHistory: [MLXArray]
         (trainLossHistory, valLossHistory) = model.fit(
             trainData: trainData,
             valData: valData,

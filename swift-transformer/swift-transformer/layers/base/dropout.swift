@@ -24,20 +24,32 @@ class Dropout {
     }
     
     func forward(X: MLXArray, training: Bool = true) -> MLXArray {
+        
+        print ("entered dropout forward")
+
+        //print(X.shape)
+        
         var tempmask = 1.0
         
         if (training){
             self.mask = MLXRandom.bernoulli(1 - self.rate, X.shape).asType(self.dataType)
             
+            //print((X * self.mask).shape)
+            print ("exited dropout forward")
+
             return X * self.mask
         }
         
+        print ("exited dropout forward")
+
         return X * tempmask
         
     }
     
     func backward(_ error: MLXArray) -> MLXArray {
         
+        print("entered dropout backward")
+
         return error * self.mask
     }
 

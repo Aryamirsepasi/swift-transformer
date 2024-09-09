@@ -2,6 +2,37 @@ import Foundation
 import Accelerate
 import MLX
 
+/*class LayerNormGlobalVars {
+    static let shared = LayerNormGlobalVars() // Singleton instance
+
+    // State variables
+    var featureSize: Int = 0
+    var stddevInv: MLXArray = []
+    var XCentered: MLXArray = []
+    var XHat: MLXArray = []
+    var gamma: MLXArray = []
+    var beta: MLXArray = []
+    var gradGamma: MLXArray = []
+    var gradBeta: MLXArray = []
+    var normalizedAxis: [Int] = []
+    var mean: MLXArray = []
+    var variance: MLXArray = []
+    var optimizer: Optimizer?
+    var inputData: MLXArray = []
+    var outputData: MLXArray = []
+    var vg: MLXArray = []
+    var mg: MLXArray = []
+    var vgHat: MLXArray = []
+    var mgHat: MLXArray = []
+    var vb: MLXArray = []
+    var mb: MLXArray = []
+    var vbHat: MLXArray = []
+    var mbHat: MLXArray = []
+    var XHatT: MLXArray = []
+
+    private init() {} // Private initializer to prevent creating multiple instances
+}*/
+
 //needed
 class LayerNormalization {
     var normalizedShape: [Int]
@@ -51,7 +82,7 @@ class LayerNormalization {
         self.mean = []
         self.featureSize = 0
         self.XHatT = []
-        
+                
         build()
     }
 
@@ -83,8 +114,11 @@ class LayerNormalization {
     }
 
     func forward(X: MLXArray) -> MLXArray {
+        
+        print ("entered layer_norm forward")
+
         self.inputData = X
-        var x_T = self.inputData.T
+        var x_T =  self.inputData.T
         
         if (self.normalizedShape == []){
             var temp : [Int] = []
@@ -96,46 +130,84 @@ class LayerNormalization {
             self.build()
         }
         
-        self.normalizedAxis = Array(0..<(self.inputData.ndim - self.gamma.ndim))
+        self.normalizedAxis = Array(0..<( self.inputData.ndim - self.gamma.ndim))
         
         self.featureSize = self.gamma.size
-        
+        //print("gamma size: ", self.gamma.size)
+        //print("featureSize after gamma size: ", self.featureSize)
+
         self.mean = MLX.mean(x_T, axes: [0])
         self.variance = MLX.variance(x_T, axes: [0])
         
-        self.XCentered = (x_T - self.mean)
-        self.stddevInv = 1 / MLX.sqrt(self.variance + self.epsilon)
+        self.XCentered = (x_T -  self.mean)
+        self.stddevInv = 1 / MLX.sqrt( self.variance +  self.epsilon)
         
         self.XHatT = self.XCentered * self.stddevInv
-        self.XHat = self.XHatT.T
+        self.XHat =  self.XHatT.T
         
         self.outputData = self.gamma * self.XHat + self.beta
         
-        return self.outputData
+        print ("exited layer_norm forward")
+
+        return  self.outputData
     }
 
     func backward(error: MLXArray) -> MLXArray {
+        
+        print("entered layer_norm backward")
+
         var errorT = error.T
         
-        var temp1 = (1 / self.featureSize) * MLX.expandedDimensions(self.gamma, axes: self.normalizedAxis).T
-        var temp2 = temp1 * self.stddevInv * (self.featureSize * errorT - MLX.sum(errorT, axis: 0) - self.XCentered * MLX.pow(self.stddevInv, 2) * MLX.sum(errorT * self.XCentered, axis: 0))
+        //print("featureSize: ", self.featureSize)
         
-        var outputError = temp2
+        var temp1 = (1 / self.featureSize) * MLX.expandedDimensions(self.gamma, axes: self.normalizedAxis).T
+        
+        //print("first part passed")
+        var temp2 = temp1 * self.stddevInv
+        
+        //print("second part passed")
+        var temp3 = self.featureSize * errorT - MLX.sum(errorT, axis: 0)
+        //print("third part passed")
+        
+        //print("errorT: ", errorT.shape)
+        //print("temp3: ", temp3.shape)
+        //print("XCentered: ", self.XCentered.shape)
+        //print("stddevInv power: ", MLX.pow(self.stddevInv, 2).shape)
+
+        var temp4 = temp3 - (self.XCentered * MLX.pow(self.stddevInv, 2))
+        //print("fourth part passed")
+
+        var temp5 = temp4 * MLX.sum(errorT * self.XCentered, axis: 0)
+        
+        //print("fifth part passed")
+        
+        var temp6 = temp2 * temp5
+
+
+        var outputError = temp6
         
         outputError = outputError.T
         
         self.gradGamma = MLX.sum(error * self.XHat, axes: self.normalizedAxis)
         self.gradBeta = MLX.sum(error, axes: self.normalizedAxis)
 
+        print("exited layer_norm backward")
+
         return outputError
     }
 
     func updateWeights(layerNum: Int) -> Int {
-        if let optimizer = self.optimizer {
+        
+        print("entered layer_norm updateWeights")
+
+        if let optimizer =  self.optimizer {
             var layerNum = layerNum
-            (gamma, vg, mg, vgHat, mgHat, layerNum) = optimizer.update(gradient: gradGamma, weights: &gamma, v: &vg, m: &mg, vHat: &vgHat, mHat: &mgHat, t: layerNum)
-            (beta, vb, mb, vbHat, mbHat, layerNum) = optimizer.update(gradient: gradBeta, weights: &beta, v: &vb, m: &mb, vHat: &vbHat, mHat: &mbHat, t: layerNum)
+            (self.gamma,  self.vg,  self.mg,  self.vgHat,  self.mgHat, layerNum) = optimizer.update(gradient: self.gradGamma, weights: &self.gamma, v: &self.vg, m: &self.mg, vHat: &self.vgHat, mHat: &self.mgHat, t: layerNum)
+            (self.beta,  self.vb,  self.mb,  self.vbHat,  self.mbHat, layerNum) = optimizer.update(gradient: self.gradBeta, weights: &self.beta, v: &self.vb, m: &self.mb, vHat: &self.vbHat, mHat: &self.mbHat, t: layerNum)
         }
+        
+        print("exited layer_norm updateWeights")
+
 
         return layerNum
     }

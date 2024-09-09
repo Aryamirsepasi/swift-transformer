@@ -16,8 +16,14 @@ class SGD: Optimizer {
     
     func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray,MLXArray, MLXArray, MLXArray, MLXArray, Int) {
         
+        print("entered SGD update")
+
+        
         weights -= gradient * alpha
         
+        
+        print("exited SGD update")
+
         return (weights, v, m, vHat, mHat, t)
 
     }
@@ -38,15 +44,29 @@ class Adam: Optimizer { //after
     }
     
     func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
-        v = beta * m + (1 - beta) * gradient
+        
+        print("entered Adam update")
+        
+        //print("m: ", m)
+        //print("beta: ", beta)
+        //print("gradient: ", gradient)
+
+
+        m = beta * m + (1 - beta) * gradient
+
         v = beta2 * v + (1 - beta2) * MLX.pow(gradient, 2)
 
         mHat = m / (1 - Float(pow(Double(beta), Double(t))))
         vHat = v / (1 - Float(pow(Double(beta2), Double(t))))
 
+
         var temp = alpha * mHat / (MLX.sqrt(vHat) + epsilon)
+
         weights -= temp
         
+
+        print("exited Adam update")
+
         return (weights, v, m, vHat, mHat , t)
     }
 }
@@ -69,6 +89,9 @@ class Noam: Optimizer {
     }
     
     func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
+        
+        print("entered Noam update")
+
         stepsNum += 1
         var model_dim_component = Float(pow(modelDim, -0.5))
         var steps_num_component = Int(pow(Double(stepsNum), -0.5))
@@ -80,6 +103,8 @@ class Noam: Optimizer {
             
         self.optimizer.alpha = lr
         
+        print("exited Noam update")
+
         return self.optimizer.update(gradient: gradient, weights: &weights, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: t)
     }
 }

@@ -19,33 +19,38 @@ class PositionalEncoding {
         self.maxLen = maxLen
         self.dataType = dataType
         
-        print("step11")
+        //print("step11")
         var pe = MLX.zeros([maxLen, dModel])
         
-        print("step12")
+        //print("step12")
         var position = MLXArray(0 ..< maxLen)[0..., .newAxis]
         
-        print("step13")
+        //print("step13")
         var divTermValues = stride(from: 0, to: dModel, by: 2).map { Float($0) * (-log(10000.0) / Float(dModel)) }
         
-        print("step14")
+        //print("step14")
         var divTerm = MLX.exp(MLXArray(divTermValues))
         
-        print("step15")
+        //print("step15")
         pe[0..., .stride(from: 0, to: pe.shape[1], by: 2)] = MLX.sin(position * divTerm)
         pe[0..., .stride(from: 1, to: pe.shape[1], by: 2)] = MLX.cos(position * divTerm)
         
-        print("step16")
+        //print("step16")
         self.pe = pe[0..., .newAxis, 0...]
         
         print ("exited positionalEncoding init")
     }
     
     func forward(x: MLXArray) -> MLXArray {
+        
+        print ("entered positional_encoding forward")
+
         var xvar = x
         
         xvar += self.pe[..<x.shape[0], 0...]
         
+        print ("exited positional_encoding forward")
+
         return xvar
     }
 

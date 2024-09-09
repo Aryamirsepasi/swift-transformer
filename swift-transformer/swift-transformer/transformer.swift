@@ -93,129 +93,178 @@ class Seq2Seq {
     }
     
     func getPadMask(x: MLXArray) -> MLXArray {
+        print("entered getPadMask")
+
         return (x .!= self.padIdx).asType(Int.self)[0..., .newAxis, 0...]
     }
     
     func getSubMask(x: MLXArray) -> MLXArray {
+        
+        print("entered getSubMask")
+
         let seqLen = x.shape[1]
         var subsequentMask = MLX.triu(MLX.ones([seqLen, seqLen]), k: 1).asType(Int.self)
         
         subsequentMask = MLX.logicalNot(subsequentMask)
         
+        print("exited getSubMask")
+
         return subsequentMask
     }
     
-    func forward(src: MLXArray, trg: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
-        
+    /*func forward(src: MLXArray, trg: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
+        print("entered forward")
+
         let srcvar = src.asType(dataType)
         let trgvar = trg.asType(dataType)
         
+        print(srcvar[0])
+        
+        //currently wrong result:
         let srcMask = self.getPadMask(x: srcvar)
-        let trgMask = self.getPadMask(x: trgvar) & self.getSubMask(x: trgvar)
+        
+        let trgMask = getPadMask(x: trgvar) & getSubMask(x: trgvar)
         
         
         let encSrc = encoder.forward(src: srcvar, srcMask: srcMask, training: training)
         
         let (out, attention) = self.decoder.forward(trg: trgvar, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: training)
         
+        print("exited forward")
+
+        return (out, attention)
+    }*/
+    
+    func forward(src: MLXArray, trg: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
+        print("entered forward")
+
+        let srcvar = src.asType(dataType)
+        let trgvar = trg.asType(dataType)
+        
+        //print(srcvar[0])
+        
+        // Correct shape for srcMask
+        let srcMask = self.getPadMask(x: srcvar)
+        
+        // Ensure trgMask is broadcastable: (batch_size, 1, seq_len) & (seq_len, seq_len)
+        let padMask = getPadMask(x: trgvar)
+        let subMask = getSubMask(x: trgvar)
+        
+        // Adjust trgMask shape: (batch_size, seq_len, seq_len)
+        let trgMask = broadcast(padMask, to: [trgvar.shape[0], trgvar.shape[1], trgvar.shape[1]]) & broadcast(subMask, to: [trgvar.shape[0], trgvar.shape[1], trgvar.shape[1]])
+        
+        let encSrc = encoder.forward(src: srcvar, srcMask: srcMask, training: training)
+        
+        let (out, attention) = self.decoder.forward(trg: trgvar, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: training)
+        
+        print("exited forward")
+
         return (out, attention)
     }
+
     
     func backward(error: MLXArray)-> MLXArray {
-        var error = error
-        error = self.decoder.backward(error: error)
-        error = self.encoder.backward(error: self.decoder.encoderError)
+        print("entered backward")
+
+        var errorvar = error
+        errorvar = self.decoder.backward(error: errorvar)
+        errorvar = self.encoder.backward(error: self.decoder.encoderError)
         
-        return error
+        print("exited backward")
+
+        return errorvar
     }
     
     func updateWeights() {
+        print("entered updateWeights")
+
         encoder.updateWeights()
         decoder.updateWeights()
+        
+        print("exited updateWeights")
+
     }
     
-    func train(source: MLXArray, target: MLXArray, epoch: Int, epochs: Int) -> MLXArray {
-        print("Starting training for epoch \(epoch + 1) of \(epochs)")
-        var lossHistory: MLXArray = []
+    func train(source: [MLXArray], target: [MLXArray], epoch: Int, epochs: Int) -> MLXArray {
+        
+        print("entered train")
+
+        var lossHistory : [Float] = []
         let totalBatches = source.count
         var epochLoss : MLXArray = []
 
-        var zipped = enumerateZippedMLXArrays(source: source, target: target)
-        
-        print("first zip: \(zipped[0])")
-        
+        var zipped = zip(source, target).enumerated()
+                
         let tqdmRange = TqdmSequence(sequence: zipped, description: "Training", unit: "batch", color: .cyan)
                 
-        for (batchNum, (sourceBatch, targetBatch)) in zipped {
+        for (batchNum, (sourceBatch, targetBatch)) in tqdmRange {
             print("Processing batch \(batchNum + 1)")
             
+            //print(sourceBatch.shape)
+            //print(targetBatch[0..., 0..<(targetBatch.shape[1] - 1)].shape)
             // Perform forward pass
-            let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch[0..<targetBatch.count - 1], training: true)
+            let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch[0..., 0..<(targetBatch.shape[1] - 1)], training: true)
+            //let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch, training: true)
             
+            //print(output.shape[0])
+            //print(output.shape[1])
+            //print(output.shape[2])
             // Reshape the output
+            
             let _output = output.reshaped([output.shape[0] * output.shape[1], output.shape[2]])
 
             // Compute the loss and append to history
-            let loss = self.lossFunction.loss(y: _output, t: targetBatch[1...].asType(DType.int32).flattened()).mean()
-            print("Computed loss for batch \(batchNum + 1): \(loss.item(Float.self))")
+            var loss = self.lossFunction.loss(y: _output, t: targetBatch[0..., 1...].asType(DType.int32).flattened()).mean()
             
-            for i in 0..<loss.count {
+            lossHistory.append(loss.item(Float.self))
+            //print("Computed loss for batch \(batchNum + 1): \(loss.item(Float.self))")
+            
+            /*for i in 0..<loss.count {
                 lossHistory[i + loss.count] = loss[i]
-            }
+            }*/
 
             // Compute the error for backpropagation
-            let error = self.lossFunction.derivative(y: _output, t: targetBatch[1...].asType(DType.int32).flattened())
+            let error = self.lossFunction.derivative(y: _output, t: targetBatch[0..., 1...].asType(DType.int32).flattened())
+
 
             // Perform backward pass and update weights
             self.backward(error: error.reshaped(output.shape))
+            
             self.updateWeights()
             
-            let latestLoss = lossHistory[-1].item(Float.self)
-            tqdmRange.setDescription(description: "training | loss: \(String(format: "%.7f", latestLoss)) | perplexity: \(String(format: "%.7f", exp(latestLoss))) | epoch \(epoch + 1)/\(epochs)")
+            print("got here")
+
+            let latestLoss = lossHistory[lossHistory.count-1]
+            tqdmRange.setDescription(description: "training | loss: \(latestLoss) | perplexity: \(exp(latestLoss)) | epoch \(epoch + 1)/\(epochs)")
 
 
             if batchNum == (totalBatches - 1) {
-                epochLoss = MLX.mean(lossHistory)
+                epochLoss = MLX.mean(MLXArray(lossHistory))
                 //print("Epoch \(epoch + 1) average loss: \(epochLoss.item(Float.self))")
-                tqdmRange.setDescription(description: "training | avg loss: \(String(format: "%.7f", epochLoss.item(Float.self))) | avg perplexity: \(String(format: "%.7f", exp(epochLoss.item(Float.self)))) | epoch \(epoch + 1)/\(epochs)")
+                tqdmRange.setDescription(description: "training | avg loss: \(epochLoss.item(Float.self)) | avg perplexity: \(exp(epochLoss.item(Float.self))) | epoch \(epoch + 1)/\(epochs)")
 
             }
         }
+        
+        print(epochLoss)
+
+        print("exited train")
+
         return epochLoss
     }
-
-    func enumerateZippedMLXArrays(source: MLXArray, target: MLXArray) -> [(Int, (MLXArray, MLXArray))] {
-        
-        print("entered enumerateZippedMLXArrays")
-        var enumeratedPairs: [(Int, (MLXArray, MLXArray))] = []
-        
-        
-        for i in 0..<source.shape[0] {
-            // Extract each pair of elements (sequences) from source and target
-            let sourceElement = source[i]
-            let targetElement = target[i]
-            
-            // Append the index and the pair as a tuple to the result list
-            enumeratedPairs.append((i, (sourceElement, targetElement)))
-        }
-        
-        
-        return enumeratedPairs
-    }
-
     
-    func evaluate(source: MLXArray, target: MLXArray) -> MLXArray {
+    func evaluate(source: [MLXArray], target: [MLXArray]) -> MLXArray {
         print("entered evaluate")
 
         var lossHistory: MLXArray = []
         
-        var zipped = enumerateZippedMLXArrays(source: source, target: target)
+        var zipped =  zip(source, target).enumerated()
         
         let tqdmRange = TqdmSequence(sequence: zipped, description: "Training", unit: "batch", color: .cyan)
         
         var epochLoss : MLXArray = []
         
-        for (batchNum, (sourceBatch, targetBatch)) in zipped {
+        for (batchNum, (sourceBatch, targetBatch)) in tqdmRange {
             
             let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch[0..<targetBatch.count - 1], training: false)
             
@@ -223,6 +272,7 @@ class Seq2Seq {
             
             let loss = self.lossFunction.loss(y: _output, t: targetBatch[1...].asType(DType.int32).flattened()).mean()
             
+
             var lossHistorynew : MLXArray = []
             
             for i in 0..<lossHistory.count{
@@ -231,13 +281,13 @@ class Seq2Seq {
             lossHistorynew[lossHistory.count] = loss
             
             let latestLoss = lossHistorynew[-1].item(Float.self)
-            tqdmRange.setDescription(description: "training | loss: \(String(format: "%.7f", latestLoss)) | perplexity: \(String(format: "%.7f", exp(latestLoss)))")
+            tqdmRange.setDescription(description: "training | loss: \(latestLoss) | perplexity: \(exp(latestLoss))")
             
             if batchNum == (source.count - 1) {
                 
                 epochLoss = MLX.mean(lossHistorynew)
                 
-                tqdmRange.setDescription(description: "training | avg loss: \(String(format: "%.7f", epochLoss.item(Float.self))) | avg perplexity: \(String(format: "%.7f", exp(epochLoss.item(Float.self))))")
+                tqdmRange.setDescription(description: "training | avg loss: \(epochLoss.item(Float.self)) | avg perplexity: \(exp(epochLoss.item(Float.self)))")
                 
             }
         }
@@ -248,15 +298,15 @@ class Seq2Seq {
         
     }
     
-    func fit(trainData: (MLXArray, MLXArray), valData: (MLXArray, MLXArray), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> (MLXArray,MLXArray) {
+    func fit(trainData: ([MLXArray], [MLXArray]), valData: ([MLXArray], [MLXArray]), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> ([MLXArray],[MLXArray]) {
         
         print("entered fit")
         
         setOptimizer()
         
         var bestValLoss = Float.infinity
-        var trainLossHistory: MLXArray = []
-        var valLossHistory: MLXArray = []
+        var trainLossHistory: [MLXArray] = []
+        var valLossHistory: [MLXArray] = []
                 
         let (trainSource, trainTarget) = trainData
         let (valSource, valTarget) = valData
@@ -264,22 +314,16 @@ class Seq2Seq {
         for epoch in 0..<epochs {
             
             let trainLoss = self.train(source: trainSource, target: trainTarget, epoch: epoch, epochs: epochs)
-            for i in 0..<trainLoss.count{
-                trainLossHistory[i + trainLoss.count] = trainLoss[i]
-                
-            }
+            trainLossHistory.append(trainLoss)
             
             let valLoss = self.evaluate(source: valSource, target: valTarget)
-            for i in 0..<valLoss.count{
-                valLossHistory[i + valLoss.count] = valLoss[i]
-                
-            }
+            valLossHistory.append(valLoss)
             
             if ((savePath != nil) && ((epoch + 1) % saveEveryEpochs == 0)) {
                 if !validationCheck {
                     self.save(path: "\(savePath)/\(epoch + 1)")
                 } else {
-                    if valLossHistory[-1].item(Float.self) < bestValLoss {
+                    if valLossHistory[valLossHistory.count - 1].item(Float.self) < bestValLoss {
                         bestValLoss = valLossHistory[-1].item(Float.self)
                         self.save(path: "\(savePath)/\(epoch + 1)")
                     } else {

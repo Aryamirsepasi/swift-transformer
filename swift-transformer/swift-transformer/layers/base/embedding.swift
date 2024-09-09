@@ -17,7 +17,6 @@ class Embedding {
     var vHat: MLXArray
     var mHat: MLXArray
     var inputLabels: MLXArray
-    var gradWeights: MLXArray
     var dataType: DType
     var batchSize: Int
     var currentInputLength: Int
@@ -37,7 +36,6 @@ class Embedding {
         self.gradB = []
         self.gradW = []
         self.inputLabels = []
-        self.gradWeights = []
         self.batchSize = 0
         self.currentInputLength = 0
         
@@ -62,17 +60,32 @@ class Embedding {
     }
     
     func prepareLabels(batchLabels: MLXArray) -> MLXArray {
+        // Convert batch labels to integers
+        var batchLabelsVar = batchLabels.asType(DType.int32)
         
-        var batchLabelsvar = batchLabels.asType(DType.int32)
+        // Prepare an empty tensor for the one-hot encoding
+        var prepareBatchLabels = MLX.zeros([batchLabelsVar.size, self.inputDim])
         
-        var prepareBatchLabels = MLX.zeros([batchLabels.size, self.inputDim])
-        prepareBatchLabels[MLXArray(batchLabels.size), batchLabels.reshaped([1, -1])] = MLXArray(1)
+        // Generate range of indices using the initializer
+        let indices = MLXArray(0..<batchLabelsVar.size).asType(DType.int32)
+        let reshapedLabels = batchLabelsVar.reshaped([batchLabelsVar.size])
+
+        // Perform one-hot encoding manually
+        for i in 0..<indices.size {
+            let index = indices[i].item(Int.self)
+            let label = reshapedLabels[i].item(Int.self)
+            prepareBatchLabels[index, label] = MLXArray(1)
+        }
         
+        // Reshape the tensor to the desired dimensions
         return prepareBatchLabels.reshaped([self.batchSize, self.currentInputLength, self.inputDim]).asType(self.dataType)
     }
 
+
     func forward(X: MLXArray) -> MLXArray {
         
+        print ("entered embedding forward")
+
         self.inputData = X
         
         for i in 0..<self.inputData.count{
@@ -90,22 +103,34 @@ class Embedding {
         
         self.outputData = MLX.matmul(self.inputData, self.w)
         
+        print ("exited embedding forward")
+
         return self.outputData
         
     }
     
     func backward(error: MLXArray) -> MLXArray {
         
+        print("entered embedding backward")
+
         self.gradW = MLX.matmul(MLX.transposed(self.inputData, axes: [0,2,1]), error).logSumExp(axis: 0)
         
+        print("exited embedding backward")
+
         return []
     }
 
     func updateWeights(layerNum: Int) -> Int {
+        
+        print("entered embedding updateWeights")
+
         if let optimizer = optimizer {
             var templayerNum = layerNum
-            (w, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradWeights, weights: &w, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: layerNum)
+            (w, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradW, weights: &w, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: layerNum)
         }
+        
+        print("exited embedding updateWeights")
+
         return layerNum + 1
     }
     
@@ -115,19 +140,5 @@ class Embedding {
 
     func setGrads(grads: (MLXArray, MLXArray)) {
         (self.gradW, self.gradB) = grads
-    }
-}
-
-// Helper function to generate normal distribution
-struct NormalDistribution {
-    var mean: Float
-    var standardDeviation: Float
-    
-    func next() -> Float {
-        let u1 = Float.random(in: 0..<1)
-        let u2 = Float.random(in: 0..<1)
-        let r = sqrt(-2 * log(u1))
-        let theta = 2 * Float.pi * u2
-        return r * sin(theta) * standardDeviation + mean
     }
 }
