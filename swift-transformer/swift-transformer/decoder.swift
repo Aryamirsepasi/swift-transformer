@@ -53,35 +53,46 @@ class Decoder {
     }
 
     func backward(error: MLXArray) -> MLXArray {
-        
         print("entered decoder backward")
 
-        var errorvar = activation.backward(grad: error)
-        errorvar = fcOut.backward(error: errorvar)
+        // Step 1: Pass through the activation backward function
+        var errorvar = self.activation.backward(grad: error)
 
-        self.encoderError = zeros(errorvar.shape)
+        // Step 2: Pass through the fully connected layer backward function
+        errorvar = self.fcOut.backward(error: errorvar)
         
+        self.encoderError = []
+        // Step 4: Process each layer in reverse order
         for layer in self.layers.reversed() {
-            let (layerError, encError) = layer.backward(error: errorvar)
+            let (errorvar, encError) = layer.backward(error: errorvar)
+
+            // Initialize encoderError if it's nil
+            if self.encoderError.shape != encError.shape {
+
+                self.encoderError = MLX.zeros(encError.shape)  // Initialize to the shape of encError
+            }
+
+            // Add encError to encoderError
             self.encoderError += encError
         }
 
+        // Step 5: Pass through the remaining layers
         errorvar = self.dropout.backward(errorvar)
-        
-        errorvar = positionEmbedding.backward(error: errorvar) * self.scale
-        errorvar = tokenEmbedding.backward(error: errorvar)
+        errorvar = self.positionEmbedding.backward(error: errorvar) * self.scale
+        errorvar = self.tokenEmbedding.backward(error: errorvar)
         
         print("exited decoder backward")
 
         return errorvar
     }
 
+
     func setOptimizer(optimizer: Optimizer) {
-        tokenEmbedding.setOptimizer(optimizer: optimizer)
+        self.tokenEmbedding.setOptimizer(optimizer: optimizer)
         for layer in layers {
             layer.setOptimizer(optimizer)
         }
-        fcOut.setOptimizer(optimizer: optimizer)
+        self.fcOut.setOptimizer(optimizer: optimizer)
     }
 
     func updateWeights() {

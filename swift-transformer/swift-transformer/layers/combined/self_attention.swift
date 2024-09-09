@@ -38,6 +38,11 @@ class MultiHeadAttention {
         self.dQ = self.dModel / headsNum
         self.dV = self.dModel / headsNum
         
+        /*print("dModel: ", self.dModel)
+        print("dK: ", self.dK)
+        print("headsNum: ", self.headsNum)
+        print("unitsNum: ", self.dK * self.headsNum)
+        */
         self.scale = sqrt(Float(dK))
         
         self.KLinear = Dense(unitsNum: dK * headsNum, inputsNum: dModel, useBias: false, dataType: dataType)
@@ -62,24 +67,32 @@ class MultiHeadAttention {
     }
     
     func splitHeadsForward(x:MLXArray) -> MLXArray {
+        print ("entered self_attention splitHeadsForward")
+
         let batchSize = x.shape[0]
         
         return x.reshaped([batchSize, -1, self.headsNum, self.dK]).transposed(0,2,1,3)
     }
     
     func splitHeadsBackward(x: MLXArray) -> MLXArray {
+        print ("entered self_attention splitHeadsBackward")
+
         let batchSize = x.shape[0]
         
         return x.transposed(0,2,1,3).reshaped([batchSize, -1, self.headsNum * self.dK])
     }
     
     func groupHeadsForward(x: MLXArray) -> MLXArray {
+        print ("entered self_attention groupHeadsForward")
+
         let batchSize = x.shape[0]
         
         return x.transposed(0,2,1,3).reshaped([batchSize, -1, self.headsNum * self.dK])
     }
     
     func groupHeadsBackward(x: MLXArray) -> MLXArray {
+        print ("entered self_attention groupHeadsBackward")
+
         let batchSize = x.shape[0]
         
         return x.reshaped([batchSize, -1, self.headsNum, self.dK]).transposed(0,2,1,3)
@@ -101,10 +114,17 @@ class MultiHeadAttention {
         let Q = QLinear.forward(X: query, training: training)
         let V = VLinear.forward(X: value, training: training)
         
+        //print("K shape: ", K.shape)
+        
         self.K = splitHeadsForward(x: K)
         self.Q = splitHeadsForward(x: Q)
         self.V = splitHeadsForward(x: V)
         
+        print("got here?")
+        print("Q: ", self.Q.shape)
+        print("Q: ", self.K.transposed(0,1,3,2).shape)
+        print("scale: ", self.scale)
+
         var energy = MLX.matmul(self.Q, self.K.transposed(0,1,3,2)) / self.scale
         
         // Assign the mask
@@ -178,10 +198,16 @@ class MultiHeadAttention {
     }
     
     func updateWeights(layerNum: Int) -> Int {
+        
+        print("entered self_attention updateWeights")
+
         var layerNum = KLinear.updateWeights(layerNum: layerNum)
         layerNum = QLinear.updateWeights(layerNum: layerNum)
         layerNum = VLinear.updateWeights(layerNum: layerNum)
         layerNum = OLinear.updateWeights(layerNum: layerNum)
+        
+        print("exited self_attention updateWeights")
+
         return layerNum
     }
 }

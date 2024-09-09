@@ -17,7 +17,6 @@ class Embedding {
     var vHat: MLXArray
     var mHat: MLXArray
     var inputLabels: MLXArray
-    var gradWeights: MLXArray
     var dataType: DType
     var batchSize: Int
     var currentInputLength: Int
@@ -37,7 +36,6 @@ class Embedding {
         self.gradB = []
         self.gradW = []
         self.inputLabels = []
-        self.gradWeights = []
         self.batchSize = 0
         self.currentInputLength = 0
         
@@ -123,10 +121,16 @@ class Embedding {
     }
 
     func updateWeights(layerNum: Int) -> Int {
+        
+        print("entered embedding updateWeights")
+
         if let optimizer = optimizer {
             var templayerNum = layerNum
-            (w, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradWeights, weights: &w, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: layerNum)
+            (w, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradW, weights: &w, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: layerNum)
         }
+        
+        print("exited embedding updateWeights")
+
         return layerNum + 1
     }
     
@@ -136,19 +140,5 @@ class Embedding {
 
     func setGrads(grads: (MLXArray, MLXArray)) {
         (self.gradW, self.gradB) = grads
-    }
-}
-
-// Helper function to generate normal distribution
-struct NormalDistribution {
-    var mean: Float
-    var standardDeviation: Float
-    
-    func next() -> Float {
-        let u1 = Float.random(in: 0..<1)
-        let u2 = Float.random(in: 0..<1)
-        let r = sqrt(-2 * log(u1))
-        let theta = 2 * Float.pi * u2
-        return r * sin(theta) * standardDeviation + mean
     }
 }

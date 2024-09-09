@@ -53,10 +53,15 @@ class PositionwiseFeedforward {
     }
 
     func updateWeights(startingLayerNum: Int) -> Int {
+        
+        print("entered positionwise... updateWeights")
+
         var layerNum = startingLayerNum
         layerNum = fc1.updateWeights(layerNum: layerNum)
         layerNum = fc2.updateWeights(layerNum: layerNum)
         
+        print("exited positionwise... updateWeights")
+
         return layerNum
     }
 }

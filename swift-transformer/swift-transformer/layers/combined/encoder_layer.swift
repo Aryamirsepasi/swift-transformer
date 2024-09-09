@@ -67,12 +67,17 @@ class EncoderLayer {
     }
 
     func updateWeights(layerNum: Int) -> Int {
+        
+        print("entered encoder_layer updateWeights")
+
         var layerNum = layerNum
         layerNum = selfAttentionNorm.updateWeights(layerNum: layerNum)
         layerNum = ffLayerNorm.updateWeights(layerNum: layerNum)
         layerNum = selfAttention.updateWeights(layerNum: layerNum)
         layerNum = positionWiseFeedForward.updateWeights(startingLayerNum: layerNum)
         
+        print("exited encoder_layer updateWeights")
+
         return layerNum
     }
 }

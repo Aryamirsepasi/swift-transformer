@@ -77,12 +77,18 @@ class Encoder {
     }
 
     func updateWeights() {
+        
+        print("entered encoder updateWeights")
+
         var layerNum = 1
         layerNum = tokenEmbedding.updateWeights(layerNum: layerNum)
         
         for layer in layers {
             layerNum = layer.updateWeights(layerNum: layerNum)
         }
+        
+        print("exited encoder updateWeights")
+
     }
 }
 

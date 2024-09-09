@@ -33,11 +33,14 @@ class DecoderLayer {
         
         var attention : MLXArray
         (_trg, attention) = self.encoderAttention.forward(query: trgvar, key: src, value: src, mask: srcMask, training: training)
-        trgvar = self.encAttnLayerNorm.forward(X: trg + self.dropout.forward(X: _trg, training: training))
+        trgvar = self.encAttnLayerNorm.forward(X: trgvar + self.dropout.forward(X: _trg, training: training))
+        
+        _trg = self.positionWiseFeedForward.forward(X: trgvar, training: training)
+        trgvar = self.ffLayerNorm.forward(X: trgvar + self.dropout.forward(X: _trg, training: training))
         
         print ("exited decoder_layer forward")
 
-        return (trg, attention)
+        return (trgvar, attention)
     }
 
     func backward(error: MLXArray) -> (MLXArray,MLXArray) {
