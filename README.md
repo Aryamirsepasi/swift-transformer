@@ -11,3 +11,9 @@ Swift-Transformer is a comprehensive Swift-based project designed to bring advan
 - **Metal Support**: Transitions from traditional GPU usage to Apple’s Metal, enhancing computational capabilities for machine learning tasks.
 
 Based on the original Numpy-Transformer Project by AmritanshuV [Link](https://github.com/AmritanshuV/Numpy-Transformer)
+
+
+## Performance Comparison
+
+- **227 Batches, epoch 1/5 (Swift)**: Training completed in 1238.6281290054321 seconds
+- **227 Batches, epoch 1/5 (Python)**: Training completed in - seconds
