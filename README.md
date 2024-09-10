@@ -13,7 +13,7 @@ Swift-Transformer is a comprehensive Swift-based project designed to bring advan
 Based on the original Numpy-Transformer Project by AmritanshuV [Link](https://github.com/AmritanshuV/Numpy-Transformer)
 
 
-## Performance Comparison
+## Performance Comparison (MacBook Pro with M1 Pro CPU, 32 GB LPDDR5 RAM, MacOS Sonoma 14.6.1)
 
 - **227 Batches, epoch 1/5 (Swift)**: Training completed in 1238.6281290054321 seconds
 - **227 Batches, epoch 1/5 (Python)**: Training completed in 8225.50 seconds
