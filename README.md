@@ -16,4 +16,4 @@ Based on the original Numpy-Transformer Project by AmritanshuV [Link](https://gi
 ## Performance Comparison
 
 - **227 Batches, epoch 1/5 (Swift)**: Training completed in 1238.6281290054321 seconds
-- **227 Batches, epoch 1/5 (Python)**: Training completed in - seconds
+- **227 Batches, epoch 1/5 (Python)**: Training completed in 8225.50 seconds
