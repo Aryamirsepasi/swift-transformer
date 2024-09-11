@@ -94,50 +94,50 @@ class Seq2Seq {
     
     func getPadMask(x: MLXArray) -> MLXArray {
         print("entered getPadMask")
-
+        
         return (x .!= self.padIdx).asType(Int.self)[0..., .newAxis, 0...]
     }
     
     func getSubMask(x: MLXArray) -> MLXArray {
         
         print("entered getSubMask")
-
+        
         let seqLen = x.shape[1]
         var subsequentMask = MLX.triu(MLX.ones([seqLen, seqLen]), k: 1).asType(Int.self)
         
         subsequentMask = MLX.logicalNot(subsequentMask)
         
         print("exited getSubMask")
-
+        
         return subsequentMask
     }
     
     /*func forward(src: MLXArray, trg: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
-        print("entered forward")
-
-        let srcvar = src.asType(dataType)
-        let trgvar = trg.asType(dataType)
-        
-        print(srcvar[0])
-        
-        //currently wrong result:
-        let srcMask = self.getPadMask(x: srcvar)
-        
-        let trgMask = getPadMask(x: trgvar) & getSubMask(x: trgvar)
-        
-        
-        let encSrc = encoder.forward(src: srcvar, srcMask: srcMask, training: training)
-        
-        let (out, attention) = self.decoder.forward(trg: trgvar, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: training)
-        
-        print("exited forward")
-
-        return (out, attention)
-    }*/
+     print("entered forward")
+     
+     let srcvar = src.asType(dataType)
+     let trgvar = trg.asType(dataType)
+     
+     print(srcvar[0])
+     
+     //currently wrong result:
+     let srcMask = self.getPadMask(x: srcvar)
+     
+     let trgMask = getPadMask(x: trgvar) & getSubMask(x: trgvar)
+     
+     
+     let encSrc = encoder.forward(src: srcvar, srcMask: srcMask, training: training)
+     
+     let (out, attention) = self.decoder.forward(trg: trgvar, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: training)
+     
+     print("exited forward")
+     
+     return (out, attention)
+     }*/
     
     func forward(src: MLXArray, trg: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
         print("entered forward")
-
+        
         let srcvar = src.asType(dataType)
         let trgvar = trg.asType(dataType)
         
@@ -158,45 +158,48 @@ class Seq2Seq {
         let (out, attention) = self.decoder.forward(trg: trgvar, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: training)
         
         print("exited forward")
-
+        
         return (out, attention)
     }
-
+    
     
     func backward(error: MLXArray)-> MLXArray {
         print("entered backward")
-
+        
         var errorvar = error
         errorvar = self.decoder.backward(error: errorvar)
         errorvar = self.encoder.backward(error: self.decoder.encoderError)
         
         print("exited backward")
-
+        
         return errorvar
     }
     
     func updateWeights() {
         print("entered updateWeights")
-
+        
         encoder.updateWeights()
         decoder.updateWeights()
         
         print("exited updateWeights")
-
+        
     }
     
     func train(source: [MLXArray], target: [MLXArray], epoch: Int, epochs: Int) -> MLXArray {
         
         print("entered train")
-
+        
+        // Start timer
+        let startTime = Date()
+        
         var lossHistory : [Float] = []
         let totalBatches = source.count
         var epochLoss : MLXArray = []
-
+        
         var zipped = zip(source, target).enumerated()
-                
+        
         let tqdmRange = TqdmSequence(sequence: zipped, description: "Training", unit: "batch", color: .cyan)
-                
+        
         for (batchNum, (sourceBatch, targetBatch)) in tqdmRange {
             print("Processing batch \(batchNum + 1)")
             
@@ -212,7 +215,7 @@ class Seq2Seq {
             // Reshape the output
             
             let _output = output.reshaped([output.shape[0] * output.shape[1], output.shape[2]])
-
+            
             // Compute the loss and append to history
             var loss = self.lossFunction.loss(y: _output, t: targetBatch[0..., 1...].asType(DType.int32).flattened()).mean()
             
@@ -220,80 +223,89 @@ class Seq2Seq {
             //print("Computed loss for batch \(batchNum + 1): \(loss.item(Float.self))")
             
             /*for i in 0..<loss.count {
-                lossHistory[i + loss.count] = loss[i]
-            }*/
-
+             lossHistory[i + loss.count] = loss[i]
+             }*/
+            
             // Compute the error for backpropagation
             let error = self.lossFunction.derivative(y: _output, t: targetBatch[0..., 1...].asType(DType.int32).flattened())
-
-
+            
+            
             // Perform backward pass and update weights
             self.backward(error: error.reshaped(output.shape))
             
             self.updateWeights()
             
-            print("got here")
-
+            //print("got here")
+            
             let latestLoss = lossHistory[lossHistory.count-1]
             tqdmRange.setDescription(description: "training | loss: \(latestLoss) | perplexity: \(exp(latestLoss)) | epoch \(epoch + 1)/\(epochs)")
-
-
+            
+            
             if batchNum == (totalBatches - 1) {
                 epochLoss = MLX.mean(MLXArray(lossHistory))
                 //print("Epoch \(epoch + 1) average loss: \(epochLoss.item(Float.self))")
                 tqdmRange.setDescription(description: "training | avg loss: \(epochLoss.item(Float.self)) | avg perplexity: \(exp(epochLoss.item(Float.self))) | epoch \(epoch + 1)/\(epochs)")
-
+                
             }
         }
         
-        print(epochLoss)
-
+        // End timer
+        let endTime = Date()
+        let timeInterval = endTime.timeIntervalSince(startTime)
+        print("Training completed in \(timeInterval) seconds")
+        //print(epochLoss)
+        
         print("exited train")
-
+        
         return epochLoss
     }
     
     func evaluate(source: [MLXArray], target: [MLXArray]) -> MLXArray {
         print("entered evaluate")
-
-        var lossHistory: MLXArray = []
+        
+        
+        // Start timer
+        let startTime = Date()
+        
+        var lossHistory : [Float] = []
+        let totalBatches = source.count
+        var epochLoss : MLXArray = []
         
         var zipped =  zip(source, target).enumerated()
         
-        let tqdmRange = TqdmSequence(sequence: zipped, description: "Training", unit: "batch", color: .cyan)
-        
-        var epochLoss : MLXArray = []
-        
+        let tqdmRange = TqdmSequence(sequence: zipped, description: "Testing", unit: "batch", color: .cyan)
+                
         for (batchNum, (sourceBatch, targetBatch)) in tqdmRange {
             
-            let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch[0..<targetBatch.count - 1], training: false)
+            let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch[0..., 0..<(targetBatch.shape[1] - 1)], training: false)
             
             let _output = output.reshaped([output.shape[0] * output.shape[1], output.shape[2]])
             
-            let loss = self.lossFunction.loss(y: _output, t: targetBatch[1...].asType(DType.int32).flattened()).mean()
+            let loss = self.lossFunction.loss(y: _output, t: targetBatch[0..., 1...].asType(DType.int32).flattened()).mean()
             
+            
+            lossHistory.append(loss.item(Float.self))
 
-            var lossHistorynew : MLXArray = []
             
-            for i in 0..<lossHistory.count{
-                lossHistorynew[i] = lossHistory[i]
-            }
-            lossHistorynew[lossHistory.count] = loss
-            
-            let latestLoss = lossHistorynew[-1].item(Float.self)
-            tqdmRange.setDescription(description: "training | loss: \(latestLoss) | perplexity: \(exp(latestLoss))")
+            let latestLoss = lossHistory[lossHistory.count - 1]
+            tqdmRange.setDescription(description: "testing | loss: \(latestLoss) | perplexity: \(exp(latestLoss))")
             
             if batchNum == (source.count - 1) {
                 
-                epochLoss = MLX.mean(lossHistorynew)
+                epochLoss = MLX.mean(MLXArray(lossHistory))
                 
-                tqdmRange.setDescription(description: "training | avg loss: \(epochLoss.item(Float.self)) | avg perplexity: \(exp(epochLoss.item(Float.self)))")
+                tqdmRange.setDescription(description: "testing | avg loss: \(epochLoss.item(Float.self)) | avg perplexity: \(exp(epochLoss.item(Float.self)))")
                 
             }
         }
         
+        // End timer
+        let endTime = Date()
+        let timeInterval = endTime.timeIntervalSince(startTime)
+        print("Testing completed in \(timeInterval) seconds")
+        
         print("exited evaluate")
-
+        
         return epochLoss
         
     }
@@ -307,7 +319,7 @@ class Seq2Seq {
         var bestValLoss = Float.infinity
         var trainLossHistory: [MLXArray] = []
         var valLossHistory: [MLXArray] = []
-                
+        
         let (trainSource, trainTarget) = trainData
         let (valSource, valTarget) = valData
         
@@ -334,7 +346,7 @@ class Seq2Seq {
         }
         
         print("exited fit")
-
+        
         return (trainLossHistory, valLossHistory)
     }
     
