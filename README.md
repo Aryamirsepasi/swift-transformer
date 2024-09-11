@@ -15,5 +15,27 @@ Based on the original Numpy-Transformer Project by AmritanshuV [Link](https://gi
 
 ## Performance Comparison (MacBook Pro with M1 Pro CPU, 32 GB LPDDR5 RAM, MacOS Sonoma 14.6.1)
 
-- **227 Batches, epoch 1/5 (Swift)**: Training completed in 1238.6281290054321 seconds
+#### Training:
+- **227 Batches, epoch 1/5 (Swift)**: Training completed in 1219.4579420089722 seconds
 - **227 Batches, epoch 1/5 (Python)**: Training completed in 8225.50 seconds
+- **227 Batches, epoch 2/5 (Swift)**: Training completed in 1291.4347389936447 seconds
+- **227 Batches, epoch 2/5 (Python)**: Training completed in 33907.19 seconds
+- **227 Batches, epoch 3/5 (Swift)**: Training completed in 1365.4138170480728 seconds
+- **227 Batches, epoch 3/5 (Python)**: Training completed in - seconds
+- **227 Batches, epoch 4/5 (Swift)**: Training completed in 1439.8610639572144 seconds
+- **227 Batches, epoch 4/5 (Python)**: Training completed in - seconds
+- **227 Batches, epoch 5/5 (Swift)**: Training completed in 1492.612431049347 seconds
+- **227 Batches, epoch 5/5 (Python)**: Training completed in - seconds
+
+#### Testing:
+- **227 Batches, epoch 1/5 (Swift)**: Testing completed in 35.09237003326416 seconds
+- **227 Batches, epoch 1/5 (Python)**: Testing completed in - seconds
+- **227 Batches, epoch 2/5 (Swift)**: Testing completed in 34.56067502498627 seconds
+- **227 Batches, epoch 2/5 (Python)**: Testing completed in - seconds
+- **227 Batches, epoch 3/5 (Swift)**: Testing completed in 36.549415946006775 seconds
+- **227 Batches, epoch 3/5 (Python)**: Testing completed in - seconds
+- **227 Batches, epoch 4/5 (Swift)**: Testing completed in 38.06288194656372 seconds
+- **227 Batches, epoch 4/5 (Python)**: Testing completed in - seconds
+- **227 Batches, epoch 5/5 (Swift)**: Testing completed in 36.32816696166992 seconds
+- **227 Batches, epoch 5/5 (Python)**: Testing completed in - seconds
+
