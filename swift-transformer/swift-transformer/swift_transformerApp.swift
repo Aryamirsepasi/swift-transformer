@@ -109,5 +109,5 @@ struct LossDataPoint: Identifiable {
     let id = UUID()
     let epoch: Int
     let loss: Float
-    let series: String // New property to distinguish between series
+    let series: String
 }
