@@ -41,3 +41,10 @@ Based on the original Numpy-Transformer Project by AmritanshuV [Link](https://gi
 
 #### Summary:
 On average, the Swift variant is approximately **8.92x** faster during training and **6.54x** faster during testing compared to the Python variant. 
+
+
+## Loss History Graph
+
+The graph below illustrates the training and validation loss over the epochs:
+
+![Loss History Graph](loss_history.png)
