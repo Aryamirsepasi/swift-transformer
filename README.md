@@ -16,26 +16,28 @@ Based on the original Numpy-Transformer Project by AmritanshuV [Link](https://gi
 ## Performance Comparison (MacBook Pro with M1 Pro CPU, 32 GB LPDDR5 RAM, MacOS Sonoma 14.6.1)
 
 #### Training:
-- **227 Batches, epoch 1/5 (Swift)**: Training completed in 1219.4579420089722 seconds
-- **227 Batches, epoch 1/5 (Python)**: Training completed in 8225.50 seconds
-- **227 Batches, epoch 2/5 (Swift)**: Training completed in 1291.4347389936447 seconds
-- **227 Batches, epoch 2/5 (Python)**: Training completed in 33907.19 seconds
-- **227 Batches, epoch 3/5 (Swift)**: Training completed in 1365.4138170480728 seconds
-- **227 Batches, epoch 3/5 (Python)**: Training completed in - seconds
-- **227 Batches, epoch 4/5 (Swift)**: Training completed in 1439.8610639572144 seconds
-- **227 Batches, epoch 4/5 (Python)**: Training completed in - seconds
-- **227 Batches, epoch 5/5 (Swift)**: Training completed in 1492.612431049347 seconds
-- **227 Batches, epoch 5/5 (Python)**: Training completed in - seconds
+- **227 Batches, epoch 1/5 (Swift)**: Training completed in 1219.46 seconds
+- **227 Batches, epoch 1/5 (Python)**: Training completed in 10350.19 seconds
+- **227 Batches, epoch 2/5 (Swift)**: Training completed in 1291.44 seconds
+- **227 Batches, epoch 2/5 (Python)**: Training completed in 28678.68 seconds
+- **227 Batches, epoch 3/5 (Swift)**: Training completed in 1365.42 seconds
+- **227 Batches, epoch 3/5 (Python)**: Training completed in 8324.21 seconds
+- **227 Batches, epoch 4/5 (Swift)**: Training completed in 1439.86 seconds
+- **227 Batches, epoch 4/5 (Python)**: Training completed in 8312.97 seconds
+- **227 Batches, epoch 5/5 (Swift)**: Training completed in 1492.61 seconds
+- **227 Batches, epoch 5/5 (Python)**: Training completed in 19090.69 seconds
 
 #### Testing:
-- **227 Batches, epoch 1/5 (Swift)**: Testing completed in 35.09237003326416 seconds
+- **227 Batches, epoch 1/5 (Swift)**: Testing completed in 35.09 seconds
 - **227 Batches, epoch 1/5 (Python)**: Testing completed in 303 seconds
-- **227 Batches, epoch 2/5 (Swift)**: Testing completed in 34.56067502498627 seconds
-- **227 Batches, epoch 2/5 (Python)**: Testing completed in - seconds
-- **227 Batches, epoch 3/5 (Swift)**: Testing completed in 36.549415946006775 seconds
-- **227 Batches, epoch 3/5 (Python)**: Testing completed in - seconds
-- **227 Batches, epoch 4/5 (Swift)**: Testing completed in 38.06288194656372 seconds
-- **227 Batches, epoch 4/5 (Python)**: Testing completed in - seconds
-- **227 Batches, epoch 5/5 (Swift)**: Testing completed in 36.32816696166992 seconds
-- **227 Batches, epoch 5/5 (Python)**: Testing completed in - seconds
+- **227 Batches, epoch 2/5 (Swift)**: Testing completed in 34.56 seconds
+- **227 Batches, epoch 2/5 (Python)**: Testing completed in 219 seconds
+- **227 Batches, epoch 3/5 (Swift)**: Testing completed in 36.55 seconds
+- **227 Batches, epoch 3/5 (Python)**: Testing completed in 218 seconds
+- **227 Batches, epoch 4/5 (Swift)**: Testing completed in 38.06 seconds
+- **227 Batches, epoch 4/5 (Python)**: Testing completed in 219 seconds
+- **227 Batches, epoch 5/5 (Swift)**: Testing completed in 36.33 seconds
+- **227 Batches, epoch 5/5 (Python)**: Testing completed in 219 seconds
 
+#### Summary:
+On average, the Swift variant is approximately **8.92x** faster during training and **6.54x** faster during testing compared to the Python variant. 
