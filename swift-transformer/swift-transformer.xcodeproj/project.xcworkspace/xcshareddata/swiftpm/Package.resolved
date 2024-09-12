@@ -1,15 +1,6 @@
 {
-  "originHash" : "d3ec84d17b2b514d78f64914324762c589ba006484e3d56ecbcd9fc83c367d06",
+  "originHash" : "adb8acdea08448c065ec0cb0583ae6015db780d0e0ac1c273f4b47a0214a425c",
   "pins" : [
-    {
-      "identity" : "matft",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jjjkkkjjj/Matft",
-      "state" : {
-        "revision" : "4436f8664ede5cbfd6c72e1d35c4c0cdd24ef813",
-        "version" : "0.3.3"
-      }
-    },
     {
       "identity" : "mlx-swift",
       "kind" : "remoteSourceControl",
@@ -17,15 +8,6 @@
       "state" : {
         "revision" : "86ad75ab1ee96cd70325732b37cd830f87d7e43f",
         "version" : "0.16.1"
-      }
-    },
-    {
-      "identity" : "swift-collections",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-collections",
-      "state" : {
-        "revision" : "94cf62b3ba8d4bed62680a282d4c25f9c63c2efb",
-        "version" : "1.1.0"
       }
     },
     {
@@ -44,15 +26,6 @@
       "state" : {
         "revision" : "71f0a47e1c1149cc486be2e436d7369e90ca4449",
         "version" : "0.1.2"
-      }
-    },
-    {
-      "identity" : "swiftplot",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/KarthikRIyer/swiftplot.git",
-      "state" : {
-        "revision" : "c5424eb8688217029d44e941d3a1d2ccc18c3a82",
-        "version" : "2.0.0"
       }
     }
   ],
