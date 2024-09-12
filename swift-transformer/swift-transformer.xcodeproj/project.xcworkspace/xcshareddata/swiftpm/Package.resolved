@@ -1,5 +1,5 @@
 {
-  "originHash" : "e58993622a6da371630f21738b5b6534e68fe63e357fda0437a2c2810ced9789",
+  "originHash" : "d3ec84d17b2b514d78f64914324762c589ba006484e3d56ecbcd9fc83c367d06",
   "pins" : [
     {
       "identity" : "matft",
@@ -44,6 +44,15 @@
       "state" : {
         "revision" : "71f0a47e1c1149cc486be2e436d7369e90ca4449",
         "version" : "0.1.2"
+      }
+    },
+    {
+      "identity" : "swiftplot",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/KarthikRIyer/swiftplot.git",
+      "state" : {
+        "revision" : "c5424eb8688217029d44e941d3a1d2ccc18c3a82",
+        "version" : "2.0.0"
       }
     }
   ],
