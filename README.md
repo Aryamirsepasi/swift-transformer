@@ -29,7 +29,7 @@ Based on the original Numpy-Transformer Project by AmritanshuV [Link](https://gi
 
 #### Testing:
 - **227 Batches, epoch 1/5 (Swift)**: Testing completed in 35.09237003326416 seconds
-- **227 Batches, epoch 1/5 (Python)**: Testing completed in - seconds
+- **227 Batches, epoch 1/5 (Python)**: Testing completed in 303 seconds
 - **227 Batches, epoch 2/5 (Swift)**: Testing completed in 34.56067502498627 seconds
 - **227 Batches, epoch 2/5 (Python)**: Testing completed in - seconds
 - **227 Batches, epoch 3/5 (Swift)**: Testing completed in 36.549415946006775 seconds
