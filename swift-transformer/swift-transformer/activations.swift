@@ -14,11 +14,11 @@ class ReLU: Activation { //needed
     
     func forward(x: MLXArray) -> MLXArray {
         
-        print ("entered activation ReLU forward")
+        //print ("entered activation ReLU forward")
 
         self.x = x
         
-        print ("exited activation ReLU forward")
+        //print ("exited activation ReLU forward")
 
         return MLX.sigmoid(x)
 
@@ -26,7 +26,7 @@ class ReLU: Activation { //needed
     
     func backward(grad: MLXArray) -> MLXArray {
         
-        print ("entered activation ReLU backward")
+        //print ("entered activation ReLU backward")
 
         return grad * MLX.where(self.x .<= 0, 0, 1).asType(self.x.dtype)
     }
@@ -38,7 +38,7 @@ class Softmax: Activation {
     
     func forward(x: MLXArray) -> MLXArray {
         
-        print ("entered activation Softmax forward")
+        //print ("entered activation Softmax forward")
 
         self.x = x
         
@@ -46,13 +46,13 @@ class Softmax: Activation {
         
         var softmax =  e_x / MLX.sum(e_x, axis: axis,keepDims: true)
                 
-        print ("exited activation Softmax forward")
+        //print ("exited activation Softmax forward")
 
         return softmax
     }
     
     func backward(grad: MLXArray) -> MLXArray {
-        print("entered activation Softmax backward")
+        //print("entered activation Softmax backward")
 
         let batch_size = self.x.shape[0]
         let softmax = self.forward(x: self.x)
@@ -79,7 +79,7 @@ class Softmax: Activation {
         let grad_expanded = grad[.ellipsis, .newAxis, 0...]
         let input_grad = MLX.matmul(grad_expanded, J) // Shape: [batch_size, seq_len, num_classes, num_classes]
 
-        print("exited activation Softmax backward")
+        //print("exited activation Softmax backward")
 
         //print((input_grad.reshaped(self.x.shape) / batch_size).shape)
         // Reshape and scale the gradient
@@ -94,22 +94,22 @@ class Identity: Activation { //needed
     private var x: MLXArray = []
 
     func forward(x: MLXArray) -> MLXArray {
-        print ("entered activation Identity forward")
+        //print ("entered activation Identity forward")
 
         self.x = x
         
-        print ("exited activation Identity forward")
+        //print ("exited activation Identity forward")
 
         return x
     }
     
     func backward(grad: MLXArray) -> MLXArray {
         
-        print ("entered activation Identity backward")
+        //print ("entered activation Identity backward")
 
         var res = grad * MLX.ones(self.x.shape).asType(self.x.dtype)
         
-        print ("exited activation Identity backward")
+        //print ("exited activation Identity backward")
 
         return res
     }
@@ -121,7 +121,7 @@ class LogSoftmax: Activation { //needed
     
     func forward(x: MLXArray) -> MLXArray {
         
-        print ("entered activation LogSoftmax forward")
+        //print ("entered activation LogSoftmax forward")
 
         self.x = x
         var e_x = MLX.exp(x - MLX.max(x, axis: axis,keepDims: true))
@@ -129,13 +129,13 @@ class LogSoftmax: Activation { //needed
         
         var log_softmax = MLX.log(softmax)
         
-        print ("exited activation LogSoftmax forward")
+        //print ("exited activation LogSoftmax forward")
 
         return log_softmax
     }
     
     func backward(grad: MLXArray) -> MLXArray {
-        print ("entered activation LogSoftmax backward")
+        //print ("entered activation LogSoftmax backward")
 
         var e_x = MLX.exp(self.x - MLX.max(self.x, axis: axis,keepDims: true))
         var softmax = e_x / MLX.sum(e_x, axis: axis,keepDims: true)
@@ -143,7 +143,7 @@ class LogSoftmax: Activation { //needed
         var batch_size = self.x.shape[0]
         var input_grad = grad - softmax * grad.sum(axis: axis,keepDims: true)
             
-        print ("exited activation LogSoftmax backward")
+        //print ("exited activation LogSoftmax backward")
 
         return input_grad / batch_size
     }

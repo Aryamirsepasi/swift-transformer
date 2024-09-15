@@ -20,7 +20,7 @@ class EncoderLayer {
 
     func forward(src: MLXArray, srcMask: MLXArray, training: Bool) -> MLXArray {
         
-        print ("entered encoder_layer forward")
+        //print ("entered encoder_layer forward")
 
         //print(src.shape)
         //print(src.shape)
@@ -34,14 +34,14 @@ class EncoderLayer {
         
         srcvar = self.ffLayerNorm.forward(X: src + self.dropout.forward(X: _src, training: training))
         
-        print ("exited encoder_layer forward")
+        //print ("exited encoder_layer forward")
 
         return srcvar
     }
 
     func backward(error: MLXArray) -> MLXArray {
         
-        print("entered encoder_layer backward")
+        //print("entered encoder_layer backward")
 
         var errorvar = self.ffLayerNorm.backward(error: error)
         
@@ -53,7 +53,7 @@ class EncoderLayer {
         
         (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(errorvar))
         
-        print("exited encoder_layer backward")
+        //print("exited encoder_layer backward")
 
         return _error + _error2 + _error3 + error
         
@@ -68,7 +68,7 @@ class EncoderLayer {
 
     func updateWeights(layerNum: Int) -> Int {
         
-        print("entered encoder_layer updateWeights")
+        //print("entered encoder_layer updateWeights")
 
         var layerNum = layerNum
         layerNum = selfAttentionNorm.updateWeights(layerNum: layerNum)
@@ -76,7 +76,7 @@ class EncoderLayer {
         layerNum = selfAttention.updateWeights(layerNum: layerNum)
         layerNum = positionWiseFeedForward.updateWeights(startingLayerNum: layerNum)
         
-        print("exited encoder_layer updateWeights")
+       // print("exited encoder_layer updateWeights")
 
         return layerNum
     }

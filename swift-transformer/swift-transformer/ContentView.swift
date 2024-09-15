@@ -17,7 +17,7 @@ struct ContentView: View {
             .frame(height: 200)
             .chartXAxisLabel("Epoch")
             .chartYAxisLabel("Loss")
-            
+            .chartYScale(domain: 4.2...4.6) // Adjust the y-axis range here
             
         }
     }

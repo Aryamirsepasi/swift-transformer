@@ -52,7 +52,7 @@ class Dense {
         self.gradB = []
         self.batchSize = 0
 
-        print("unitsNum in dense init: ", self.unitsNum)
+        //print("unitsNum in dense init: ", self.unitsNum)
         self.build()
     }
     
@@ -80,7 +80,7 @@ class Dense {
     }
     
     func forward(X: MLXArray, training: Bool = true) -> MLXArray {
-        print("entered dense forward")
+        //print("entered dense forward")
 
         self.inputData = X // Set inputData here
 
@@ -91,13 +91,13 @@ class Dense {
         self.outputData = weightedSum + self.b
 
         //print("outputData shape: ", self.outputData.shape)
-        print("exited dense forward")
+        //print("exited dense forward")
 
         return self.outputData
     }
 
     func backward(error: MLXArray) -> MLXArray {
-        print("entered dense backward")
+        //print("entered dense backward")
 
         guard let inputData = self.inputData else {
             fatalError("Input data not set. Ensure forward pass is called before backward pass.")
@@ -111,13 +111,13 @@ class Dense {
         let wT = self.w.transposed(1, 0)
         let outputError = MLX.matmul(error, wT)
 
-        print("exited dense backward")
+        //print("exited dense backward")
         return outputError
     }
 
     func updateWeights(layerNum: Int) -> Int {
         
-        print("entered dense updateWeights")
+        //print("entered dense updateWeights")
 
         if let optimizer = self.optimizer {
             var templayerNum = layerNum
@@ -127,7 +127,7 @@ class Dense {
             }
         }
         
-        print("exited dense updateWeights")
+        //print("exited dense updateWeights")
 
         return layerNum + 1
     }

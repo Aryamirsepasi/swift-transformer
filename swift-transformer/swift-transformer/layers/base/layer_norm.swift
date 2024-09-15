@@ -115,7 +115,7 @@ class LayerNormalization {
 
     func forward(X: MLXArray) -> MLXArray {
         
-        print ("entered layer_norm forward")
+        //print ("entered layer_norm forward")
 
         self.inputData = X
         var x_T =  self.inputData.T
@@ -147,14 +147,14 @@ class LayerNormalization {
         
         self.outputData = self.gamma * self.XHat + self.beta
         
-        print ("exited layer_norm forward")
+        //print ("exited layer_norm forward")
 
         return  self.outputData
     }
 
     func backward(error: MLXArray) -> MLXArray {
         
-        print("entered layer_norm backward")
+        //print("entered layer_norm backward")
 
         var errorT = error.T
         
@@ -191,14 +191,14 @@ class LayerNormalization {
         self.gradGamma = MLX.sum(error * self.XHat, axes: self.normalizedAxis)
         self.gradBeta = MLX.sum(error, axes: self.normalizedAxis)
 
-        print("exited layer_norm backward")
+        //print("exited layer_norm backward")
 
         return outputError
     }
 
     func updateWeights(layerNum: Int) -> Int {
         
-        print("entered layer_norm updateWeights")
+        //print("entered layer_norm updateWeights")
 
         if let optimizer =  self.optimizer {
             var layerNum = layerNum
@@ -206,7 +206,7 @@ class LayerNormalization {
             (self.beta,  self.vb,  self.mb,  self.vbHat,  self.mbHat, layerNum) = optimizer.update(gradient: self.gradBeta, weights: &self.beta, v: &self.vb, m: &self.mb, vHat: &self.vbHat, mHat: &self.mbHat, t: layerNum)
         }
         
-        print("exited layer_norm updateWeights")
+        //print("exited layer_norm updateWeights")
 
 
         return layerNum

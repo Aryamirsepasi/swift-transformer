@@ -7,17 +7,18 @@ struct swift_transformerApp: App {
     @StateObject var viewModel = TransformerViewModel()
     
     var body: some Scene {
-        WindowGroup {
-            ContentView(viewModel: viewModel)
-                .onAppear {
-                    viewModel.setupTransformer()
-                }
+            WindowGroup {
+                ContentView(viewModel: viewModel)
+                    .onAppear {
+                        viewModel.setupTransformer()
+                    }
+            }
         }
-    }
 }
 
 class TransformerViewModel: ObservableObject {
     @Published var lossData: [LossDataPoint] = []
+    //@Published var examples: [Example] = []  // Added to store translation examples
     
     func setupTransformer() -> Seq2Seq {
         // Token and index setup
@@ -78,7 +79,7 @@ class TransformerViewModel: ObservableObject {
             valData: valData,
             epochs: 5,
             saveEveryEpochs: 20,
-            savePath: "saved models/seq2seq_model",
+            savePath: ".",
             validationCheck: true
         )
         
@@ -100,6 +101,45 @@ class TransformerViewModel: ObservableObject {
         print("Training Loss History Array: \(trainLosses)")
         print("Validation Loss History Array: \(valLosses)")
         
+        
+        // The below part doesn't generate the correct decoded sentence. I unfortunately couldn't find where the problem is
+        /*
+        var (_, valData2, _) = dataPreparator.importMulti30kDataset(path: "./dataset/")
+        valData2 = dataPreparator.clearDataset(dataset: valData2)
+        
+        var sentencesNum = 10
+        let totalSentences = valData2.count
+        let randomIndices = (0..<sentencesNum).map { _ in Int.random(in: 0..<totalSentences) }
+        let sentencesSelection = randomIndices.map { valData2[$0] }
+        
+        //var examples: [Example] = []
+        
+        for (i, example) in sentencesSelection.enumerated() {
+            print("\nExample №\(i + 1)")
+            if let inputSentenceString = example["en"], let targetSentenceString = example["de"] {
+                // Split the sentences into arrays of words
+                let inputSentence = inputSentenceString.split(separator: " ").map(String.init)
+                let targetSentence = targetSentenceString.split(separator: " ").map(String.init)
+                
+                print("Input sentence: \(inputSentence.joined(separator: " "))")
+                let (decodedSentence, attention) = model.predict(sentence: inputSentence, vocabs: trainDataVocabs)
+                print("Decoded sentence: \(decodedSentence.joined(separator: " "))")
+                print("Target sentence: \(targetSentence.joined(separator: " "))")
+                
+                // If you want to store the example
+                /*let exampleStruct = Example(
+                    index: i + 1,
+                    inputSentence: inputSentence,
+                    targetSentence: targetSentence,
+                    decodedSentence: decodedSentence,
+                    attention: attention
+                )
+                examples.append(exampleStruct)*/
+            }
+        }
+
+        */
+        
         return model
     }
 }
@@ -111,3 +151,13 @@ struct LossDataPoint: Identifiable {
     let loss: Float
     let series: String
 }
+
+// Define a struct for translation examples
+/*struct Example: Identifiable {
+    let id = UUID()
+    let index: Int
+    let inputSentence: [String]
+    let targetSentence: [String]
+    let decodedSentence: [String]
+    let attention: [[[Float]]]
+}*/

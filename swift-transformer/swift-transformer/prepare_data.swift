@@ -37,7 +37,7 @@ class DataPreparator {
     
     func prepareData(path: String = "dataset/", batchSize: Int = 1, minFreq: Int = 10) -> (([MLXArray], [MLXArray]), ([MLXArray], [MLXArray]), ([MLXArray], [MLXArray])) {
         
-        print("entered prepare data")
+        //print("entered prepare data")
         
         let (trainData, valData, testData) = importMulti30kDataset(path: path)
         let clearedTrainData = clearDataset(dataset: trainData)
@@ -58,39 +58,39 @@ class DataPreparator {
         let valDataBatches = addTokens(dataset: clearedValData, batchSize: batchSize)
         let valSourceTarget = buildDataset(dataset: valDataBatches, vocabs: self.vocabs!)
         
-        print("exited prepare data")
+        //print("exited prepare data")
         
         return (trainSourceTarget, testSourceTarget, valSourceTarget)
     }
     
     func getVocabs() -> ([String: Int], [String: Int])? {
         
-        print("exited getVocabs")
+        //print("exited getVocabs")
         
         return self.vocabs
     }
     
     func filterSeq(seq: String) -> String {
         
-        print("entered filterSeq")
+        //print("entered filterSeq")
         
         let charsToRemove = CharacterSet(charactersIn: "!”#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\t\n")
         
-        print("exited filterSeq")
+        //print("exited filterSeq")
         
         return seq.components(separatedBy: charsToRemove).joined()
     }
     
     func lowercaseSeq(seq: String) -> String {
         
-        print("exited lowercaseSeq")
+        //print("exited lowercaseSeq")
         
         return seq.lowercased()
     }
     
     func importMulti30kDataset(path: String) -> ([[String: String]], [[String: String]], [[String: String]]) {
         
-        print("entered importMulti30kDataset")
+        //print("entered importMulti30kDataset")
         
         let filenames = ["train", "val", "test"]
         var trainResults: [[String: String]] = []
@@ -118,7 +118,7 @@ class DataPreparator {
             }
         }
         
-        print("exited importMulti30kDataset")
+        //print("exited importMulti30kDataset")
         
         
         //print("First entry in trainResults: \(trainResults[0])")
@@ -128,7 +128,7 @@ class DataPreparator {
     
     func clearDataset(dataset: [[String: String]]) -> [[String: String]] {
         
-        print("exited clearDataset")
+        //print("exited clearDataset")
         
         return dataset.map { example in
             var clearedExample = example
@@ -140,7 +140,7 @@ class DataPreparator {
     
     func buildVocab(dataset: [[String: String]], minFreq: Int = 1) -> ([String: Int], [String: Int]) {
         
-        print("entered buildVocab")
+        //print("entered buildVocab")
         
         var enVocab: [String: Int] = tokensAndIndices
         var deVocab: [String: Int] = tokensAndIndices
@@ -163,13 +163,13 @@ class DataPreparator {
             deVocab[word] = deVocab.count
         }
         
-        print("exited buildVocab")
+        //print("exited buildVocab")
         
         return (enVocab, deVocab)
     }
     
     func addTokens(dataset: [[String: String]], batchSize: Int) -> [[[String: String]]] {
-        print("entered addTokens")
+        //print("entered addTokens")
         
         // Step 1: Add special tokens (SOS, EOS) to each sequence
         let paddedData = dataset.map { example -> [String: String] in
@@ -205,7 +205,7 @@ class DataPreparator {
             }
         }
         
-        print("exited addTokens")
+        //print("exited addTokens")
         return batchedData
     }
     
@@ -269,7 +269,7 @@ class DataPreparator {
     }*/
     func buildDataset(dataset: [[[String: String]]], vocabs: ([String: Int], [String: Int])) -> ([MLXArray], [MLXArray]) {
         
-        print("entered buildDataset")
+        //print("entered buildDataset")
 
         var sourceArrays: [MLXArray] = []
         var targetArrays: [MLXArray] = []
@@ -303,7 +303,7 @@ class DataPreparator {
             targetArrays.append(targetMLX)
         }
 
-        print("exited buildDataset")
+        //print("exited buildDataset")
         
         return (sourceArrays, targetArrays)
     }

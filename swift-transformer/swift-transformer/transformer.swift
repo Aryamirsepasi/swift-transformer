@@ -93,21 +93,21 @@ class Seq2Seq {
     }
     
     func getPadMask(x: MLXArray) -> MLXArray {
-        print("entered getPadMask")
+        //print("entered getPadMask")
         
         return (x .!= self.padIdx).asType(Int.self)[0..., .newAxis, 0...]
     }
     
     func getSubMask(x: MLXArray) -> MLXArray {
         
-        print("entered getSubMask")
+        //print("entered getSubMask")
         
         let seqLen = x.shape[1]
         var subsequentMask = MLX.triu(MLX.ones([seqLen, seqLen]), k: 1).asType(Int.self)
         
         subsequentMask = MLX.logicalNot(subsequentMask)
         
-        print("exited getSubMask")
+        //print("exited getSubMask")
         
         return subsequentMask
     }
@@ -136,7 +136,7 @@ class Seq2Seq {
      }*/
     
     func forward(src: MLXArray, trg: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
-        print("entered forward")
+        //print("entered forward")
         
         let srcvar = src.asType(dataType)
         let trgvar = trg.asType(dataType)
@@ -157,37 +157,37 @@ class Seq2Seq {
         
         let (out, attention) = self.decoder.forward(trg: trgvar, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: training)
         
-        print("exited forward")
+        //print("exited forward")
         
         return (out, attention)
     }
     
     
     func backward(error: MLXArray)-> MLXArray {
-        print("entered backward")
+        //print("entered backward")
         
         var errorvar = error
         errorvar = self.decoder.backward(error: errorvar)
         errorvar = self.encoder.backward(error: self.decoder.encoderError)
         
-        print("exited backward")
+        //print("exited backward")
         
         return errorvar
     }
     
     func updateWeights() {
-        print("entered updateWeights")
+        //print("entered updateWeights")
         
         encoder.updateWeights()
         decoder.updateWeights()
         
-        print("exited updateWeights")
+        //print("exited updateWeights")
         
     }
     
     func train(source: [MLXArray], target: [MLXArray], epoch: Int, epochs: Int) -> MLXArray {
         
-        print("entered train")
+        //print("entered train")
         
         // Start timer
         let startTime = Date()
@@ -201,7 +201,7 @@ class Seq2Seq {
         let tqdmRange = TqdmSequence(sequence: zipped, description: "Training", unit: "batch", color: .cyan)
         
         for (batchNum, (sourceBatch, targetBatch)) in tqdmRange {
-            print("Processing batch \(batchNum + 1)")
+            //print("Processing batch \(batchNum + 1)")
             
             //print(sourceBatch.shape)
             //print(targetBatch[0..., 0..<(targetBatch.shape[1] - 1)].shape)
@@ -255,13 +255,13 @@ class Seq2Seq {
         print("Training completed in \(timeInterval) seconds")
         //print(epochLoss)
         
-        print("exited train")
+        //print("exited train")
         
         return epochLoss
     }
     
     func evaluate(source: [MLXArray], target: [MLXArray]) -> MLXArray {
-        print("entered evaluate")
+        //print("entered evaluate")
         
         
         // Start timer
@@ -304,7 +304,7 @@ class Seq2Seq {
         let timeInterval = endTime.timeIntervalSince(startTime)
         print("Testing completed in \(timeInterval) seconds")
         
-        print("exited evaluate")
+        //print("exited evaluate")
         
         return epochLoss
         
@@ -312,7 +312,7 @@ class Seq2Seq {
     
     func fit(trainData: ([MLXArray], [MLXArray]), valData: ([MLXArray], [MLXArray]), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> ([MLXArray],[MLXArray]) {
         
-        print("entered fit")
+        //print("entered fit")
         
         setOptimizer()
         
@@ -345,32 +345,43 @@ class Seq2Seq {
             }
         }
         
-        print("exited fit")
+        //print("exited fit")
         
         return (trainLossHistory, valLossHistory)
     }
     
-    func predict(sentence: [Int], vocabs: ([String: Int], [String: Int]), maxLength: Int = 50) -> ([String], MLXArray) {
+    func predict(sentence: [String], vocabs: ([String: Int], [String: Int]), maxLength: Int = 50) -> ([String], MLXArray) {
         
-        // not completely correct:
-        let srcIndices = [sosIndex] + sentence + [eosIndex]
+        // Map words to indices, using the source vocabulary
+            let srcIndices = sentence.map { word in
+                vocabs.0[word] ?? unkIndex
+            }
         
-        let src = MLXArray(srcIndices).reshaped([1,-1])
+        // Add SOS and EOS tokens
+        let srcIndicesWithTokens = [sosIndex] + srcIndices + [eosIndex]
+        
+        // Create an MLXArray from the source indices and reshape it
+        let src = MLXArray(srcIndicesWithTokens).reshaped([1, -1])
         let srcMask = self.getPadMask(x: src)
         
+        // Pass through the encoder
         let encSrc = self.encoder.forward(src: src, srcMask: srcMask, training: false)
         
+        // Initialize target indices with SOS token
         var trgIndices = [sosIndex]
+        var output = MLXArray([])
+        var attention = MLXArray([])
         
-        var (output, attention) : (MLXArray, MLXArray) = ([],[])
-        
-        for _ in 0..<maxLength{
-            
-            let trg = MLXArray(trgIndices).reshaped([1,-1])
+        for _ in 0..<maxLength {
+            let trg = MLXArray(trgIndices).reshaped([1, -1])
             let trgMask = self.getPadMask(x: trg) & self.getSubMask(x: trg)
             
-            (output, attention) = self.decoder.forward(trg: trg, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: false)
+            // Pass through the decoder
+            let (out, attn) = self.decoder.forward(trg: trg, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: false)
+            output = out
+            attention = attn
             
+            // Get the index of the predicted word
             let trgIndx = output.argMax(axis: -1)[0..., -1]
             
             trgIndices.append(trgIndx.item(Int.self))
@@ -379,12 +390,20 @@ class Seq2Seq {
             if trgIndx.item(Int.self) == eosIndex || trgIndices.count >= maxLength {
                 break
             }
-            
         }
         
+        // Create a reversed vocabulary mapping indices back to words
         let reversedVocab = Dictionary(uniqueKeysWithValues: vocabs.1.map { ($1, $0) })
-        let decodedSentence = trgIndices.dropFirst().compactMap { reversedVocab[$0] }
         
-        return (decodedSentence, attention[0])
+        // Decode the sentence by mapping indices to words
+        let decodedSentence = trgIndices.map { idx in
+            reversedVocab[idx] ?? unkToken
+        }
+        
+        // Extract the first element of the attention array
+        let attention0 = attention[0]
+        
+        return (Array(decodedSentence.dropFirst()), attention0)
     }
+
 }
