@@ -84,7 +84,7 @@ class Embedding {
 
     func forward(X: MLXArray) -> MLXArray {
         
-        print ("entered embedding forward")
+        //print ("entered embedding forward")
 
         self.inputData = X
         
@@ -103,7 +103,7 @@ class Embedding {
         
         self.outputData = MLX.matmul(self.inputData, self.w)
         
-        print ("exited embedding forward")
+        //print ("exited embedding forward")
 
         return self.outputData
         
@@ -111,25 +111,25 @@ class Embedding {
     
     func backward(error: MLXArray) -> MLXArray {
         
-        print("entered embedding backward")
+        //print("entered embedding backward")
 
         self.gradW = MLX.matmul(MLX.transposed(self.inputData, axes: [0,2,1]), error).logSumExp(axis: 0)
         
-        print("exited embedding backward")
+        //print("exited embedding backward")
 
         return []
     }
 
     func updateWeights(layerNum: Int) -> Int {
         
-        print("entered embedding updateWeights")
+        //print("entered embedding updateWeights")
 
         if let optimizer = optimizer {
             var templayerNum = layerNum
             (w, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradW, weights: &w, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: layerNum)
         }
         
-        print("exited embedding updateWeights")
+        //print("exited embedding updateWeights")
 
         return layerNum + 1
     }

@@ -16,13 +16,13 @@ class SGD: Optimizer {
     
     func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray,MLXArray, MLXArray, MLXArray, MLXArray, Int) {
         
-        print("entered SGD update")
+        //print("entered SGD update")
 
         
         weights -= gradient * alpha
         
         
-        print("exited SGD update")
+        //print("exited SGD update")
 
         return (weights, v, m, vHat, mHat, t)
 
@@ -45,7 +45,7 @@ class Adam: Optimizer { //after
     
     func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
         
-        print("entered Adam update")
+        //print("entered Adam update")
         
         //print("m: ", m)
         //print("beta: ", beta)
@@ -65,7 +65,7 @@ class Adam: Optimizer { //after
         weights -= temp
         
 
-        print("exited Adam update")
+        //print("exited Adam update")
 
         return (weights, v, m, vHat, mHat , t)
     }
@@ -90,7 +90,7 @@ class Noam: Optimizer {
     
     func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
         
-        print("entered Noam update")
+        //print("entered Noam update")
 
         stepsNum += 1
         var model_dim_component = Float(pow(modelDim, -0.5))
@@ -103,7 +103,7 @@ class Noam: Optimizer {
             
         self.optimizer.alpha = lr
         
-        print("exited Noam update")
+        //print("exited Noam update")
 
         return self.optimizer.update(gradient: gradient, weights: &weights, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: t)
     }

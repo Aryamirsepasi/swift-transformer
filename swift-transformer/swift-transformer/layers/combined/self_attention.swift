@@ -67,7 +67,7 @@ class MultiHeadAttention {
     }
     
     func splitHeadsForward(x:MLXArray) -> MLXArray {
-        print ("entered self_attention splitHeadsForward")
+        //print ("entered self_attention splitHeadsForward")
 
         let batchSize = x.shape[0]
         
@@ -75,7 +75,7 @@ class MultiHeadAttention {
     }
     
     func splitHeadsBackward(x: MLXArray) -> MLXArray {
-        print ("entered self_attention splitHeadsBackward")
+        //print ("entered self_attention splitHeadsBackward")
 
         let batchSize = x.shape[0]
         
@@ -83,7 +83,7 @@ class MultiHeadAttention {
     }
     
     func groupHeadsForward(x: MLXArray) -> MLXArray {
-        print ("entered self_attention groupHeadsForward")
+        //print ("entered self_attention groupHeadsForward")
 
         let batchSize = x.shape[0]
         
@@ -91,7 +91,7 @@ class MultiHeadAttention {
     }
     
     func groupHeadsBackward(x: MLXArray) -> MLXArray {
-        print ("entered self_attention groupHeadsBackward")
+        //print ("entered self_attention groupHeadsBackward")
 
         let batchSize = x.shape[0]
         
@@ -100,7 +100,7 @@ class MultiHeadAttention {
     
     func forward(query: MLXArray, key: MLXArray, value: MLXArray, mask: MLXArray, training: Bool = true) -> (MLXArray, MLXArray) {
         
-        print ("entered self_attention forward")
+        //print ("entered self_attention forward")
 
         self.keyLen = key.shape[1]
         self.queryLen = query.shape[1]
@@ -120,10 +120,10 @@ class MultiHeadAttention {
         self.Q = splitHeadsForward(x: Q)
         self.V = splitHeadsForward(x: V)
         
-        print("got here?")
-        print("Q: ", self.Q.shape)
-        print("Q: ", self.K.transposed(0,1,3,2).shape)
-        print("scale: ", self.scale)
+        //print("got here?")
+        //print("Q: ", self.Q.shape)
+        //print("Q: ", self.K.transposed(0,1,3,2).shape)
+        //print("scale: ", self.scale)
 
         var energy = MLX.matmul(self.Q, self.K.transposed(0,1,3,2)) / self.scale
         
@@ -148,7 +148,7 @@ class MultiHeadAttention {
         
         var O = self.OLinear.forward(X: concat_output)
         
-        print ("exited self_attention forward")
+        //print ("exited self_attention forward")
 
         return (O, attention)
     }
@@ -156,7 +156,7 @@ class MultiHeadAttention {
     
     func backward(error: MLXArray) -> (MLXArray,MLXArray,MLXArray) {
         
-        print("entered self_attention backward")
+        //print("entered self_attention backward")
 
         var error = self.OLinear.backward(error: error)
         
@@ -185,7 +185,7 @@ class MultiHeadAttention {
         QError = self.QLinear.backward(error: QError)
         KError = self.KLinear.backward(error: KError)
         
-        print("exited self_attention backward")
+        //print("exited self_attention backward")
 
         return (QError, KError, VError)
     }
@@ -199,14 +199,14 @@ class MultiHeadAttention {
     
     func updateWeights(layerNum: Int) -> Int {
         
-        print("entered self_attention updateWeights")
+        //print("entered self_attention updateWeights")
 
         var layerNum = KLinear.updateWeights(layerNum: layerNum)
         layerNum = QLinear.updateWeights(layerNum: layerNum)
         layerNum = VLinear.updateWeights(layerNum: layerNum)
         layerNum = OLinear.updateWeights(layerNum: layerNum)
         
-        print("exited self_attention updateWeights")
+        //print("exited self_attention updateWeights")
 
         return layerNum
     }

@@ -53,7 +53,7 @@ class Decoder {
     }
 
     func backward(error: MLXArray) -> MLXArray {
-        print("entered decoder backward")
+        //print("entered decoder backward")
 
         // Step 1: Pass through the activation backward function
         var errorvar = self.activation.backward(grad: error)
@@ -81,7 +81,7 @@ class Decoder {
         errorvar = self.positionEmbedding.backward(error: errorvar) * self.scale
         errorvar = self.tokenEmbedding.backward(error: errorvar)
         
-        print("exited decoder backward")
+        //print("exited decoder backward")
 
         return errorvar
     }
