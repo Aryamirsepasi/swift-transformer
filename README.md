@@ -42,9 +42,12 @@ Based on the original Numpy-Transformer project by AmritanshuV. [Link](https://g
 - **227 Batches, Epoch 5/5 (Swift)**: Testing completed in 36.33 seconds
 - **227 Batches, Epoch 5/5 (Python)**: Testing completed in 219 seconds
 
+
 #### Summary:
 
 On average, the Swift variant is approximately **8.92×** faster during training and **6.54×** faster during testing compared to the Python variant.
+
+**More information about the performance can be found in the performance data folder.**
 
 ## Loss History Graph
 
