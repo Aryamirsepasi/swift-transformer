@@ -74,12 +74,31 @@ class Embedding {
         for i in 0..<indices.size {
             let index = indices[i].item(Int.self)
             let label = reshapedLabels[i].item(Int.self)
-            prepareBatchLabels[index, label] = MLXArray(1)
+            prepareBatchLabels[index, label] = MLXArray(1.0)
         }
         
         // Reshape the tensor to the desired dimensions
         return prepareBatchLabels.reshaped([self.batchSize, self.currentInputLength, self.inputDim]).asType(self.dataType)
     }
+    
+    /*func prepareLabels(batchLabels: MLXArray) -> MLXArray {
+        print ("entered embedding prepareLabels")
+
+        let batchLabelsVar = batchLabels.asType(DType.int32)
+        let numSamples = batchLabelsVar.size
+        var prepareBatchLabels = MLX.zeros([numSamples, self.inputDim])
+
+        // Flatten and iterate over labels
+        let labels = batchLabelsVar.flattened()
+        for (index, labelValue) in labels.enumerated() {
+            let label = labelValue.item(Int.self)
+            prepareBatchLabels[index, label] = MLXArray(1.0)
+        }
+
+        print ("exited embedding prepareLabels")
+
+        return prepareBatchLabels.reshaped([self.batchSize, self.currentInputLength, self.inputDim])
+    }*/
 
 
     func forward(X: MLXArray) -> MLXArray {
@@ -113,7 +132,7 @@ class Embedding {
         
         //print("entered embedding backward")
 
-        self.gradW = MLX.matmul(MLX.transposed(self.inputData, axes: [0,2,1]), error).logSumExp(axis: 0)
+        self.gradW = MLX.matmul(MLX.transposed(self.inputData, axes: [0,2,1]), error).sum(axis: 0)
         
         //print("exited embedding backward")
 

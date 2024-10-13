@@ -108,8 +108,7 @@ class Dense {
         self.gradB = MLX.sum(error, axes: [0, 1])
         
         // Perform matrix multiplication equivalent to np.dot(error, self.w.T)
-        let wT = self.w.transposed(1, 0)
-        let outputError = MLX.matmul(error, wT)
+        let outputError = MLX.matmul(error, self.w.T)
 
         //print("exited dense backward")
         return outputError

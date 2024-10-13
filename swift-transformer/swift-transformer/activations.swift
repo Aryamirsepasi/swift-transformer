@@ -47,6 +47,8 @@ class Softmax: Activation {
         var softmax =  e_x / MLX.sum(e_x, axis: axis,keepDims: true)
                 
         //print ("exited activation Softmax forward")
+        
+        
 
         return softmax
     }
