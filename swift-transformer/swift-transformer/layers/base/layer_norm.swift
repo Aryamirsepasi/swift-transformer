@@ -153,48 +153,23 @@ class LayerNormalization {
     }
 
     func backward(error: MLXArray) -> MLXArray {
-        
-        //print("entered layer_norm backward")
+        let errorT = error.T
+        let gammaExpanded = MLX.expandedDimensions(self.gamma, axes: self.normalizedAxis).T
+        let temp1 = (1 / Float(self.featureSize)) * gammaExpanded
+        let temp2 = temp1 * self.stddevInv
 
-        var errorT = error.T
-        
-        //print("featureSize: ", self.featureSize)
-        
-        var temp1 = (1 / self.featureSize) * MLX.expandedDimensions(self.gamma, axes: self.normalizedAxis).T
-        
-        //print("first part passed")
-        var temp2 = temp1 * self.stddevInv
-        
-        //print("second part passed")
-        var temp3 = self.featureSize * errorT - MLX.sum(errorT, axis: 0)
-        //print("third part passed")
-        
-        //print("errorT: ", errorT.shape)
-        //print("temp3: ", temp3.shape)
-        //print("XCentered: ", self.XCentered.shape)
-        //print("stddevInv power: ", MLX.pow(self.stddevInv, 2).shape)
+        // Correctly compute temp3
+        let sumErrorT = MLX.sum(errorT, axis: 0)
+        let sumErrorTXCentered = MLX.sum(errorT * self.XCentered, axis: 0)
+        let temp3 = self.featureSize * errorT - sumErrorT - self.XCentered * MLX.pow(self.stddevInv, 2) * sumErrorTXCentered
 
-        var temp4 = temp3 - (self.XCentered * MLX.pow(self.stddevInv, 2))
-        //print("fourth part passed")
-
-        var temp5 = temp4 * MLX.sum(errorT * self.XCentered, axis: 0)
-        
-        //print("fifth part passed")
-        
-        var temp6 = temp2 * temp5
-
-
-        var outputError = temp6
-        
-        outputError = outputError.T
-        
+        let outputError = temp2 * temp3
         self.gradGamma = MLX.sum(error * self.XHat, axes: self.normalizedAxis)
         self.gradBeta = MLX.sum(error, axes: self.normalizedAxis)
 
-        //print("exited layer_norm backward")
-
-        return outputError
+        return outputError.T
     }
+
 
     func updateWeights(layerNum: Int) -> Int {
         

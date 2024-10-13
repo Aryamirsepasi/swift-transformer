@@ -47,7 +47,7 @@ class PositionalEncoding {
 
         var xvar = x
         
-        xvar += self.pe[..<x.shape[0], 0...]
+        xvar += self.pe[..<xvar.shape[0], 0...]
         
         //print ("exited positional_encoding forward")
 
