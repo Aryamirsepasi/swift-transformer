@@ -10,7 +10,7 @@ class Encoder {
 
     init(srcVocabSize: Int, headsNum: Int, layersNum: Int, dModel: Int, dFF: Int, dropoutRate: Float, maxLen: Int = 5000, dataType: DType = DType.float32) {
         
-        //print ("entered encoder init")
+        print ("entered encoder init")
 
         self.tokenEmbedding = Embedding(inputDim: srcVocabSize, outputDim: dModel, dataType: dataType)
         
@@ -27,13 +27,13 @@ class Encoder {
         //print ("step4")
         self.scale = sqrt(Float(dModel))
         
-        //print ("exited encoder init")
+        print ("exited encoder init")
 
     }
 
     func forward(src: MLXArray, srcMask: MLXArray, training: Bool) -> MLXArray {
         
-        //print ("entered encoder forward")
+        print ("entered encoder forward")
 
         var srcvar = self.tokenEmbedding.forward(X: src) * self.scale
         srcvar = self.positionEmbedding.forward(x: srcvar)
@@ -43,7 +43,7 @@ class Encoder {
             srcvar = layer.forward(src: srcvar, srcMask: srcMask, training: training)
         }
         
-        //print ("exited encoder forward")
+        print ("exited encoder forward")
 
 
         return srcvar
@@ -51,7 +51,7 @@ class Encoder {
 
     func backward(error: MLXArray) -> MLXArray {
         
-        //print ("entered encoder backward")
+        print ("entered encoder backward")
 
         var errorvar = error
         
@@ -62,23 +62,28 @@ class Encoder {
         errorvar = dropout.backward(errorvar)
         errorvar = positionEmbedding.backward(error: errorvar) * self.scale
         
-        //print ("exited encoder backward")
+        print ("exited encoder backward")
 
         return tokenEmbedding.backward(error: errorvar)
     }
 
     func setOptimizer(_ optimizer: Optimizer) {
         
+        print("entered encoder setOptimizer")
+
         tokenEmbedding.setOptimizer(optimizer: optimizer)
         
         for layer in layers {
             layer.setOptimizer(optimizer)
         }
+        
+        print("exited encoder setOptimizer")
+
     }
 
     func updateWeights() {
         
-        //print("entered encoder updateWeights")
+        print("entered encoder updateWeights")
 
         var layerNum = 1
         layerNum = tokenEmbedding.updateWeights(layerNum: layerNum)
@@ -87,7 +92,7 @@ class Encoder {
             layerNum = layer.updateWeights(layerNum: layerNum)
         }
         
-        //print("exited encoder updateWeights")
+        print("exited encoder updateWeights")
 
     }
 }

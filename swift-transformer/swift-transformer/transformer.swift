@@ -2,6 +2,8 @@ import Foundation
 import Accelerate
 import MLX
 import Tqdm
+import MLXNN
+
 
 //needed
 
@@ -33,21 +35,39 @@ class Seq2Seq {
     var lossFunction: LossFunction
     
     init(encoder: Encoder, decoder: Decoder, padIdx: Int) {
+        
+        print("entered init")
+
         self.encoder = encoder
         self.decoder = decoder
         self.padIdx = padIdx
         self.optimizer = Adam()
         self.lossFunction = CrossEntropy()
+        
+        print("exited init")
+
     }
     
     func setOptimizer() {
+        
+        print("entered setOptimizer")
+
         encoder.setOptimizer(optimizer)
         decoder.setOptimizer(optimizer: optimizer)
+        
+        print("exited setOptimizer")
+
     }
     
     func compile(optimizer: Optimizer, lossFunction: LossFunction) {
+        
+        print("entered compile")
+
         self.optimizer = optimizer
         self.lossFunction = lossFunction
+        
+        print("exited compile")
+
     }
     
     func load(path: String) {
@@ -93,21 +113,21 @@ class Seq2Seq {
     }
     
     func getPadMask(x: MLXArray) -> MLXArray {
-        //print("entered getPadMask")
+        print("entered getPadMask")
         
         return (x .!= self.padIdx).asType(Int.self)[0..., .newAxis, 0...]
     }
     
     func getSubMask(x: MLXArray) -> MLXArray {
         
-        //print("entered getSubMask")
+        print("entered getSubMask")
         
         let seqLen = x.shape[1]
         var subsequentMask = MLX.triu(MLX.ones([seqLen, seqLen]), k: 1).asType(Int.self)
         
-        subsequentMask = MLX.logicalNot(subsequentMask)
+        subsequentMask = MLX.logicalNot(subsequentMask, stream: .gpu)
         
-        //print("exited getSubMask")
+        print("exited getSubMask")
         
         return subsequentMask
     }
@@ -136,7 +156,7 @@ class Seq2Seq {
      }*/
     
     func forward(src: MLXArray, trg: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
-        //print("entered forward")
+        print("entered forward")
         
         let srcvar = src.asType(dataType)
         let trgvar = trg.asType(dataType)
@@ -151,43 +171,43 @@ class Seq2Seq {
         let subMask = getSubMask(x: trgvar)
         
         // Adjust trgMask shape: (batch_size, seq_len, seq_len)
-        let trgMask = broadcast(padMask, to: [trgvar.shape[0], trgvar.shape[1], trgvar.shape[1]]) & broadcast(subMask, to: [trgvar.shape[0], trgvar.shape[1], trgvar.shape[1]])
+        let trgMask = broadcast(padMask, to: [trgvar.shape[0], trgvar.shape[1], trgvar.shape[1]], stream: .gpu) & broadcast(subMask, to: [trgvar.shape[0], trgvar.shape[1], trgvar.shape[1]], stream: .gpu)
         
         let encSrc = encoder.forward(src: srcvar, srcMask: srcMask, training: training)
         
         let (out, attention) = self.decoder.forward(trg: trgvar, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: training)
         
-        //print("exited forward")
+        print("exited forward")
         
         return (out, attention)
     }
     
     
     func backward(error: MLXArray)-> MLXArray {
-        //print("entered backward")
+        print("entered backward")
         
         var errorvar = error
         errorvar = self.decoder.backward(error: errorvar)
         errorvar = self.encoder.backward(error: self.decoder.encoderError)
         
-        //print("exited backward")
+        print("exited backward")
         
         return errorvar
     }
     
     func updateWeights() {
-        //print("entered updateWeights")
+        print("entered updateWeights")
         
         encoder.updateWeights()
         decoder.updateWeights()
         
-        //print("exited updateWeights")
+        print("exited updateWeights")
         
     }
     
     func train(source: [MLXArray], target: [MLXArray], epoch: Int, epochs: Int) -> MLXArray {
         
-        //print("entered train")
+        print("entered train")
         
         // Start timer
         let startTime = Date()
@@ -214,10 +234,14 @@ class Seq2Seq {
             //print(output.shape[2])
             // Reshape the output
             
-            let _output = output.reshaped([output.shape[0] * output.shape[1], output.shape[2]])
+            let _output = output.reshaped([output.shape[0] * output.shape[1], output.shape[2]], stream: .gpu)
             
             // Compute the loss and append to history
             var loss = self.lossFunction.loss(y: _output, t: targetBatch[0..., 1...].asType(DType.int32).flattened()).mean()
+            //let logits = _output
+            //let targets = targetBatch[0..., 1...].asType(DType.int32).flattened()
+            //let loss = crossEntropy(logits: logits, targets: targets, reduction: .mean)
+            print("loss: \(loss.item(Float.self))")
             
             lossHistory.append(loss.item(Float.self))
             //print("Computed loss for batch \(batchNum + 1): \(loss.item(Float.self))")
@@ -255,13 +279,13 @@ class Seq2Seq {
         print("Training completed in \(timeInterval) seconds")
         //print(epochLoss)
         
-        //print("exited train")
+        print("exited train")
         
         return epochLoss
     }
     
     func evaluate(source: [MLXArray], target: [MLXArray]) -> MLXArray {
-        //print("entered evaluate")
+        print("entered evaluate")
         
         
         // Start timer
@@ -279,10 +303,12 @@ class Seq2Seq {
             
             let (output, attention) = self.forward(src: sourceBatch, trg: targetBatch[0..., 0..<(targetBatch.shape[1] - 1)], training: false)
             
-            let _output = output.reshaped([output.shape[0] * output.shape[1], output.shape[2]])
+            let _output = output.reshaped([output.shape[0] * output.shape[1], output.shape[2]], stream: .gpu)
             
             let loss = self.lossFunction.loss(y: _output, t: targetBatch[0..., 1...].asType(DType.int32).flattened()).mean()
-            
+            //let logits = _output
+            //let targets = targetBatch[0..., 1...].asType(DType.int32).flattened()
+            //let loss = crossEntropy(logits: logits, targets: targets, reduction: .mean)
             
             lossHistory.append(loss.item(Float.self))
 
@@ -304,7 +330,7 @@ class Seq2Seq {
         let timeInterval = endTime.timeIntervalSince(startTime)
         print("Testing completed in \(timeInterval) seconds")
         
-        //print("exited evaluate")
+        print("exited evaluate")
         
         return epochLoss
         
@@ -312,7 +338,7 @@ class Seq2Seq {
     
     func fit(trainData: ([MLXArray], [MLXArray]), valData: ([MLXArray], [MLXArray]), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> ([MLXArray],[MLXArray]) {
         
-        //print("entered fit")
+        print("entered fit")
         
         setOptimizer()
         
@@ -345,7 +371,7 @@ class Seq2Seq {
             }
         }
         
-        //print("exited fit")
+        print("exited fit")
         
         return (trainLossHistory, valLossHistory)
     }

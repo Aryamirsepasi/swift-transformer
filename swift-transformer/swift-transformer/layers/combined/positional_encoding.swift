@@ -12,7 +12,7 @@ class PositionalEncoding {
     
     init(maxLen: Int, dModel: Int, dropoutRate: Float = 0.1, dataType: DType) {
         
-        //print("entered positionalEncoding init")
+        print("entered positionalEncoding init")
         
         self.dModel = dModel
         self.dropoutRate = dropoutRate
@@ -32,24 +32,24 @@ class PositionalEncoding {
         var divTerm = MLX.exp(MLXArray(divTermValues))
         
         //print("step15")
-        pe[0..., .stride(from: 0, to: pe.shape[1], by: 2)] = MLX.sin(position * divTerm)
-        pe[0..., .stride(from: 1, to: pe.shape[1], by: 2)] = MLX.cos(position * divTerm)
+        pe[0..., .stride(from: 0, to: pe.shape[1], by: 2)] = MLX.sin(position * divTerm, stream: .gpu)
+        pe[0..., .stride(from: 1, to: pe.shape[1], by: 2)] = MLX.cos(position * divTerm, stream: .gpu)
         
         //print("step16")
         self.pe = pe[0..., .newAxis, 0...]
         
-        //print ("exited positionalEncoding init")
+        print ("exited positionalEncoding init")
     }
     
     func forward(x: MLXArray) -> MLXArray {
         
-        //print ("entered positional_encoding forward")
+        print ("entered positional_encoding forward")
 
         var xvar = x
         
         xvar += self.pe[..<xvar.shape[0], 0...]
         
-        //print ("exited positional_encoding forward")
+        print ("exited positional_encoding forward")
 
         return xvar
     }
