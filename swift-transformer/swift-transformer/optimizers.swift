@@ -16,11 +16,11 @@ class SGD: Optimizer {
     
     func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray,MLXArray, MLXArray, MLXArray, MLXArray, Int) {
         
-        //print("entered SGD update")
+        print("entered SGD update")
         
         weights -= gradient * alpha
         
-        //print("exited SGD update")
+        print("exited SGD update")
         
         return (weights, v, m, vHat, mHat, t)
         
@@ -43,7 +43,7 @@ class Adam: Optimizer { //after
     
     func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
         
-        //print("entered Adam update")
+        print("entered Adam update")
         
         //print("m: ", m)
         //print("beta: ", beta)
@@ -52,18 +52,18 @@ class Adam: Optimizer { //after
         
         m = beta * m + (1 - beta) * gradient
         
-        v = beta2 * v + (1 - beta2) * MLX.pow(gradient, 2)
+        v = beta2 * v + (1 - beta2) * MLX.pow(gradient, 2, stream: .gpu)
         
         mHat = m / (1 - Float(pow(Double(beta), Double(t))))
         vHat = v / (1 - Float(pow(Double(beta2), Double(t))))
         
         
-        var temp = alpha * mHat / (MLX.sqrt(vHat) + epsilon)
+        var temp = alpha * mHat / (MLX.sqrt(vHat, stream: .gpu) + epsilon)
         
         weights -= temp
         
         
-        //print("exited Adam update")
+        print("exited Adam update")
         
         return (weights, v, m, vHat, mHat , t)
     }
@@ -89,7 +89,7 @@ class Noam: Optimizer {
     
     func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
         
-        //print("entered Noam update")
+        print("entered Noam update")
         
         stepsNum += 1
         let arg1 = pow(Float(stepsNum), -0.5)
@@ -97,7 +97,7 @@ class Noam: Optimizer {
         let lr = scaleFactor * pow(modelDim, -0.5) * min(arg1, arg2)
         optimizer.alpha = lr
         
-        //print("exited Noam update")
+        print("exited Noam update")
         
         return self.optimizer.update(gradient: gradient, weights: &weights, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: t)
     }
@@ -109,3 +109,4 @@ let optimizers: [String: Optimizer] = [
     //"noam": Noam(optimizer: any Optimizer, modelDim: <#Float#>),
     "adam": Adam(),
 ]
+

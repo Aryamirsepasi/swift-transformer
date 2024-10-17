@@ -1,6 +1,7 @@
 import Foundation
 import Accelerate
 import MLX
+import MLXNN
 
 //needed
 class EncoderLayer {
@@ -11,16 +12,22 @@ class EncoderLayer {
     var dropout: Dropout
 
     init(dModel: Int, headsNum: Int, dFF: Int, dropoutRate: Float, dataType: DType) {
+        
+        print ("entered encoder_layer init")
+
         self.selfAttentionNorm = LayerNormalization(normalizedShape: [dModel], epsilon: 1e-6, dataType: dataType)
         self.ffLayerNorm = LayerNormalization(normalizedShape: [dModel], epsilon: 1e-6, dataType: dataType)
         self.selfAttention = MultiHeadAttention(dModel: dModel, headsNum: headsNum, dropoutRate: dropoutRate, dataType: dataType)
         self.positionWiseFeedForward = PositionwiseFeedforward(dModel: dModel, dFF: dFF, dropoutRate: dropoutRate)
         self.dropout = Dropout(rate: dropoutRate, dataType: dataType)
+        
+        print ("exited encoder_layer init")
+
     }
 
     func forward(src: MLXArray, srcMask: MLXArray, training: Bool) -> MLXArray {
         
-        //print ("entered encoder_layer forward")
+        print ("entered encoder_layer forward")
 
         //print(src.shape)
         //print(src.shape)
@@ -34,14 +41,14 @@ class EncoderLayer {
         
         srcvar = self.ffLayerNorm.forward(X: src + self.dropout.forward(X: _src, training: training))
         
-        //print ("exited encoder_layer forward")
+        print ("exited encoder_layer forward")
 
         return srcvar
     }
 
     func backward(error: MLXArray) -> MLXArray {
         
-        //print("entered encoder_layer backward")
+        print("entered encoder_layer backward")
 
         var errorvar = self.ffLayerNorm.backward(error: error)
         
@@ -53,22 +60,28 @@ class EncoderLayer {
         
         (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(errorvar))
         
-        //print("exited encoder_layer backward")
+        print("exited encoder_layer backward")
 
         return _error + _error2 + _error3 + error
         
     }
 
     func setOptimizer(_ optimizer: Optimizer) {
+        
+        print ("entered encoder_layer setOptimizer")
+
         selfAttentionNorm.setOptimizer(optimizer: optimizer)
         ffLayerNorm.setOptimizer(optimizer: optimizer)
         selfAttention.setOptimizer(optimizer: optimizer)
         positionWiseFeedForward.setOptimizer(optimizer: optimizer)
+        
+        print ("exited encoder_layer setOptimizer")
+
     }
 
     func updateWeights(layerNum: Int) -> Int {
         
-        //print("entered encoder_layer updateWeights")
+        print("entered encoder_layer updateWeights")
 
         var layerNum = layerNum
         layerNum = selfAttentionNorm.updateWeights(layerNum: layerNum)
@@ -76,7 +89,7 @@ class EncoderLayer {
         layerNum = selfAttention.updateWeights(layerNum: layerNum)
         layerNum = positionWiseFeedForward.updateWeights(startingLayerNum: layerNum)
         
-       // print("exited encoder_layer updateWeights")
+       print("exited encoder_layer updateWeights")
 
         return layerNum
     }

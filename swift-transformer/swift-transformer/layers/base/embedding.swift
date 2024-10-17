@@ -20,8 +20,12 @@ class Embedding {
     var dataType: DType
     var batchSize: Int
     var currentInputLength: Int
-
+    
+    
     init(inputDim: Int, outputDim: Int, dataType: DType = DType.float32) {
+        
+        print("entered embedding init")
+        
         self.inputDim = inputDim
         self.outputDim = outputDim
         
@@ -40,26 +44,40 @@ class Embedding {
         self.currentInputLength = 0
         
         self.build()
+        
+        print("exited embedding init")
+        
     }
     
     func setOptimizer(optimizer: Optimizer) {
+        
+        print("entered embedding setOptimizer")
+        
         self.optimizer = optimizer
+        
+        print("exited embedding setOptimizer")
+        
     }
     
     func build() {
         
-        self.w = MLXRandom.normal([self.inputDim, self.outputDim], loc: 0, scale: pow(Float(self.inputDim), -0.5)).asType(self.dataType)
-
+        print("entered embedding build")
+        
+        self.w = MLXRandom.normal([self.inputDim, self.outputDim], loc: 0, scale: pow(Float(self.inputDim), -0.5), stream: .gpu).asType(self.dataType)
+        
         self.v = MLX.zeros(like: self.w).asType(self.dataType)
         self.m = MLX.zeros(like: self.w).asType(self.dataType)
         
         self.vHat = MLX.zeros(like: self.w).asType(self.dataType)
         self.mHat = MLX.zeros(like: self.w).asType(self.dataType)
         
+        print("exited embedding build")
         
     }
     
     func prepareLabels(batchLabels: MLXArray) -> MLXArray {
+        print("entered embedding prepareLabels")
+        
         // Convert batch labels to integers
         var batchLabelsVar = batchLabels.asType(DType.int32)
         
@@ -67,44 +85,28 @@ class Embedding {
         var prepareBatchLabels = MLX.zeros([batchLabelsVar.size, self.inputDim])
         
         // Generate range of indices using the initializer
-        let indices = MLXArray(0..<batchLabelsVar.size).asType(DType.int32)
-        let reshapedLabels = batchLabelsVar.reshaped([batchLabelsVar.size])
-
+        /*let indices = MLXArray(0..<batchLabelsVar.size).asType(DType.int32)
+        let reshapedLabels = batchLabelsVar.reshaped([batchLabelsVar.size], stream: .gpu)
+        
         // Perform one-hot encoding manually
         for i in 0..<indices.size {
             let index = indices[i].item(Int.self)
             let label = reshapedLabels[i].item(Int.self)
             prepareBatchLabels[index, label] = MLXArray(1.0)
-        }
+        }*/
+        
+        prepareBatchLabels[MLXArray(0..<batchLabelsVar.size), batchLabelsVar.reshaped([1,-1])] = MLXArray(1)
+        
+        print("exited embedding prepareLabels")
         
         // Reshape the tensor to the desired dimensions
-        return prepareBatchLabels.reshaped([self.batchSize, self.currentInputLength, self.inputDim]).asType(self.dataType)
+        return prepareBatchLabels.reshaped([self.batchSize, self.currentInputLength, self.inputDim], stream: .gpu).asType(self.dataType)
     }
     
-    /*func prepareLabels(batchLabels: MLXArray) -> MLXArray {
-        print ("entered embedding prepareLabels")
-
-        let batchLabelsVar = batchLabels.asType(DType.int32)
-        let numSamples = batchLabelsVar.size
-        var prepareBatchLabels = MLX.zeros([numSamples, self.inputDim])
-
-        // Flatten and iterate over labels
-        let labels = batchLabelsVar.flattened()
-        for (index, labelValue) in labels.enumerated() {
-            let label = labelValue.item(Int.self)
-            prepareBatchLabels[index, label] = MLXArray(1.0)
-        }
-
-        print ("exited embedding prepareLabels")
-
-        return prepareBatchLabels.reshaped([self.batchSize, self.currentInputLength, self.inputDim])
-    }*/
-
-
     func forward(X: MLXArray) -> MLXArray {
         
-        //print ("entered embedding forward")
-
+        print ("entered embedding forward")
+        
         self.inputData = X
         
         for i in 0..<self.inputData.count{
@@ -120,44 +122,53 @@ class Embedding {
         
         self.inputData = self.prepareLabels(batchLabels: self.inputData)
         
-        self.outputData = MLX.matmul(self.inputData, self.w)
+        self.outputData = MLX.matmul(self.inputData, self.w, stream: .gpu)
         
-        //print ("exited embedding forward")
-
+        print ("exited embedding forward")
+        
         return self.outputData
         
     }
     
     func backward(error: MLXArray) -> MLXArray {
         
-        //print("entered embedding backward")
-
-        self.gradW = MLX.matmul(MLX.transposed(self.inputData, axes: [0,2,1]), error).sum(axis: 0)
+        print("entered embedding backward")
         
-        //print("exited embedding backward")
-
+        self.gradW = MLX.matmul(MLX.transposed(self.inputData, axes: [0,2,1], stream: .gpu), error, stream: .gpu).sum(axis: 0, stream: .gpu)
+        
+        print("exited embedding backward")
+        
         return []
     }
-
+    
     func updateWeights(layerNum: Int) -> Int {
         
-        //print("entered embedding updateWeights")
-
+        print("entered embedding updateWeights")
+        
         if let optimizer = optimizer {
             var templayerNum = layerNum
             (w, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradW, weights: &w, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: layerNum)
         }
         
-        //print("exited embedding updateWeights")
-
+        print("exited embedding updateWeights")
+        
         return layerNum + 1
     }
     
     func getGrads() -> (MLXArray, MLXArray) {
+        
+        print("entered embedding getGrads")
+        
         return (self.gradW, self.gradB)
     }
-
+    
     func setGrads(grads: (MLXArray, MLXArray)) {
+        
+        print("entered embedding setGrads")
+        
         (self.gradW, self.gradB) = grads
+        
+        print("exited embedding setGrads")
+        
     }
 }
