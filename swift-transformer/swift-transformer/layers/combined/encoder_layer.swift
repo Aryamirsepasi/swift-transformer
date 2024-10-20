@@ -13,43 +13,29 @@ class EncoderLayer {
 
     init(dModel: Int, headsNum: Int, dFF: Int, dropoutRate: Float, dataType: DType) {
         
-        print ("entered encoder_layer init")
-
         self.selfAttentionNorm = LayerNormalization(normalizedShape: [dModel], epsilon: 1e-6, dataType: dataType)
         self.ffLayerNorm = LayerNormalization(normalizedShape: [dModel], epsilon: 1e-6, dataType: dataType)
         self.selfAttention = MultiHeadAttention(dModel: dModel, headsNum: headsNum, dropoutRate: dropoutRate, dataType: dataType)
         self.positionWiseFeedForward = PositionwiseFeedforward(dModel: dModel, dFF: dFF, dropoutRate: dropoutRate)
         self.dropout = Dropout(rate: dropoutRate, dataType: dataType)
         
-        print ("exited encoder_layer init")
-
     }
 
     func forward(src: MLXArray, srcMask: MLXArray, training: Bool) -> MLXArray {
-        
-        print ("entered encoder_layer forward")
-
-        //print(src.shape)
-        //print(src.shape)
-        //print(src.shape)
 
         var (_src, _) = self.selfAttention.forward(query: src, key: src, value: src, mask: srcMask, training: training)
         
-        var srcvar = self.selfAttentionNorm.forward(X: src + self.dropout.forward(X: _src, training: training))
+        var srcvar = self.selfAttentionNorm.forward(X: MLX.add(src,self.dropout.forward(X: _src, training: training)))
         
         _src = self.positionWiseFeedForward.forward(X: src, training: training)
         
-        srcvar = self.ffLayerNorm.forward(X: src + self.dropout.forward(X: _src, training: training))
+        srcvar = self.ffLayerNorm.forward(X: MLX.add(src,self.dropout.forward(X: _src, training: training)))
         
-        print ("exited encoder_layer forward")
-
         return srcvar
     }
 
     func backward(error: MLXArray) -> MLXArray {
         
-        print("entered encoder_layer backward")
-
         var errorvar = self.ffLayerNorm.backward(error: error)
         
         var _error = self.positionWiseFeedForward.backward(error: self.dropout.backward(errorvar))
@@ -60,37 +46,27 @@ class EncoderLayer {
         
         (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(errorvar))
         
-        print("exited encoder_layer backward")
-
         return _error + _error2 + _error3 + error
         
     }
 
     func setOptimizer(_ optimizer: Optimizer) {
         
-        print ("entered encoder_layer setOptimizer")
-
         selfAttentionNorm.setOptimizer(optimizer: optimizer)
         ffLayerNorm.setOptimizer(optimizer: optimizer)
         selfAttention.setOptimizer(optimizer: optimizer)
         positionWiseFeedForward.setOptimizer(optimizer: optimizer)
         
-        print ("exited encoder_layer setOptimizer")
-
     }
 
     func updateWeights(layerNum: Int) -> Int {
         
-        print("entered encoder_layer updateWeights")
-
         var layerNum = layerNum
         layerNum = selfAttentionNorm.updateWeights(layerNum: layerNum)
         layerNum = ffLayerNorm.updateWeights(layerNum: layerNum)
         layerNum = selfAttention.updateWeights(layerNum: layerNum)
         layerNum = positionWiseFeedForward.updateWeights(startingLayerNum: layerNum)
         
-       print("exited encoder_layer updateWeights")
-
         return layerNum
     }
 }

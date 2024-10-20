@@ -23,6 +23,6 @@ The dataset can be downloaded from the original Python project created by Amrita
 
 I would like to express my gratitude to the following individuals:
 
-- **Dr. Harold Köstler**: For proposing this interesting and challenging project.
+- **Dr. Harold Köstler**: For proposing this interesting and challenging project and his guidance throughout the project.
 - **David Koski**: For assisting with issues related to the MLX library.
 - **My Classmates**: For their helpful support throughout this project.

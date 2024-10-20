@@ -83,13 +83,10 @@ class DataPreparator {
         var testResults: [[String: String]] = []
         
         let currentPath = FileManager.default.currentDirectoryPath
-        print("Current working directory: \(currentPath)")
-
 
         // Get the container directory
         let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "com.aryamirsepasi.swift-transformer")
 
-        print (containerURL)
         guard let datasetURL = containerURL?.appendingPathComponent("dataset") else {
             print("Error: Could not find dataset directory")
             return (trainResults, valResults, testResults)
@@ -126,7 +123,6 @@ class DataPreparator {
             }
         }
 
-        print(trainResults[0])
         return (trainResults, valResults, testResults)
     }
 

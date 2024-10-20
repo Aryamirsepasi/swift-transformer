@@ -4,7 +4,7 @@ import MLX
 
 protocol Optimizer {
     var alpha: Float { get set }
-    func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int)
+    func update(gradient: MLXArray, weights: MLXArray, v: MLXArray, m: MLXArray, vHat: MLXArray, mHat: MLXArray,  t: Int)-> (MLXArray,MLXArray, MLXArray, MLXArray, MLXArray, Int)
 }
 
 class SGD: Optimizer {
@@ -14,14 +14,10 @@ class SGD: Optimizer {
         self.alpha = alpha
     }
     
-    func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray,MLXArray, MLXArray, MLXArray, MLXArray, Int) {
-        
-        print("entered SGD update")
-        
+    func update(gradient: MLXArray, weights:  MLXArray, v:  MLXArray, m:  MLXArray, vHat:  MLXArray, mHat:  MLXArray, t: Int) -> (MLXArray,MLXArray, MLXArray, MLXArray, MLXArray, Int) {
+                
         weights -= gradient * alpha
-        
-        print("exited SGD update")
-        
+                
         return (weights, v, m, vHat, mHat, t)
         
     }
@@ -41,29 +37,19 @@ class Adam: Optimizer { //after
         self.epsilon = epsilon
     }
     
-    func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
+    func update(gradient: MLXArray, weights:  MLXArray, v:  MLXArray, m:  MLXArray, vHat:  MLXArray, mHat:  MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
         
-        print("entered Adam update")
+        let mvar = MLX.add((beta * m),((1 - beta) * gradient))
         
-        //print("m: ", m)
-        //print("beta: ", beta)
-        //print("gradient: ", gradient)
+        let vvar = MLX.add((beta2 * v),((1 - beta2) * MLX.pow(gradient, 2, stream: .gpu)))
         
-        
-        m = beta * m + (1 - beta) * gradient
-        
-        v = beta2 * v + (1 - beta2) * MLX.pow(gradient, 2, stream: .gpu)
-        
-        mHat = m / (1 - Float(pow(Double(beta), Double(t))))
-        vHat = v / (1 - Float(pow(Double(beta2), Double(t))))
+        let mHatvar = mvar / (1 - Float(pow(Double(beta), Double(t))))
+        let vHatvar = vvar / (1 - Float(pow(Double(beta2), Double(t))))
         
         
-        var temp = alpha * mHat / (MLX.sqrt(vHat, stream: .gpu) + epsilon)
+        let temp = alpha * mHatvar / (MLX.sqrt(vHatvar, stream: .gpu) + epsilon)
         
         weights -= temp
-        
-        
-        print("exited Adam update")
         
         return (weights, v, m, vHat, mHat , t)
     }
@@ -87,19 +73,15 @@ class Noam: Optimizer {
         self.stepsNum = 0
     }
     
-    func update(gradient: MLXArray, weights: inout MLXArray, v: inout MLXArray, m: inout MLXArray, vHat: inout MLXArray, mHat: inout MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
-        
-        print("entered Noam update")
-        
+    func update(gradient: MLXArray, weights:  MLXArray, v:  MLXArray, m:  MLXArray, vHat:  MLXArray, mHat:  MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
+                
         stepsNum += 1
         let arg1 = pow(Float(stepsNum), -0.5)
         let arg2 = Float(stepsNum) * pow(Float(warmupSteps), -1.5)
         let lr = scaleFactor * pow(modelDim, -0.5) * min(arg1, arg2)
         optimizer.alpha = lr
-        
-        print("exited Noam update")
-        
-        return self.optimizer.update(gradient: gradient, weights: &weights, v: &v, m: &m, vHat: &vHat, mHat: &mHat, t: t)
+                
+        return self.optimizer.update(gradient: gradient, weights: weights, v: v, m: m, vHat: vHat, mHat: mHat, t: t)
     }
 }
 
