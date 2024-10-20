@@ -10,10 +10,9 @@ class DecoderLayer {
     var encoderAttention: MultiHeadAttention
     var positionWiseFeedForward: PositionwiseFeedforward
     var dropout: Dropout
-
+    
     init(dModel: Int, headsNum: Int, dFF: Int, dropoutRate: Float, dataType: DType) {
-        print ("entered decoder_layer init")
-
+        
         self.selfAttentionNorm = LayerNormalization(normalizedShape: [dModel], epsilon: 1e-6, dataType: dataType)
         self.encAttnLayerNorm = LayerNormalization(normalizedShape: [dModel], epsilon: 1e-6, dataType: dataType)
         self.ffLayerNorm = LayerNormalization(normalizedShape: [dModel], epsilon: 1e-6, dataType: dataType)
@@ -22,73 +21,56 @@ class DecoderLayer {
         self.positionWiseFeedForward = PositionwiseFeedforward(dModel: dModel, dFF: dFF, dropoutRate: dropoutRate)
         self.dropout = Dropout(rate: dropoutRate, dataType: dataType)
         
-        print ("exited decoder_layer init")
-
     }
-
+    
     func forward(trg: MLXArray, trgMask: MLXArray, src: MLXArray, srcMask: MLXArray, training: Bool) -> (MLXArray, MLXArray) {
-        print ("entered decoder_layer forward")
-
-        var _trg : MLXArray
-        (_trg, _) = self.selfAttention.forward(query: trg, key: trg, value: trg, mask: trgMask, training: training)
+        
+        var (_trg, attention) = self.selfAttention.forward(query: trg, key: trg, value: trg, mask: trgMask, training: training)
         var trgvar = trg
-        trgvar = self.selfAttentionNorm.forward(X: trgvar + self.dropout.forward(X: _trg, training: training))
+        trgvar = self.selfAttentionNorm.forward(X: MLX.add(trgvar,self.dropout.forward(X: _trg, training: training)))
         
-        
-        var attention : MLXArray
         (_trg, attention) = self.encoderAttention.forward(query: trgvar, key: src, value: src, mask: srcMask, training: training)
-        trgvar = self.encAttnLayerNorm.forward(X: trgvar + self.dropout.forward(X: _trg, training: training))
+        trgvar = self.encAttnLayerNorm.forward(X: MLX.add(trgvar,self.dropout.forward(X: _trg, training: training)))
         
         _trg = self.positionWiseFeedForward.forward(X: trgvar, training: training)
-        trgvar = self.ffLayerNorm.forward(X: trgvar + self.dropout.forward(X: _trg, training: training))
         
-        print ("exited decoder_layer forward")
-
+        trgvar = self.ffLayerNorm.forward(X: MLX.add(trgvar, self.dropout.forward(X: _trg, training: training)))
+        
         return (trgvar, attention)
     }
-
+    
     func backward(error: MLXArray) -> (MLXArray,MLXArray) {
         
-       print("entered decoder_layer backward")
-
         var errorvar = self.ffLayerNorm.backward(error: error)
-
+        
         var _error = self.positionWiseFeedForward.backward(error: self.dropout.backward(errorvar))
         
         errorvar = self.encAttnLayerNorm.backward(error: errorvar + _error)
-
+        
         var encError1: MLXArray
         var encError2: MLXArray
         (_error, encError1, encError2) = self.encoderAttention.backward(error: self.dropout.backward(errorvar))
         errorvar = self.selfAttentionNorm.backward(error: errorvar + _error)
-
+        
         var _error2: MLXArray
         var _error3: MLXArray
         (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(errorvar))
         
-        print("exited decoder_layer backward")
-
         return (_error + _error2 + _error3 + error, encError1 + encError2)
     }
-
+    
     func setOptimizer(_ optimizer: Optimizer) {
         
-        print("entered decoder_layer setOptimizer")
-
         selfAttentionNorm.setOptimizer(optimizer: optimizer)
         encAttnLayerNorm.setOptimizer(optimizer: optimizer)
         ffLayerNorm.setOptimizer(optimizer: optimizer)
         selfAttention.setOptimizer(optimizer: optimizer)
         encoderAttention.setOptimizer(optimizer: optimizer)
         positionWiseFeedForward.setOptimizer(optimizer: optimizer)
-        
-        print("exited decoder_layer setOptimizer")
     }
-
+    
     func updateWeights(_ layerNum: Int) -> Int {
         
-        print("entered decoder_layer updateWeights")
-
         var layerNum = layerNum
         layerNum = selfAttentionNorm.updateWeights(layerNum: layerNum)
         layerNum = encAttnLayerNorm.updateWeights(layerNum: layerNum)
@@ -97,8 +79,6 @@ class DecoderLayer {
         layerNum = encoderAttention.updateWeights(layerNum: layerNum)
         layerNum = positionWiseFeedForward.updateWeights(startingLayerNum: layerNum)
         
-        print("exited decoder_layer updateWeights")
-
         return layerNum
     }
 }

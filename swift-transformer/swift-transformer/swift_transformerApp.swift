@@ -35,21 +35,17 @@ class TransformerViewModel: ObservableObject {
         let unkIndex = 3
         
         let tokens = [padToken, sosToken, eosToken, unkToken]
-        print(FileManager.default.currentDirectoryPath) // checking directory
+        print("Directory: \(FileManager.default.currentDirectoryPath)") // checking directory
         let indexes = [padIndex, sosIndex, eosIndex, unkIndex]
         
         let dataPreparator = DataPreparator(tokens: tokens, indexes: indexes)
         
-        print("Running prepareData")
+        //print("Running prepareData")
         let (trainData, testData, valData) = dataPreparator.prepareData(path: "./dataset/", batchSize: batchSize, minFreq: 2)
         
-        //print("Number of training examples: \(trainData.0.count)")
-        //print("Number of validation examples: \(valData.0.count)")
-        //print("Number of test examples: \(testData.0.count)")
-
         let (source, target) = trainData
         
-        print("Running getVocabs")
+        //print("Running getVocabs")
         let trainDataVocabs = dataPreparator.getVocabs()!
         
         let inputDim = trainDataVocabs.0.count
@@ -76,7 +72,7 @@ class TransformerViewModel: ObservableObject {
         let (trainLossHistory, valLossHistory) = model.fit(
             trainData: trainData,
             valData: valData,
-            epochs: 17,
+            epochs: 5,
             saveEveryEpochs: 20,
             savePath: ".",
             validationCheck: true

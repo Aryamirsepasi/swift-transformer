@@ -18,8 +18,7 @@ class CrossEntropy: LossFunction { //needed CrossEntropyLoss
     
     func loss(y: MLXArray, t: MLXArray) -> MLXArray {
         
-        print("entered CrossEntropy loss")
-        var log_softmax = self.log_softmax.forward(x: y)
+        let log_softmax = self.log_softmax.forward(x: y)
         let tInt = t.asType(Int.self)
         let numSamples = tInt.count
         let numClasses = log_softmax.shape[1]
@@ -36,24 +35,21 @@ class CrossEntropy: LossFunction { //needed CrossEntropyLoss
         }*/
         nll_loss = -log_softmax[MLXArray(0..<t.count),t]
         
-        var loss_output = MLX.where(t .== self.ignore_index, 0, nll_loss, stream: .gpu)
-        
-        print("exited CrossEntropy loss")
-        
+        let loss_output = MLX.where(t .== self.ignore_index, 0, nll_loss, stream: .gpu)
+                
         return loss_output
     }
     
     func derivative(y: MLXArray, t: MLXArray) -> MLXArray {
-        print("entered CrossEntropy derivative")
         
-        var softmax = self.log_softmax.forward(x: y)
+        let softmax = self.log_softmax.forward(x: y)
         
         
         let tInt = t.asType(Int.self)
             let numSamples = tInt.count
             let numClasses = softmax.shape[1]
         
-        var grad = softmax
+        let grad = softmax
         /*for i in 0..<numSamples{
             let labelIndex = tInt[i]
             if labelIndex.item(Int.self) == self.ignore_index || labelIndex.item(Int.self) < 0 || labelIndex.item(Int.self) >= numClasses {
@@ -64,10 +60,8 @@ class CrossEntropy: LossFunction { //needed CrossEntropyLoss
         }*/
         grad[MLXArray(0..<t.count), t] -= 1
         grad /= t.count
-        var res = MLX.where(t.reshaped([-1,1]) .== self.ignore_index, 0, grad, stream: .gpu)
-        
-        print("exited CrossEntropy derivative")
-        
+        let res = MLX.where(t.reshaped([-1,1]) .== self.ignore_index, 0, grad, stream: .gpu)
+                
         return res
         
     }

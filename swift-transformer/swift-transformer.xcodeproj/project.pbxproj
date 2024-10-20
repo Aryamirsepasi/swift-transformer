@@ -7,19 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2A08A9F22BED9A2400E4C2D7 /* extract_data.py in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9E42BED9A2400E4C2D7 /* extract_data.py */; };
-		2A08A9F32BED9A2400E4C2D7 /* mmt_task1_test2016.tar.gz in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9E52BED9A2400E4C2D7 /* mmt_task1_test2016.tar.gz */; };
-		2A08A9F42BED9A2400E4C2D7 /* mmt16_task1_test.tar.gz in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9E62BED9A2400E4C2D7 /* mmt16_task1_test.tar.gz */; };
-		2A08A9F52BED9A2400E4C2D7 /* readme.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9E72BED9A2400E4C2D7 /* readme.txt */; };
-		2A08A9F62BED9A2400E4C2D7 /* test.de in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9E82BED9A2400E4C2D7 /* test.de */; };
-		2A08A9F72BED9A2400E4C2D7 /* test.en in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9E92BED9A2400E4C2D7 /* test.en */; };
-		2A08A9F82BED9A2400E4C2D7 /* test.fr in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9EA2BED9A2400E4C2D7 /* test.fr */; };
-		2A08A9F92BED9A2400E4C2D7 /* train.de in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9EB2BED9A2400E4C2D7 /* train.de */; };
-		2A08A9FA2BED9A2400E4C2D7 /* train.en in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9EC2BED9A2400E4C2D7 /* train.en */; };
-		2A08A9FB2BED9A2400E4C2D7 /* training.tar.gz in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9ED2BED9A2400E4C2D7 /* training.tar.gz */; };
-		2A08A9FC2BED9A2400E4C2D7 /* val.de in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9EE2BED9A2400E4C2D7 /* val.de */; };
-		2A08A9FD2BED9A2400E4C2D7 /* val.en in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9EF2BED9A2400E4C2D7 /* val.en */; };
-		2A08A9FE2BED9A2400E4C2D7 /* validation.tar.gz in Resources */ = {isa = PBXBuildFile; fileRef = 2A08A9F02BED9A2400E4C2D7 /* validation.tar.gz */; };
 		2A1EF4482C62A7DF00C17B25 /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = 2A1EF4472C62A7DF00C17B25 /* MLX */; };
 		2A1EF44A2C62A7DF00C17B25 /* MLXFFT in Frameworks */ = {isa = PBXBuildFile; productRef = 2A1EF4492C62A7DF00C17B25 /* MLXFFT */; };
 		2A1EF44C2C62A7DF00C17B25 /* MLXFast in Frameworks */ = {isa = PBXBuildFile; productRef = 2A1EF44B2C62A7DF00C17B25 /* MLXFast */; };
@@ -39,7 +26,6 @@
 		2A4206722BEFA7BA00F914ED /* positional_encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4206712BEFA7BA00F914ED /* positional_encoding.swift */; };
 		2A4206742BEFB12100F914ED /* self_attention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4206732BEFB12100F914ED /* self_attention.swift */; };
 		2A4206762BEFB27100F914ED /* reshape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4206752BEFB27100F914ED /* reshape.swift */; };
-		2A46CE872C0A7B610009F1B2 /* operations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A46CE862C0A7B610009F1B2 /* operations.swift */; };
 		2A59D3222BF0154F00048D26 /* embedding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59D3212BF0154F00048D26 /* embedding.swift */; };
 		2A59D3242BF0155A00048D26 /* layer_norm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59D3232BF0155A00048D26 /* layer_norm.swift */; };
 		2A59D3262BF0157A00048D26 /* decoder_layer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A59D3252BF0157A00048D26 /* decoder_layer.swift */; };
@@ -71,19 +57,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2A08A9E42BED9A2400E4C2D7 /* extract_data.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = extract_data.py; sourceTree = "<group>"; };
-		2A08A9E52BED9A2400E4C2D7 /* mmt_task1_test2016.tar.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = mmt_task1_test2016.tar.gz; sourceTree = "<group>"; };
-		2A08A9E62BED9A2400E4C2D7 /* mmt16_task1_test.tar.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = mmt16_task1_test.tar.gz; sourceTree = "<group>"; };
-		2A08A9E72BED9A2400E4C2D7 /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
-		2A08A9E82BED9A2400E4C2D7 /* test.de */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test.de; sourceTree = "<group>"; };
-		2A08A9E92BED9A2400E4C2D7 /* test.en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test.en; sourceTree = "<group>"; };
-		2A08A9EA2BED9A2400E4C2D7 /* test.fr */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test.fr; sourceTree = "<group>"; };
-		2A08A9EB2BED9A2400E4C2D7 /* train.de */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = train.de; sourceTree = "<group>"; };
-		2A08A9EC2BED9A2400E4C2D7 /* train.en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = train.en; sourceTree = "<group>"; };
-		2A08A9ED2BED9A2400E4C2D7 /* training.tar.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = training.tar.gz; sourceTree = "<group>"; };
-		2A08A9EE2BED9A2400E4C2D7 /* val.de */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = val.de; sourceTree = "<group>"; };
-		2A08A9EF2BED9A2400E4C2D7 /* val.en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = val.en; sourceTree = "<group>"; };
-		2A08A9F02BED9A2400E4C2D7 /* validation.tar.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = validation.tar.gz; sourceTree = "<group>"; };
 		2A29127A2BDEC183008A505C /* swift-transformer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swift-transformer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A29127D2BDEC183008A505C /* swift_transformerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_transformerApp.swift; sourceTree = "<group>"; };
 		2A29127F2BDEC183008A505C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -102,7 +75,6 @@
 		2A4206712BEFA7BA00F914ED /* positional_encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = positional_encoding.swift; sourceTree = "<group>"; };
 		2A4206732BEFB12100F914ED /* self_attention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = self_attention.swift; sourceTree = "<group>"; };
 		2A4206752BEFB27100F914ED /* reshape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = reshape.swift; sourceTree = "<group>"; };
-		2A46CE862C0A7B610009F1B2 /* operations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = operations.swift; sourceTree = "<group>"; };
 		2A59D3212BF0154F00048D26 /* embedding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = embedding.swift; sourceTree = "<group>"; };
 		2A59D3232BF0155A00048D26 /* layer_norm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = layer_norm.swift; sourceTree = "<group>"; };
 		2A59D3252BF0157A00048D26 /* decoder_layer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = decoder_layer.swift; sourceTree = "<group>"; };
@@ -146,26 +118,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2A08A9F12BED9A2400E4C2D7 /* dataset */ = {
-			isa = PBXGroup;
-			children = (
-				2A08A9E42BED9A2400E4C2D7 /* extract_data.py */,
-				2A08A9E52BED9A2400E4C2D7 /* mmt_task1_test2016.tar.gz */,
-				2A08A9E62BED9A2400E4C2D7 /* mmt16_task1_test.tar.gz */,
-				2A08A9E72BED9A2400E4C2D7 /* readme.txt */,
-				2A08A9E82BED9A2400E4C2D7 /* test.de */,
-				2A08A9E92BED9A2400E4C2D7 /* test.en */,
-				2A08A9EA2BED9A2400E4C2D7 /* test.fr */,
-				2A08A9EB2BED9A2400E4C2D7 /* train.de */,
-				2A08A9EC2BED9A2400E4C2D7 /* train.en */,
-				2A08A9ED2BED9A2400E4C2D7 /* training.tar.gz */,
-				2A08A9EE2BED9A2400E4C2D7 /* val.de */,
-				2A08A9EF2BED9A2400E4C2D7 /* val.en */,
-				2A08A9F02BED9A2400E4C2D7 /* validation.tar.gz */,
-			);
-			path = dataset;
-			sourceTree = "<group>";
-		};
 		2A2912712BDEC183008A505C = {
 			isa = PBXGroup;
 			children = (
@@ -190,9 +142,7 @@
 		2A29127C2BDEC183008A505C /* swift-transformer */ = {
 			isa = PBXGroup;
 			children = (
-				2A08A9F12BED9A2400E4C2D7 /* dataset */,
 				2A29127D2BDEC183008A505C /* swift_transformerApp.swift */,
-				2A46CE852C0A7B440009F1B2 /* numpy-replacements */,
 				2A29127F2BDEC183008A505C /* ContentView.swift */,
 				2AE3D9BF2BDEFFBC006AC004 /* encoder.swift */,
 				2A2912AB2BDEC237008A505C /* prepare_data.swift */,
@@ -265,14 +215,6 @@
 				2A59D3292BF015A200048D26 /* positionwise_feed_forward.swift */,
 			);
 			path = combined;
-			sourceTree = "<group>";
-		};
-		2A46CE852C0A7B440009F1B2 /* numpy-replacements */ = {
-			isa = PBXGroup;
-			children = (
-				2A46CE862C0A7B610009F1B2 /* operations.swift */,
-			);
-			path = "numpy-replacements";
 			sourceTree = "<group>";
 		};
 		2A74CB3D2C92259E00B98059 /* Frameworks */ = {
@@ -354,7 +296,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1530;
-				LastUpgradeCheck = 1530;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					2A2912792BDEC183008A505C = {
 						CreatedOnToolsVersion = 15.3;
@@ -398,21 +340,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A08A9FC2BED9A2400E4C2D7 /* val.de in Resources */,
-				2A08A9F82BED9A2400E4C2D7 /* test.fr in Resources */,
-				2A08A9FD2BED9A2400E4C2D7 /* val.en in Resources */,
-				2A08A9F72BED9A2400E4C2D7 /* test.en in Resources */,
-				2A08A9F52BED9A2400E4C2D7 /* readme.txt in Resources */,
-				2A08A9F92BED9A2400E4C2D7 /* train.de in Resources */,
-				2A08A9FA2BED9A2400E4C2D7 /* train.en in Resources */,
 				2A2912852BDEC184008A505C /* Preview Assets.xcassets in Resources */,
-				2A08A9F22BED9A2400E4C2D7 /* extract_data.py in Resources */,
-				2A08A9F32BED9A2400E4C2D7 /* mmt_task1_test2016.tar.gz in Resources */,
 				2A2912822BDEC184008A505C /* Assets.xcassets in Resources */,
-				2A08A9F42BED9A2400E4C2D7 /* mmt16_task1_test.tar.gz in Resources */,
-				2A08A9F62BED9A2400E4C2D7 /* test.de in Resources */,
-				2A08A9FE2BED9A2400E4C2D7 /* validation.tar.gz in Resources */,
-				2A08A9FB2BED9A2400E4C2D7 /* training.tar.gz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -456,7 +385,6 @@
 				2A29127E2BDEC183008A505C /* swift_transformerApp.swift in Sources */,
 				2ABF1CAD2BE0613900C700DD /* transformer.swift in Sources */,
 				2A4206742BEFB12100F914ED /* self_attention.swift in Sources */,
-				2A46CE872C0A7B610009F1B2 /* operations.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -527,6 +455,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -590,6 +519,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -620,6 +550,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-transformer/Preview Content\"";
 				DEVELOPMENT_TEAM = MK2V998W66;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -649,6 +580,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-transformer/Preview Content\"";
 				DEVELOPMENT_TEAM = MK2V998W66;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -672,10 +604,10 @@
 		2A2912A32BDEC184008A505C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = MK2V998W66;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.4;
@@ -691,10 +623,10 @@
 		2A2912A42BDEC184008A505C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = MK2V998W66;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.4;
@@ -710,9 +642,9 @@
 		2A2912A62BDEC184008A505C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = MK2V998W66;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
@@ -727,9 +659,9 @@
 		2A2912A72BDEC184008A505C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = MK2V998W66;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
