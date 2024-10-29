@@ -84,8 +84,8 @@ class TransformerViewModel: ObservableObject {
         let (trainLossHistory, valLossHistory) = model.fit(
             trainData: trainData,
             valData: valData,
-            epochs: 1,
-            saveEveryEpochs: 1,
+            epochs: 20,
+            saveEveryEpochs: 20,
             savePath: ".",
             validationCheck: true
         )

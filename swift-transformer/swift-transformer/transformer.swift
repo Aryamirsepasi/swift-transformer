@@ -452,7 +452,7 @@ class Seq2Seq {
         let srcMask = self.getPadMask(x: src)
         
         // Pass through the encoder
-        let encSrc = self.encoder.forward(src: src, srcMask: srcMask, training: false)
+        let encSrc = self.encoder.forward(src: src.asType(dataType), srcMask: srcMask, training: false)  // Added asType
         
         // Initialize target indices with SOS token
         var trgIndices = [sosIndex]
@@ -460,36 +460,45 @@ class Seq2Seq {
         var attention = MLXArray([])
         
         for _ in 0..<maxLength {
+            // Create target tensor and mask
             let trg = MLXArray(trgIndices).reshaped([1, -1])
             let trgMask = self.getPadMask(x: trg) & self.getSubMask(x: trg)
             
             // Pass through the decoder
-            let (out, attn) = self.decoder.forward(trg: trg, trgMask: trgMask, src: encSrc, srcMask: srcMask, training: false)
+            let (out, attn) = self.decoder.forward(trg: trg.asType(dataType), trgMask: trgMask, src: encSrc, srcMask: srcMask, training: false)  // Added asType
             output = out
             attention = attn
             
-            // Get the next token using argmax - this is the key difference from your current version
-            let trgIndex = out.argMax(axis: -1)[0..., -1].item(Int.self)
+            // Get prediction for next token - using argmax directly like in Python
+            let trgIndex = out.argMax(axis: -1)[0..., -1].item(Int.self)  // Fixed index access
             
-            // Break if we generate EOS token or reach max length
-            if trgIndex == eosIndex || trgIndices.count >= maxLength {
+            // Break if we hit EOS or max length
+            if trgIndex == eosIndex {
                 break
             }
             
             trgIndices.append(trgIndex)
+            
+            if trgIndices.count >= maxLength {
+                break
+            }
         }
         
         // Create a reversed vocabulary mapping indices back to words
         let reversedVocab = Dictionary(uniqueKeysWithValues: vocabs.1.map { ($1, $0) })
         
-        // Decode the sentence by mapping indices to words
+        // Decode the sentence by mapping indices to words (and handle unknown tokens)
         let decodedSentence = trgIndices.map { idx in
-            reversedVocab[idx] ?? unkToken
+            if let word = reversedVocab[idx] {
+                return word
+            }
+            return unkToken
         }
         
-        // Extract the first element of the attention array
+        // Get first attention layer like in Python
         let attention0 = attention[0]
         
+        // Drop the SOS token like in Python implementation
         return (Array(decodedSentence.dropFirst()), attention0)
     }
 }
