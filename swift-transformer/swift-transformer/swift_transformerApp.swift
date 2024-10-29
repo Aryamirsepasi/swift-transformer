@@ -40,13 +40,25 @@ class TransformerViewModel: ObservableObject {
         
         let dataPreparator = DataPreparator(tokens: tokens, indexes: indexes)
         
-        //print("Running prepareData")
-        let (trainData, testData, valData) = dataPreparator.prepareData(path: "./dataset/", batchSize: batchSize, minFreq: 2)
+        /// Get raw data
+        let (rawTrainData, rawValData, rawTestData) = dataPreparator.importMulti30kDataset(path: "./dataset/")
         
-        let (source, target) = trainData
+        // Clear all datasets at once
+        let (clearedTrainData, clearedValData, clearedTestData) = dataPreparator.clearDataset(rawTrainData, rawValData, rawTestData).tuple
         
-        //print("Running getVocabs")
-        let trainDataVocabs = dataPreparator.getVocabs()!
+        // Build vocabulary from cleared training data
+        let trainDataVocabs = dataPreparator.buildVocab(dataset: clearedTrainData, minFreq: 2)
+        dataPreparator.vocabs = trainDataVocabs
+        
+        // Process each dataset
+        let trainDataBatches = dataPreparator.addTokens(dataset: clearedTrainData, batchSize: batchSize)
+        let testDataBatches = dataPreparator.addTokens(dataset: clearedTestData, batchSize: batchSize)
+        let valDataBatches = dataPreparator.addTokens(dataset: clearedValData, batchSize: batchSize)
+        
+        // Build final datasets
+        let trainData = dataPreparator.buildDataset(dataset: trainDataBatches, vocabs: trainDataVocabs)
+        let testData = dataPreparator.buildDataset(dataset: testDataBatches, vocabs: trainDataVocabs)
+        let valData = dataPreparator.buildDataset(dataset: valDataBatches, vocabs: trainDataVocabs)
         
         let inputDim = trainDataVocabs.0.count
         let outputDim = trainDataVocabs.1.count
@@ -72,8 +84,8 @@ class TransformerViewModel: ObservableObject {
         let (trainLossHistory, valLossHistory) = model.fit(
             trainData: trainData,
             valData: valData,
-            epochs: 5,
-            saveEveryEpochs: 20,
+            epochs: 1,
+            saveEveryEpochs: 1,
             savePath: ".",
             validationCheck: true
         )
@@ -87,13 +99,11 @@ class TransformerViewModel: ObservableObject {
             LossDataPoint(epoch: index, loss: loss, series: "Validation Loss")
         }
         
-        // Load and process validation data
-        let (_, valDataRaw, _) = dataPreparator.importMulti30kDataset(path: "./dataset/")
-        let valDataProcessed = dataPreparator.clearDataset(dataset: valDataRaw)
+        // Evaluate on some validation examples
         let sentencesNum = 10
-        let totalSentences = valDataProcessed.count
+        let totalSentences = clearedValData.count
         let randomIndices = (0..<sentencesNum).map { _ in Int.random(in: 0..<totalSentences) }
-        let sentencesSelection = randomIndices.map { valDataProcessed[$0] }
+        let sentencesSelection = randomIndices.map { clearedValData[$0] }
         
         for (i, example) in sentencesSelection.enumerated() {
             print("\nExample №\(i + 1)")

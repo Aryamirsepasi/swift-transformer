@@ -24,49 +24,55 @@ class Encoder {
     }
     
     func forward(src: MLXArray, srcMask: MLXArray, training: Bool) -> MLXArray {
-        
-        var srcvar = self.tokenEmbedding.forward(X: src) * self.scale
-        srcvar = self.positionEmbedding.forward(x: srcvar)
-        srcvar = self.dropout.forward(X: srcvar, training: training)
-        
-        for layer in layers {
-            srcvar = layer.forward(src: srcvar, srcMask: srcMask, training: training)
+        return autoreleasepool {
+            
+            var srcvar = self.tokenEmbedding.forward(X: src) * self.scale
+            srcvar = self.positionEmbedding.forward(x: srcvar)
+            srcvar = self.dropout.forward(X: srcvar, training: training)
+            
+            for layer in layers {
+                srcvar = layer.forward(src: srcvar, srcMask: srcMask, training: training)
+            }
+            
+            return srcvar
         }
-        
-        return srcvar
     }
     
     func backward(error: MLXArray) -> MLXArray {
-        
-        var errorvar = error
-        
-        for layer in layers.reversed() {
-            errorvar = layer.backward(error: error)
+        return autoreleasepool {
+            
+            var errorvar = error
+            
+            for layer in layers.reversed() {
+                errorvar = layer.backward(error: error)
+            }
+            
+            errorvar = dropout.backward(errorvar)
+            errorvar = positionEmbedding.backward(error: errorvar) * self.scale
+            
+            return tokenEmbedding.backward(error: errorvar)
         }
-        
-        errorvar = dropout.backward(errorvar)
-        errorvar = positionEmbedding.backward(error: errorvar) * self.scale
-        
-        return tokenEmbedding.backward(error: errorvar)
     }
-    
     func setOptimizer(_ optimizer: Optimizer) {
-        
-        tokenEmbedding.setOptimizer(optimizer: optimizer)
-        
-        for layer in layers {
-            layer.setOptimizer(optimizer)
+        return autoreleasepool {
+            
+            tokenEmbedding.setOptimizer(optimizer: optimizer)
+            
+            for layer in layers {
+                layer.setOptimizer(optimizer)
+            }
         }
-        
     }
     
     func updateWeights() {
-        
-        var layerNum = 1
-        layerNum = tokenEmbedding.updateWeights(layerNum: layerNum)
-        
-        for layer in layers {
-            layerNum = layer.updateWeights(layerNum: layerNum)
+        return autoreleasepool {
+            
+            var layerNum = 1
+            layerNum = tokenEmbedding.updateWeights(layerNum: layerNum)
+            
+            for layer in layers {
+                layerNum = layer.updateWeights(layerNum: layerNum)
+            }
         }
         
     }

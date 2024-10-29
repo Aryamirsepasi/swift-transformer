@@ -64,70 +64,67 @@ class Embedding {
     }
     
     func prepareLabels(batchLabels: MLXArray) -> MLXArray {
-        // Convert batch labels to integers
-        let batchLabelsVar = batchLabels.asType(DType.int32)
-        
-        // Prepare an empty tensor for the one-hot encoding
-        let prepareBatchLabels = MLX.zeros([batchLabelsVar.size, self.inputDim])
-        
-        // Generate range of indices using the initializer
-        /*let indices = MLXArray(0..<batchLabelsVar.size).asType(DType.int32)
-         let reshapedLabels = batchLabelsVar.reshaped([batchLabelsVar.size], stream: .gpu)
-         
-         // Perform one-hot encoding manually
-         for i in 0..<indices.size {
-         let index = indices[i].item(Int.self)
-         let label = reshapedLabels[i].item(Int.self)
-         prepareBatchLabels[index, label] = MLXArray(1.0)
-         }*/
-        
-        prepareBatchLabels[MLXArray(0..<batchLabelsVar.size), batchLabelsVar.reshaped([1,-1])] = MLXArray(1)
-        
-        let res = prepareBatchLabels.reshaped([self.batchSize, self.currentInputLength, self.inputDim], stream: .gpu).asType(self.dataType)
-        
-        // Reshape the tensor to the desired dimensions
-        return res
-    }
+            return autoreleasepool {
+                let batchLabelsVar = batchLabels.asType(DType.int32)
+                let prepareBatchLabels = MLX.zeros([batchLabelsVar.size, self.inputDim])
+                
+                // Optimize one-hot encoding to avoid intermediate arrays
+                prepareBatchLabels[MLXArray(0..<batchLabelsVar.size),
+                                 batchLabelsVar.reshaped([1,-1])] = MLXArray(1)
+                
+                return prepareBatchLabels.reshaped([self.batchSize,
+                                                  self.currentInputLength,
+                                                  self.inputDim],
+                                                 stream: .gpu)
+                                        .asType(self.dataType)
+            }
+        }
     
     func forward(X: MLXArray) -> MLXArray {
         
-        self.inputData = X
-        
-        for i in 0..<self.inputData.count{
-            let arr = self.inputData[i]
+        autoreleasepool {
+            self.inputData = X
             
-            if !(MLX.equal(self.inputData[0].count, arr.count).all().item()){
-                fatalError("Input sequences must be of the same length")
+            for i in 0..<self.inputData.count{
+                let arr = self.inputData[i]
+                
+                if !(MLX.equal(self.inputData[0].count, arr.count).all().item()){
+                    fatalError("Input sequences must be of the same length")
+                }
             }
+            
+            self.currentInputLength = self.inputData[0].count
+            self.batchSize = self.inputData.count
+            
+            self.inputData = self.prepareLabels(batchLabels: self.inputData)
+            
+            self.outputData = MLX.matmul(self.inputData, self.w, stream: .gpu)
+            
+            
+            return self.outputData
         }
-        
-        self.currentInputLength = self.inputData[0].count
-        self.batchSize = self.inputData.count
-        
-        self.inputData = self.prepareLabels(batchLabels: self.inputData)
-        
-        self.outputData = MLX.matmul(self.inputData, self.w, stream: .gpu)
-        
-        
-        return self.outputData
         
     }
     
     func backward(error: MLXArray) -> MLXArray {
-        
-        self.gradW = MLX.matmul(MLX.transposed(self.inputData, axes: [0,2,1], stream: .gpu), error, stream: .gpu).sum(axis: 0, stream: .gpu)
-        
-        return []
+        autoreleasepool {
+            
+            self.gradW = MLX.matmul(MLX.transposed(self.inputData, axes: [0,2,1], stream: .gpu), error, stream: .gpu).sum(axis: 0, stream: .gpu)
+            
+            return []
+        }
     }
     
     func updateWeights(layerNum: Int) -> Int {
-        
-        if let optimizer = optimizer {
-            var templayerNum = layerNum
-            (w, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradW, weights: w, v: v, m: m, vHat: vHat, mHat: mHat, t: layerNum)
+        autoreleasepool {
+            
+            if let optimizer = optimizer {
+                var templayerNum = layerNum
+                (w, v, m, vHat, mHat, templayerNum) = optimizer.update(gradient: gradW, weights: w, v: v, m: m, vHat: vHat, mHat: mHat, t: layerNum)
+            }
+            
+            return layerNum + 1
         }
-        
-        return layerNum + 1
     }
     
     func getGrads() -> (MLXArray, MLXArray) {
