@@ -33,13 +33,15 @@ class PositionalEncoding {
     }
     
     func forward(x: MLXArray) -> MLXArray {
-        
-        
-        let xvar = x
-        
-        xvar += self.pe[..<xvar.shape[0], 0...]
-        
-        return xvar
+        autoreleasepool {
+            
+            
+            let xvar = x
+            
+            xvar += self.pe[..<xvar.shape[0], 0...]
+            
+            return xvar
+        }
     }
     
     func backward(error: MLXArray) -> MLXArray {

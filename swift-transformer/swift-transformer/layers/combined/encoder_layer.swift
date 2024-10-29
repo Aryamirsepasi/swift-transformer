@@ -22,32 +22,37 @@ class EncoderLayer {
     }
 
     func forward(src: MLXArray, srcMask: MLXArray, training: Bool) -> MLXArray {
+        return autoreleasepool {
+            var srcvar = src  // Create initial copy
+            
+            var (_src, _) = self.selfAttention.forward(query: src, key: src, value: src, mask: srcMask, training: training)
+            
+            srcvar = self.selfAttentionNorm.forward(X: MLX.add(srcvar, self.dropout.forward(X: _src, training: training)))
 
-        var (_src, _) = self.selfAttention.forward(query: src, key: src, value: src, mask: srcMask, training: training)
-        
-        var srcvar = self.selfAttentionNorm.forward(X: MLX.add(src,self.dropout.forward(X: _src, training: training)))
-        
-        _src = self.positionWiseFeedForward.forward(X: src, training: training)
-        
-        srcvar = self.ffLayerNorm.forward(X: MLX.add(src,self.dropout.forward(X: _src, training: training)))
-        
-        return srcvar
+            let ffOutput = self.positionWiseFeedForward.forward(X: srcvar, training: training)
+
+            srcvar = self.ffLayerNorm.forward(X: MLX.add(srcvar, self.dropout.forward(X: ffOutput, training: training)))
+
+            return srcvar
+        }
     }
 
     func backward(error: MLXArray) -> MLXArray {
-        
-        var errorvar = self.ffLayerNorm.backward(error: error)
-        
-        var _error = self.positionWiseFeedForward.backward(error: self.dropout.backward(errorvar))
-        
-        errorvar = self.selfAttentionNorm.backward(error:errorvar + _error)
-        
-        var _error2, _error3 : MLXArray
-        
-        (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(errorvar))
-        
-        return _error + _error2 + _error3 + error
-        
+        return autoreleasepool {
+            
+            var errorvar = self.ffLayerNorm.backward(error: error)
+            
+            var _error = self.positionWiseFeedForward.backward(error: self.dropout.backward(errorvar))
+            
+            errorvar = self.selfAttentionNorm.backward(error:errorvar + _error)
+            
+            var _error2, _error3 : MLXArray
+            
+            (_error, _error2, _error3) = self.selfAttention.backward(error: self.dropout.backward(errorvar))
+            
+            return _error + _error2 + _error3 + error
+            
+        }
     }
 
     func setOptimizer(_ optimizer: Optimizer) {
@@ -60,13 +65,15 @@ class EncoderLayer {
     }
 
     func updateWeights(layerNum: Int) -> Int {
-        
-        var layerNum = layerNum
-        layerNum = selfAttentionNorm.updateWeights(layerNum: layerNum)
-        layerNum = ffLayerNorm.updateWeights(layerNum: layerNum)
-        layerNum = selfAttention.updateWeights(layerNum: layerNum)
-        layerNum = positionWiseFeedForward.updateWeights(startingLayerNum: layerNum)
-        
-        return layerNum
+        autoreleasepool {
+            
+            var layerNum = layerNum
+            layerNum = selfAttentionNorm.updateWeights(layerNum: layerNum)
+            layerNum = ffLayerNorm.updateWeights(layerNum: layerNum)
+            layerNum = selfAttention.updateWeights(layerNum: layerNum)
+            layerNum = positionWiseFeedForward.updateWeights(startingLayerNum: layerNum)
+            
+            return layerNum
+        }
     }
 }

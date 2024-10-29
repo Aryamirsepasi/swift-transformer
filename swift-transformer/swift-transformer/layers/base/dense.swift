@@ -79,44 +79,50 @@ class Dense {
     }
     
     func forward(X: MLXArray, training: Bool = true) -> MLXArray {
-        
-        self.inputData = X // Set inputData
-        
-        // Perform batched matrix multiplication
-        let weightedSum = MLX.matmul(self.inputData!, self.w)
-        
-        // Add the bias term, broadcasting over the correct dimension
-        self.outputData = MLX.add(weightedSum,self.b)
-        
-        return self.outputData
+        return autoreleasepool {
+            
+            self.inputData = X // Set inputData
+            
+            // Perform batched matrix multiplication
+            let weightedSum = MLX.matmul(self.inputData!, self.w)
+            
+            // Add the bias term, broadcasting over the correct dimension
+            self.outputData = MLX.add(weightedSum,self.b)
+            
+            return self.outputData
+        }
     }
     
     func backward(error: MLXArray) -> MLXArray {
-        
-        guard let inputData = self.inputData else {
-            fatalError("Input data not set. Ensure forward pass is called before backward pass.")
+        return autoreleasepool {
+            
+            guard let inputData = self.inputData else {
+                fatalError("Input data not set. Ensure forward pass is called before backward pass.")
+            }
+            
+            // Compute gradients for weights and biases
+            self.gradW = MLX.sum(MLX.matmul(inputData.transposed(0, 2, 1, stream: .gpu), error, stream: .gpu), axes: [0], stream: .gpu)
+            self.gradB = MLX.sum(error, axes: [0, 1], stream: .gpu)
+            
+            // Perform matrix multiplication equivalent to np.dot(error, self.w.T)
+            let outputError = MLX.matmul(error, self.w.T, stream: .gpu)
+            return outputError
         }
-        
-        // Compute gradients for weights and biases
-        self.gradW = MLX.sum(MLX.matmul(inputData.transposed(0, 2, 1, stream: .gpu), error, stream: .gpu), axes: [0], stream: .gpu)
-        self.gradB = MLX.sum(error, axes: [0, 1], stream: .gpu)
-        
-        // Perform matrix multiplication equivalent to np.dot(error, self.w.T)
-        let outputError = MLX.matmul(error, self.w.T, stream: .gpu)
-        return outputError
     }
     
     func updateWeights(layerNum: Int) -> Int {
-        
-        if let optimizer = self.optimizer {
-            var templayerNum = layerNum
-            (self.w, self.v, self.m, self.vHat, self.mHat, templayerNum) = optimizer.update(gradient: self.gradW, weights: self.w, v: self.v, m: self.m, vHat: self.vHat, mHat: self.mHat, t: layerNum)
-            if self.useBias {
-                (self.b, self.vb, self.mb, self.vbHat, self.mbHat, templayerNum) = optimizer.update(gradient: self.gradB, weights: self.b, v: self.vb, m: self.mb, vHat: self.vbHat, mHat: self.mbHat, t: layerNum)
+        autoreleasepool {
+            
+            if let optimizer = self.optimizer {
+                var templayerNum = layerNum
+                (self.w, self.v, self.m, self.vHat, self.mHat, templayerNum) = optimizer.update(gradient: self.gradW, weights: self.w, v: self.v, m: self.m, vHat: self.vHat, mHat: self.mHat, t: layerNum)
+                if self.useBias {
+                    (self.b, self.vb, self.mb, self.vbHat, self.mbHat, templayerNum) = optimizer.update(gradient: self.gradB, weights: self.b, v: self.vb, m: self.mb, vHat: self.vbHat, mHat: self.mbHat, t: layerNum)
+                }
             }
+            
+            return layerNum + 1
         }
-        
-        return layerNum + 1
     }
     
     func getGrads() -> (MLXArray, MLXArray) {

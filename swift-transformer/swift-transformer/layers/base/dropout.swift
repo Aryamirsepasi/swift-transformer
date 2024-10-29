@@ -10,6 +10,7 @@ class Dropout {
     var outputShape: [Int]
     var mask: MLXArray?
     var dataType: DType
+    private var currentMaskShape: [Int]? // Track current mask shape
     
     init(rate: Float = 0.1, dataType: DType = DType.float32) {
         
@@ -28,29 +29,31 @@ class Dropout {
     }
     
     func forward(X: MLXArray, training: Bool = true) -> MLXArray {
-        
-        if training {
-            if self.mask == nil || self.mask!.shape != X.shape {
-                // Only generate a new mask if necessary
-                self.mask = MLXRandom.bernoulli(1 - self.rate, X.shape, stream: .gpu).asType(self.dataType)
+        autoreleasepool {
+            
+            guard training else { return X }
+            
+            // Only generate new mask if shape changes
+            if self.currentMaskShape != X.shape {
+                self.mask = MLXRandom.bernoulli(1 - self.rate, X.shape, stream: .gpu)
+                    .asType(self.dataType)
+                self.currentMaskShape = X.shape
             }
             
-            let res = X * self.mask!
-            
-            return res
+            return X * self.mask!
         }
-        
-        return X
         
         
         
     }
     
     func backward(_ error: MLXArray) -> MLXArray {
-        
-        let outputError = error * self.mask!
-        
-        return outputError
+        autoreleasepool {
+            
+            let outputError = error * self.mask!
+            
+            return outputError
+        }
     }
     
 }

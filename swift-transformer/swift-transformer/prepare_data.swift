@@ -37,26 +37,19 @@ class DataPreparator {
     
     func prepareData(path: String = "dataset/", batchSize: Int = 1, minFreq: Int = 10) -> (([MLXArray], [MLXArray]), ([MLXArray], [MLXArray]), ([MLXArray], [MLXArray])) {
         let (trainData, valData, testData) = importMulti30kDataset(path: path)
-        let clearedTrainData = clearDataset(dataset: trainData)
-        let clearedValData = clearDataset(dataset: valData)
-        let clearedTestData = clearDataset(dataset: testData)
+        let (clearedTrainData, clearedValData, clearedTestData) = clearDataset(trainData, valData, testData).tuple
         
         print("train data sequences num =  \(clearedTrainData.count)")
-
         
         self.vocabs = buildVocab(dataset: clearedTrainData, minFreq: minFreq)
         print("EN vocab length =  \(self.vocabs!.0.count); DE vocab length = \(self.vocabs!.1.count)")
-
         
         let trainDataBatches = addTokens(dataset: clearedTrainData, batchSize: batchSize)
-        
         print("batch num =  \(trainDataBatches.count)")
-
-        let trainSourceTarget = buildDataset(dataset: trainDataBatches, vocabs: self.vocabs!)
         
+        let trainSourceTarget = buildDataset(dataset: trainDataBatches, vocabs: self.vocabs!)
         let testDataBatches = addTokens(dataset: clearedTestData, batchSize: batchSize)
         let testSourceTarget = buildDataset(dataset: testDataBatches, vocabs: self.vocabs!)
-        
         let valDataBatches = addTokens(dataset: clearedValData, batchSize: batchSize)
         let valSourceTarget = buildDataset(dataset: valDataBatches, vocabs: self.vocabs!)
         
@@ -128,12 +121,14 @@ class DataPreparator {
 
 
     
-    func clearDataset(dataset: [[String: String]]) -> [[String: [String]]] {
-        return dataset.map { example in
-            var clearedExample: [String: [String]] = [:]
-            clearedExample["en"] = lowercaseSeq(seq: filterSeq(seq: example["en"]!)).split(separator: " ").map(String.init)
-            clearedExample["de"] = lowercaseSeq(seq: filterSeq(seq: example["de"]!)).split(separator: " ").map(String.init)
-            return clearedExample
+    func clearDataset(_ datasets: [[String: String]]...) -> [[[String: [String]]]] {
+        return datasets.map { dataset in
+            dataset.map { example in
+                var clearedExample: [String: [String]] = [:]
+                clearedExample["en"] = lowercaseSeq(seq: filterSeq(seq: example["en"]!)).split(separator: " ").map(String.init)
+                clearedExample["de"] = lowercaseSeq(seq: filterSeq(seq: example["de"]!)).split(separator: " ").map(String.init)
+                return clearedExample
+            }
         }
     }
     
@@ -163,45 +158,50 @@ class DataPreparator {
     }
     
     func addTokens(dataset: [[String: [String]]], batchSize: Int) -> [[[String: [String]]]] {
-        let paddedData = dataset.map { example -> [String: [String]] in
-            var paddedExample = example
-            paddedExample["en"] = [sosToken] + example["en"]! + [eosToken]
-            paddedExample["de"] = [sosToken] + example["de"]! + [eosToken]
-            return paddedExample
+        // First add SOS and EOS tokens
+        let datasetWithTokens = dataset.map { example -> [String: [String]] in
+            var newExample = example
+            newExample["en"] = [sosToken] + example["en"]! + [eosToken]
+            newExample["de"] = [sosToken] + example["de"]! + [eosToken]
+            return newExample
         }
         
-        var batchedData: [[[String: [String]]]] = stride(from: 0, to: paddedData.count, by: batchSize).map {
-            Array(paddedData[$0..<min($0 + batchSize, paddedData.count)])
-        }
+        // Split into batches more similarly to numpy's array_split
+        let numBatches = Int(ceil(Double(datasetWithTokens.count) / Double(batchSize)))
+        var batches: [[[String: [String]]]] = []
         
-        for i in 0..<batchedData.count {
-            let batch = batchedData[i]
+        for i in 0..<numBatches {
+            let start = i * batchSize
+            let end = min(start + batchSize, datasetWithTokens.count)
+            var batch = Array(datasetWithTokens[start..<end])
+            
+            // Find max lengths for this batch
             let maxEnSeqLen = batch.map { $0["en"]!.count }.max() ?? 0
             let maxDeSeqLen = batch.map { $0["de"]!.count }.max() ?? 0
             
-            batchedData[i] = batch.map { example in
-                var paddedExample = example
-                let enWords = example["en"]!
-                let deWords = example["de"]!
+            // Pad sequences in the batch
+            for j in 0..<batch.count {
+                let enPadding = Array(repeating: padToken, count: maxEnSeqLen - batch[j]["en"]!.count)
+                let dePadding = Array(repeating: padToken, count: maxDeSeqLen - batch[j]["de"]!.count)
                 
-                paddedExample["en"] = enWords + Array(repeating: padToken, count: maxEnSeqLen - enWords.count)
-                paddedExample["de"] = deWords + Array(repeating: padToken, count: maxDeSeqLen - deWords.count)
-                
-                return paddedExample
+                batch[j]["en"]! += enPadding
+                batch[j]["de"]! += dePadding
             }
+            
+            batches.append(batch)
         }
         
-        return batchedData
+        return batches
     }
     
     func buildDataset(dataset: [[[String: [String]]]], vocabs: ([String: Int], [String: Int])) -> ([MLXArray], [MLXArray]) {
         var sourceArrays: [MLXArray] = []
         var targetArrays: [MLXArray] = []
-
+        
         for batch in dataset {
             var sourceBatch: [[Int]] = []
             var targetBatch: [[Int]] = []
-
+            
             for example in batch {
                 let enIndices = example["en"]!.map { vocabs.0[$0] ?? unkIndex }
                 let deIndices = example["de"]!.map { vocabs.1[$0] ?? unkIndex }
@@ -209,13 +209,28 @@ class DataPreparator {
                 sourceBatch.append(enIndices)
                 targetBatch.append(deIndices)
             }
-
-            let sourceMLX = MLXArray(sourceBatch.flatMap { $0 }).reshaped([sourceBatch.count, sourceBatch[0].count])
-            let targetMLX = MLXArray(targetBatch.flatMap { $0 }).reshaped([targetBatch.count, targetBatch[0].count])
-
+            
+            // Create MLXArrays using flatMap and reshape
+            let sourceMLX = MLXArray(sourceBatch.flatMap { $0 })
+                .reshaped([sourceBatch.count, sourceBatch[0].count])
+                .asType(DType.int32)
+                
+            let targetMLX = MLXArray(targetBatch.flatMap { $0 })
+                .reshaped([targetBatch.count, targetBatch[0].count])
+                .asType(DType.int32)
+            
             sourceArrays.append(sourceMLX)
             targetArrays.append(targetMLX)
         }
+        
         return (sourceArrays, targetArrays)
+    }
+}
+
+// Helper extension to convert array to tuple
+extension Array {
+    var tuple: (Element, Element, Element) {
+        guard count == 3 else { fatalError("Array must contain exactly 3 elements") }
+        return (self[0], self[1], self[2])
     }
 }

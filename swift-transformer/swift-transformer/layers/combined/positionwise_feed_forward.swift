@@ -48,12 +48,14 @@ class PositionwiseFeedforward {
     }
 
     func updateWeights(startingLayerNum: Int) -> Int {
-        
-        var layerNum = startingLayerNum
-        layerNum = fc1.updateWeights(layerNum: layerNum)
-        layerNum = fc2.updateWeights(layerNum: layerNum)
-        
-        return layerNum
+        autoreleasepool {
+            
+            var layerNum = startingLayerNum
+            layerNum = fc1.updateWeights(layerNum: layerNum)
+            layerNum = fc2.updateWeights(layerNum: layerNum)
+            
+            return layerNum
+        }
     }
 }
 

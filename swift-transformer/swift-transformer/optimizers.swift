@@ -15,9 +15,9 @@ class SGD: Optimizer {
     }
     
     func update(gradient: MLXArray, weights:  MLXArray, v:  MLXArray, m:  MLXArray, vHat:  MLXArray, mHat:  MLXArray, t: Int) -> (MLXArray,MLXArray, MLXArray, MLXArray, MLXArray, Int) {
-                
+        
         weights -= gradient * alpha
-                
+        
         return (weights, v, m, vHat, mHat, t)
         
     }
@@ -38,20 +38,27 @@ class Adam: Optimizer { //after
     }
     
     func update(gradient: MLXArray, weights:  MLXArray, v:  MLXArray, m:  MLXArray, vHat:  MLXArray, mHat:  MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
-        
-        let mvar = MLX.add((beta * m),((1 - beta) * gradient))
-        
-        let vvar = MLX.add((beta2 * v),((1 - beta2) * MLX.pow(gradient, 2, stream: .gpu)))
-        
-        let mHatvar = mvar / (1 - Float(pow(Double(beta), Double(t))))
-        let vHatvar = vvar / (1 - Float(pow(Double(beta2), Double(t))))
-        
-        
-        let temp = alpha * mHatvar / (MLX.sqrt(vHatvar, stream: .gpu) + epsilon)
-        
-        weights -= temp
-        
-        return (weights, v, m, vHat, mHat , t)
+        return autoreleasepool {
+            
+            let t = Float(t + 1)
+            
+            // Update biased first moment estimate
+            let mNew = beta * m + (1 - beta) * gradient
+            
+            // Update biased second raw moment estimate
+            let vNew = beta2 * v + (1 - beta2) * (gradient * gradient)
+            
+            // Compute bias-corrected first moment estimate
+            let mHatNew = mNew / (1 - pow(beta, t))
+            
+            // Compute bias-corrected second raw moment estimate
+            let vHatNew = vNew / (1 - pow(beta2, t))
+            
+            // Update parameters
+            let weightsNew = weights - alpha * mHatNew / (MLX.sqrt(vHatNew) + epsilon)
+            
+            return (weightsNew, vNew, mNew, vHatNew, mHatNew, Int(t))
+        }
     }
 }
 
@@ -74,13 +81,13 @@ class Noam: Optimizer {
     }
     
     func update(gradient: MLXArray, weights:  MLXArray, v:  MLXArray, m:  MLXArray, vHat:  MLXArray, mHat:  MLXArray, t: Int) -> (MLXArray, MLXArray, MLXArray, MLXArray, MLXArray, Int) {
-                
+        
         stepsNum += 1
         let arg1 = pow(Float(stepsNum), -0.5)
         let arg2 = Float(stepsNum) * pow(Float(warmupSteps), -1.5)
         let lr = scaleFactor * pow(modelDim, -0.5) * min(arg1, arg2)
         optimizer.alpha = lr
-                
+        
         return self.optimizer.update(gradient: gradient, weights: weights, v: v, m: m, vHat: vHat, mHat: mHat, t: t)
     }
 }

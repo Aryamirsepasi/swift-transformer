@@ -64,107 +64,111 @@ class MultiHeadAttention {
     }
     
     func splitHeadsForward(x:MLXArray) -> MLXArray {
-
+        
         let batchSize = x.shape[0]
         
         return x.reshaped([batchSize, -1, self.headsNum, self.dK], stream: .gpu).transposed(0,2,1,3, stream: .gpu)
     }
     
     func splitHeadsBackward(x: MLXArray) -> MLXArray {
-
+        
         let batchSize = x.shape[0]
         
         return x.transposed(0,2,1,3, stream: .gpu).reshaped([batchSize, -1, self.headsNum * self.dK], stream: .gpu)
     }
     
     func groupHeadsForward(x: MLXArray) -> MLXArray {
-
+        
         let batchSize = x.shape[0]
         
         return x.transposed(0,2,1,3, stream: .gpu).reshaped([batchSize, -1, self.headsNum * self.dK], stream: .gpu)
     }
     
     func groupHeadsBackward(x: MLXArray) -> MLXArray {
-
+        
         let batchSize = x.shape[0]
         
         return x.reshaped([batchSize, -1, self.headsNum, self.dK], stream: .gpu).transposed(0,2,1,3, stream: .gpu)
     }
     
     func forward(query: MLXArray, key: MLXArray, value: MLXArray, mask: MLXArray, training: Bool = true) -> (MLXArray, MLXArray) {
-        
-        self.keyLen = key.shape[1]
-        self.queryLen = query.shape[1]
-        self.valueLen = value.shape[1]
-
-        let K = KLinear.forward(X: key)
-        let Q = QLinear.forward(X: query)
-        let V = VLinear.forward(X: value)
+        autoreleasepool {
+            
+            self.keyLen = key.shape[1]
+            self.queryLen = query.shape[1]
+            self.valueLen = value.shape[1]
+            
+            let K = KLinear.forward(X: key)
+            let Q = QLinear.forward(X: query)
+            let V = VLinear.forward(X: value)
+            
+            self.K = splitHeadsForward(x: K)
+            self.Q = splitHeadsForward(x: Q)
+            self.V = splitHeadsForward(x: V)
+            
+            var energy = MLX.matmul(self.Q, self.K.transposed(0,1,3,2), stream: .gpu) / self.scale
+            
+            // Assign the mask
+            self.mask = mask
+            
+            // Corrected: Apply the new axis and ellipsis correctly
+            if self.mask != nil {
+                self.mask! = self.mask![0..., .newAxis, .ellipsis, stream: .gpu]
                 
-        self.K = splitHeadsForward(x: K)
-        self.Q = splitHeadsForward(x: Q)
-        self.V = splitHeadsForward(x: V)
-
-        var energy = MLX.matmul(self.Q, self.K.transposed(0,1,3,2), stream: .gpu) / self.scale
-        
-        // Assign the mask
-        self.mask = mask
-        
-        // Corrected: Apply the new axis and ellipsis correctly
-        if self.mask != nil {
-            self.mask! = self.mask![0..., .newAxis, .ellipsis, stream: .gpu]
+                // Handle negative infinity
+                let negativeInfinity = Double.infinity * -1
+                
+                // Apply the mask
+                energy = MLX.which(self.mask! .== 0, negativeInfinity, energy, stream: .gpu)
+            }
             
-            // Handle negative infinity
-            let negativeInfinity = Double.infinity * -1
+            let attention = self.activation.forward(x: energy)
             
-            // Apply the mask
-            energy = MLX.which(self.mask! .== 0, negativeInfinity, energy, stream: .gpu)
+            self.dropoutAttention = self.dropout.forward(X: attention, training: training)
+            let output = MLX.matmul(self.dropoutAttention, self.V, stream: .gpu)
+            
+            let concat_output = self.groupHeadsForward(x: output)
+            
+            let O = self.OLinear.forward(X: concat_output)
+            
+            return (O, attention)
         }
-        
-        let attention = self.activation.forward(x: energy)
-        
-        self.dropoutAttention = self.dropout.forward(X: attention, training: training)
-        let output = MLX.matmul(self.dropoutAttention, self.V, stream: .gpu)
-        
-        let concat_output = self.groupHeadsForward(x: output)
-        
-        let O = self.OLinear.forward(X: concat_output)
-        
-        return (O, attention)
     }
-
+    
     
     func backward(error: MLXArray) -> (MLXArray,MLXArray,MLXArray) {
-        
-        var error = self.OLinear.backward(error: error)
-        
-        error = self.groupHeadsBackward(x: error)
-        
-        var VError = MLX.matmul(self.dropoutAttention.transposed(0,1,3,2), error)
-                
-        error = MLX.matmul(error, self.V.transposed(0,1,3,2), stream: .gpu)
-        error = self.dropout.backward(error)
-        error = self.activation.backward(grad: error)
-        
-        // if self.mask is not None:
-        if self.mask != nil {
-            error = MLX.which(self.mask! .== 0, 0, error, stream: .gpu)
+        autoreleasepool {
+            
+            var error = self.OLinear.backward(error: error)
+            
+            error = self.groupHeadsBackward(x: error)
+            
+            var VError = MLX.matmul(self.dropoutAttention.transposed(0,1,3,2), error)
+            
+            error = MLX.matmul(error, self.V.transposed(0,1,3,2), stream: .gpu)
+            error = self.dropout.backward(error)
+            error = self.activation.backward(grad: error)
+            
+            // if self.mask is not None:
+            if self.mask != nil {
+                error = MLX.which(self.mask! .== 0, 0, error, stream: .gpu)
+            }
+            error /= self.scale
+            
+            var QError = MLX.matmul(error, self.K, stream: .gpu)
+            var KError = MLX.matmul(self.Q.transposed(0,1,3,2), error, stream: .gpu)
+            KError = KError.transposed(0,1,3,2, stream: .gpu)
+            
+            VError = self.splitHeadsBackward(x: VError)
+            QError = self.splitHeadsBackward(x: QError)
+            KError = self.splitHeadsBackward(x: KError)
+            
+            VError = self.VLinear.backward(error: VError)
+            QError = self.QLinear.backward(error: QError)
+            KError = self.KLinear.backward(error: KError)
+            
+            return (QError, KError, VError)
         }
-        error /= self.scale
-        
-        var QError = MLX.matmul(error, self.K, stream: .gpu)
-        var KError = MLX.matmul(self.Q.transposed(0,1,3,2), error, stream: .gpu)
-        KError = KError.transposed(0,1,3,2, stream: .gpu)
-        
-        VError = self.splitHeadsBackward(x: VError)
-        QError = self.splitHeadsBackward(x: QError)
-        KError = self.splitHeadsBackward(x: KError)
-        
-        VError = self.VLinear.backward(error: VError)
-        QError = self.QLinear.backward(error: QError)
-        KError = self.KLinear.backward(error: KError)
-        
-        return (QError, KError, VError)
     }
     
     func setOptimizer(optimizer: Optimizer) {
