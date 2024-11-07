@@ -6,7 +6,7 @@ Additionally, you can access a comprehensive set of detailed measurements in the
 
 [View Performance Measurement Files](https://drive.google.com/drive/folders/1l94hx23KmZ6R0HTXCil01ruhZi1YzL-g?usp=share_link)
 
-## Performance Comparison (MacBook Pro with M1 Pro CPU, 32 GB LPDDR5 RAM, macOS Sequoia 15.0.1)
+## Performance Comparison (MacBook Pro with M1 Pro CPU, 32 GB LPDDR5 RAM, macOS Sequoia 15.0.1)*
 
 #### Training:
 
@@ -34,7 +34,8 @@ Additionally, you can access a comprehensive set of detailed measurements in the
 - **227 Batches, Epoch 5/5 (Swift)**: Testing completed in 36.33 seconds
 - **227 Batches, Epoch 5/5 (Python)**: Testing completed in 219 seconds
 
-
 #### Summary:
 
 On average, the Swift variant is approximately **36.75×** faster during training and **26.12×** faster during testing compared to the Python variant.
+
+##### * It’s worth noting, however, that MLX operates on GPUs by default. The Python version utilizes either NumPy or CuPy. One is CPU-based, while the other is limited to NVIDIA GPUs, which Macs don’t support.

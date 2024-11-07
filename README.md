@@ -18,7 +18,9 @@ Based on the original Numpy-Transformer project by AmritanshuV. [Link](https://g
 
 #### Summary:
 
-On average, the Swift variant is approximately **36.75×** faster during training and **26.12×** faster during testing compared to the Python variant.
+On average, the Swift variant is approximately **36.75×** faster during training and **26.12×** faster during testing compared to the Python variant.*
+
+* It’s worth noting, however, that MLX operates on GPUs by default. The Python version utilizes either NumPy or CuPy. One is CPU-based, while the other is limited to NVIDIA GPUs, which Macs don’t support.
 
 ## Loss History Graph
 

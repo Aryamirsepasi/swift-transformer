@@ -6,21 +6,31 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            // Use Swift Charts to plot the graph
-            Chart(viewModel.lossData) {
-                LineMark(
-                    x: .value("Epoch", $0.epoch),
-                    y: .value("Loss", $0.loss)
-                )
-                .foregroundStyle(by: .value("Series", $0.series)) // Differentiate lines by series
+            Text("Training Progress")
+                .font(.headline)
+                .padding()
+            
+            if viewModel.lossData.isEmpty {
+                ProgressView("Waiting for training data...")
+            } else {
+                Chart(viewModel.lossData) {
+                    LineMark(
+                        x: .value("Epoch", $0.epoch),
+                        y: .value("Loss", $0.loss)
+                    )
+                    .foregroundStyle(by: .value("Series", $0.series))
+                }
+                .frame(height: 300)
+                .padding()
+                .chartXAxisLabel("Epoch")
+                .chartYAxisLabel("Loss")
+                // Remove fixed Y-axis range to allow dynamic scaling
+                .chartLegend(position: .bottom)
             }
-            .frame(height: 200)
-            .chartXAxisLabel("Epoch")
-            .chartYAxisLabel("Loss")
-            .chartYScale(domain: 4.2...4.6) // Adjust the y-axis range
             
-            
+            Text("Latest Loss: \(viewModel.lossData.last?.loss ?? 0, specifier: "%.4f")")
+                .padding()
         }
+        .padding()
     }
-    
 }
