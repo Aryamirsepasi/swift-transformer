@@ -44,7 +44,7 @@ class Encoder {
             var errorvar = error
             
             for layer in layers.reversed() {
-                errorvar = layer.backward(error: error)
+                errorvar = layer.backward(error: errorvar)  // Fixed: was using 'error' instead of 'errorvar'
             }
             
             errorvar = dropout.backward(errorvar)

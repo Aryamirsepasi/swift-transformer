@@ -106,20 +106,27 @@ class MultiHeadAttention {
             self.Q = splitHeadsForward(x: Q)
             self.V = splitHeadsForward(x: V)
             
+            // Compute attention scores: Q @ K^T / sqrt(d_k)
             var energy = MLX.matmul(self.Q, self.K.transposed(0,1,3,2), stream: .gpu) / self.scale
             
-            // Assign the mask
-            self.mask = mask
-            
-            // Corrected: Apply the new axis and ellipsis correctly
-            if self.mask != nil {
-                self.mask! = self.mask![0..., .newAxis, .ellipsis, stream: .gpu]
+            // Store the mask and apply it
+            // Mask should be broadcastable to [batch, heads, query_len, key_len]
+            if mask.size > 0 {
+                // Expand mask to have heads dimension if needed
+                // Input mask is typically [batch, 1, seq_len] or [batch, seq_len, seq_len]
+                var expandedMask = mask
+                if mask.ndim == 3 {
+                    // Add heads dimension: [batch, 1, q_len, k_len] or [batch, 1, 1, k_len]
+                    expandedMask = mask.expandedDimensions(axis: 1)
+                }
+                self.mask = expandedMask
                 
-                // Handle negative infinity
-                let negativeInfinity = Double.infinity * -1
-                
-                // Apply the mask
-                energy = MLX.which(self.mask! .== 0, negativeInfinity, energy, stream: .gpu)
+                // Apply mask: use -inf for masked positions (where mask is 0/false)
+                // MLX.where selects from second arg when condition is true, third when false
+                let negInf = MLXArray(Float(-1e9))  // Use large negative value instead of -inf for numerical stability
+                energy = MLX.where(expandedMask .== 0, negInf, energy, stream: .gpu)
+            } else {
+                self.mask = nil
             }
             
             let attention = self.activation.forward(x: energy)
@@ -149,11 +156,11 @@ class MultiHeadAttention {
             error = self.dropout.backward(error)
             error = self.activation.backward(grad: error)
             
-            // if self.mask is not None:
-            if self.mask != nil {
-                error = MLX.which(self.mask! .== 0, 0, error, stream: .gpu)
+            // Apply mask to gradients (zero out gradients for masked positions)
+            if let mask = self.mask {
+                error = MLX.where(mask .== 0, MLXArray(Float(0)), error, stream: .gpu)
             }
-            error /= self.scale
+            error = error / self.scale
             
             var QError = MLX.matmul(error, self.K, stream: .gpu)
             var KError = MLX.matmul(self.Q.transposed(0,1,3,2), error, stream: .gpu)

@@ -11,6 +11,7 @@ class Dropout {
     var mask: MLXArray?
     var dataType: DType
     private var currentMaskShape: [Int]? // Track current mask shape
+    private var scale: Float  // Scale factor for inverted dropout
     
     init(rate: Float = 0.1, dataType: DType = DType.float32) {
         
@@ -19,6 +20,8 @@ class Dropout {
         self.outputShape = []
         self.mask = nil
         self.dataType = dataType
+        // Inverted dropout: scale by 1/(1-p) during training so no scaling needed at inference
+        self.scale = rate < 1.0 ? 1.0 / (1.0 - rate) : 1.0
         
     }
     
@@ -31,26 +34,25 @@ class Dropout {
     func forward(X: MLXArray, training: Bool = true) -> MLXArray {
         autoreleasepool {
             
-            guard training else { return X }
+            guard training && self.rate > 0 else { return X }
             
-            // Only generate new mask if shape changes
-            if self.currentMaskShape != X.shape {
-                self.mask = MLXRandom.bernoulli(1 - self.rate, X.shape, stream: .gpu)
-                    .asType(self.dataType)
-                self.currentMaskShape = X.shape
-            }
+            // Always generate new mask for each forward pass during training
+            // This ensures different dropout patterns for different forward calls
+            self.mask = MLXRandom.bernoulli(1 - self.rate, X.shape, stream: .gpu)
+                .asType(self.dataType)
+            self.currentMaskShape = X.shape
             
-            return X * self.mask!
+            // Apply inverted dropout: mask and scale
+            return (X * self.mask!) * self.scale
         }
-        
-        
-        
     }
     
     func backward(_ error: MLXArray) -> MLXArray {
         autoreleasepool {
+            guard let mask = self.mask else { return error }
             
-            let outputError = error * self.mask!
+            // Gradient flows through kept units, scaled by the same factor
+            let outputError = (error * mask) * self.scale
             
             return outputError
         }

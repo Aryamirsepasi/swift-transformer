@@ -71,16 +71,16 @@ class Decoder {
             self.encoderError = []
             // Step 4: Process each layer in reverse order
             for layer in self.layers.reversed() {
-                let (errorvar, encError) = layer.backward(error: errorvar)
+                let (layerError, encError) = layer.backward(error: errorvar)  // Fixed: renamed to avoid shadowing
+                errorvar = layerError  // Update errorvar with the layer's output
                 
-                // Initialize encoderError if it's nil
-                if self.encoderError.shape != encError.shape {
-                    
-                    self.encoderError = MLX.zeros(encError.shape, stream: .gpu)  // Initialize to the shape of encError
+                // Initialize encoderError if it's empty or shape mismatch
+                if self.encoderError.size == 0 || self.encoderError.shape != encError.shape {
+                    self.encoderError = MLX.zeros(encError.shape, stream: .gpu)
                 }
                 
                 // Add encError to encoderError
-                self.encoderError += encError
+                self.encoderError = self.encoderError + encError
             }
             
             // Step 5: Pass through the remaining layers

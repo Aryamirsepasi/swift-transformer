@@ -16,9 +16,9 @@ class SGD: Optimizer {
     
     func update(gradient: MLXArray, weights:  MLXArray, v:  MLXArray, m:  MLXArray, vHat:  MLXArray, mHat:  MLXArray, t: Int) -> (MLXArray,MLXArray, MLXArray, MLXArray, MLXArray, Int) {
         
-        weights -= gradient * alpha
+        let weightsNew = weights - gradient * alpha
         
-        return (weights, v, m, vHat, mHat, t)
+        return (weightsNew, v, m, vHat, mHat, t)
         
     }
 }

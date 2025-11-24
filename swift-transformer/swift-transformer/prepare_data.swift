@@ -75,26 +75,29 @@ class DataPreparator {
         var valResults: [[String: String]] = []
         var testResults: [[String: String]] = []
         
-        let currentPath = FileManager.default.currentDirectoryPath
-
-        // Get the container directory
-        let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "com.aryamirsepasi.swift-transformer")
-
-        guard let datasetURL = containerURL?.appendingPathComponent("dataset") else {
-            print("Error: Could not find dataset directory")
+        // Use Bundle resources for sandboxed app access
+        guard let bundlePath = Bundle.main.resourcePath else {
+            print("Error: Could not find bundle resource path")
             return (trainResults, valResults, testResults)
         }
+        
+        let datasetURL = URL(fileURLWithPath: bundlePath).appendingPathComponent("dataset")
+        print("Looking for dataset at: \(datasetURL.path)")
 
         for filename in filenames {
-            let enPath = datasetURL.appendingPathComponent("\(filename).en")
-            let dePath = datasetURL.appendingPathComponent("\(filename).de")
+            // Try Bundle.main.url first for proper resource lookup
+            let enBundleURL = Bundle.main.url(forResource: filename, withExtension: "en", subdirectory: "dataset")
+            let deBundleURL = Bundle.main.url(forResource: filename, withExtension: "de", subdirectory: "dataset")
+            
+            let enPath = enBundleURL ?? datasetURL.appendingPathComponent("\(filename).en")
+            let dePath = deBundleURL ?? datasetURL.appendingPathComponent("\(filename).de")
 
             do {
-                let enContent = try String(contentsOf: enPath)
-                let deContent = try String(contentsOf: dePath)
+                let enContent = try String(contentsOf: enPath, encoding: .utf8)
+                let deContent = try String(contentsOf: dePath, encoding: .utf8)
 
-                let enLines = enContent.split(separator: "\n")
-                let deLines = deContent.split(separator: "\n")
+                let enLines = enContent.split(separator: "\n", omittingEmptySubsequences: true)
+                let deLines = deContent.split(separator: "\n", omittingEmptySubsequences: true)
 
                 if enLines.count == deLines.count {
                     let pairs = zip(enLines, deLines).map { ["en": String($0), "de": String($1)] }
@@ -108,8 +111,9 @@ class DataPreparator {
                     default:
                         break
                     }
+                    print("Loaded \(pairs.count) pairs from \(filename)")
                 } else {
-                    print("Error: Mismatch in line counts for \(filename).en and \(filename).de")
+                    print("Error: Mismatch in line counts for \(filename).en (\(enLines.count)) and \(filename).de (\(deLines.count))")
                 }
             } catch {
                 print("Error reading files at paths \(enPath) or \(dePath): \(error)")

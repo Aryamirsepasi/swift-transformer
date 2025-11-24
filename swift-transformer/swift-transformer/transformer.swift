@@ -82,6 +82,7 @@ class Seq2Seq {
             
             // Restore encoder layers
             for (i, layer) in self.encoder.layers.enumerated() {
+                // Self-attention weights
                 layer.selfAttention.KLinear.w = encoderParams["layer_\(i)_self_attention_k"]!
                 layer.selfAttention.QLinear.w = encoderParams["layer_\(i)_self_attention_q"]!
                 layer.selfAttention.VLinear.w = encoderParams["layer_\(i)_self_attention_v"]!
@@ -93,6 +94,29 @@ class Seq2Seq {
                     layer.selfAttention.VLinear.b = encoderParams["layer_\(i)_self_attention_v_bias"]!
                     layer.selfAttention.OLinear.b = encoderParams["layer_\(i)_self_attention_o_bias"]!
                 }
+                
+                // Layer normalization parameters
+                if let gamma = encoderParams["layer_\(i)_self_attention_norm_gamma"],
+                   let beta = encoderParams["layer_\(i)_self_attention_norm_beta"] {
+                    layer.selfAttentionNorm.gamma = gamma
+                    layer.selfAttentionNorm.beta = beta
+                }
+                if let gamma = encoderParams["layer_\(i)_ff_norm_gamma"],
+                   let beta = encoderParams["layer_\(i)_ff_norm_beta"] {
+                    layer.ffLayerNorm.gamma = gamma
+                    layer.ffLayerNorm.beta = beta
+                }
+                
+                // Feed-forward weights
+                if let fc1w = encoderParams["layer_\(i)_ff_fc1_w"],
+                   let fc1b = encoderParams["layer_\(i)_ff_fc1_b"],
+                   let fc2w = encoderParams["layer_\(i)_ff_fc2_w"],
+                   let fc2b = encoderParams["layer_\(i)_ff_fc2_b"] {
+                    layer.positionWiseFeedForward.fc1.w = fc1w
+                    layer.positionWiseFeedForward.fc1.b = fc1b
+                    layer.positionWiseFeedForward.fc2.w = fc2w
+                    layer.positionWiseFeedForward.fc2.b = fc2b
+                }
             }
             
             // Restore decoder parameters
@@ -101,11 +125,13 @@ class Seq2Seq {
             
             // Restore decoder layers
             for (i, layer) in self.decoder.layers.enumerated() {
+                // Self-attention weights
                 layer.selfAttention.KLinear.w = decoderParams["layer_\(i)_self_attention_k"]!
                 layer.selfAttention.QLinear.w = decoderParams["layer_\(i)_self_attention_q"]!
                 layer.selfAttention.VLinear.w = decoderParams["layer_\(i)_self_attention_v"]!
                 layer.selfAttention.OLinear.w = decoderParams["layer_\(i)_self_attention_o"]!
                 
+                // Encoder-attention weights
                 layer.encoderAttention.KLinear.w = decoderParams["layer_\(i)_enc_attention_k"]!
                 layer.encoderAttention.QLinear.w = decoderParams["layer_\(i)_enc_attention_q"]!
                 layer.encoderAttention.VLinear.w = decoderParams["layer_\(i)_enc_attention_v"]!
@@ -122,11 +148,39 @@ class Seq2Seq {
                     layer.encoderAttention.VLinear.b = decoderParams["layer_\(i)_enc_attention_v_bias"]!
                     layer.encoderAttention.OLinear.b = decoderParams["layer_\(i)_enc_attention_o_bias"]!
                 }
+                
+                // Layer normalization parameters
+                if let gamma = decoderParams["layer_\(i)_self_attention_norm_gamma"],
+                   let beta = decoderParams["layer_\(i)_self_attention_norm_beta"] {
+                    layer.selfAttentionNorm.gamma = gamma
+                    layer.selfAttentionNorm.beta = beta
+                }
+                if let gamma = decoderParams["layer_\(i)_enc_attention_norm_gamma"],
+                   let beta = decoderParams["layer_\(i)_enc_attention_norm_beta"] {
+                    layer.encAttnLayerNorm.gamma = gamma
+                    layer.encAttnLayerNorm.beta = beta
+                }
+                if let gamma = decoderParams["layer_\(i)_ff_norm_gamma"],
+                   let beta = decoderParams["layer_\(i)_ff_norm_beta"] {
+                    layer.ffLayerNorm.gamma = gamma
+                    layer.ffLayerNorm.beta = beta
+                }
+                
+                // Feed-forward weights
+                if let fc1w = decoderParams["layer_\(i)_ff_fc1_w"],
+                   let fc1b = decoderParams["layer_\(i)_ff_fc1_b"],
+                   let fc2w = decoderParams["layer_\(i)_ff_fc2_w"],
+                   let fc2b = decoderParams["layer_\(i)_ff_fc2_b"] {
+                    layer.positionWiseFeedForward.fc1.w = fc1w
+                    layer.positionWiseFeedForward.fc1.b = fc1b
+                    layer.positionWiseFeedForward.fc2.w = fc2w
+                    layer.positionWiseFeedForward.fc2.b = fc2b
+                }
             }
             
-            print("Successfully loaded model from \"\(path)\"")
+            logPrint("Successfully loaded model from \"\(path)\"")
         } catch {
-            print("Error loading model parameters: \(error)")
+            logPrint("Error loading model parameters: \(error)")
         }
     }
     
@@ -138,7 +192,7 @@ class Seq2Seq {
             do {
                 try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true, attributes: nil)
             } catch {
-                print("Error creating directory at \(path): \(error)")
+                logPrint("Error creating directory at \(path): \(error)")
                 return
             }
         }
@@ -153,6 +207,7 @@ class Seq2Seq {
         
         // Save encoder layers
         for (i, layer) in self.encoder.layers.enumerated() {
+            // Self-attention weights
             encoderParams["layer_\(i)_self_attention_k"] = layer.selfAttention.KLinear.w
             encoderParams["layer_\(i)_self_attention_q"] = layer.selfAttention.QLinear.w
             encoderParams["layer_\(i)_self_attention_v"] = layer.selfAttention.VLinear.w
@@ -164,6 +219,18 @@ class Seq2Seq {
                 encoderParams["layer_\(i)_self_attention_v_bias"] = layer.selfAttention.VLinear.b
                 encoderParams["layer_\(i)_self_attention_o_bias"] = layer.selfAttention.OLinear.b
             }
+            
+            // Layer normalization parameters
+            encoderParams["layer_\(i)_self_attention_norm_gamma"] = layer.selfAttentionNorm.gamma
+            encoderParams["layer_\(i)_self_attention_norm_beta"] = layer.selfAttentionNorm.beta
+            encoderParams["layer_\(i)_ff_norm_gamma"] = layer.ffLayerNorm.gamma
+            encoderParams["layer_\(i)_ff_norm_beta"] = layer.ffLayerNorm.beta
+            
+            // Feed-forward weights
+            encoderParams["layer_\(i)_ff_fc1_w"] = layer.positionWiseFeedForward.fc1.w
+            encoderParams["layer_\(i)_ff_fc1_b"] = layer.positionWiseFeedForward.fc1.b
+            encoderParams["layer_\(i)_ff_fc2_w"] = layer.positionWiseFeedForward.fc2.w
+            encoderParams["layer_\(i)_ff_fc2_b"] = layer.positionWiseFeedForward.fc2.b
         }
         
         // Save decoder parameters
@@ -172,11 +239,13 @@ class Seq2Seq {
         
         // Save decoder layers
         for (i, layer) in self.decoder.layers.enumerated() {
+            // Self-attention weights
             decoderParams["layer_\(i)_self_attention_k"] = layer.selfAttention.KLinear.w
             decoderParams["layer_\(i)_self_attention_q"] = layer.selfAttention.QLinear.w
             decoderParams["layer_\(i)_self_attention_v"] = layer.selfAttention.VLinear.w
             decoderParams["layer_\(i)_self_attention_o"] = layer.selfAttention.OLinear.w
             
+            // Encoder-attention weights
             decoderParams["layer_\(i)_enc_attention_k"] = layer.encoderAttention.KLinear.w
             decoderParams["layer_\(i)_enc_attention_q"] = layer.encoderAttention.QLinear.w
             decoderParams["layer_\(i)_enc_attention_v"] = layer.encoderAttention.VLinear.w
@@ -193,9 +262,27 @@ class Seq2Seq {
                 decoderParams["layer_\(i)_enc_attention_v_bias"] = layer.encoderAttention.VLinear.b
                 decoderParams["layer_\(i)_enc_attention_o_bias"] = layer.encoderAttention.OLinear.b
             }
+            
+            // Layer normalization parameters
+            decoderParams["layer_\(i)_self_attention_norm_gamma"] = layer.selfAttentionNorm.gamma
+            decoderParams["layer_\(i)_self_attention_norm_beta"] = layer.selfAttentionNorm.beta
+            decoderParams["layer_\(i)_enc_attention_norm_gamma"] = layer.encAttnLayerNorm.gamma
+            decoderParams["layer_\(i)_enc_attention_norm_beta"] = layer.encAttnLayerNorm.beta
+            decoderParams["layer_\(i)_ff_norm_gamma"] = layer.ffLayerNorm.gamma
+            decoderParams["layer_\(i)_ff_norm_beta"] = layer.ffLayerNorm.beta
+            
+            // Feed-forward weights
+            decoderParams["layer_\(i)_ff_fc1_w"] = layer.positionWiseFeedForward.fc1.w
+            decoderParams["layer_\(i)_ff_fc1_b"] = layer.positionWiseFeedForward.fc1.b
+            decoderParams["layer_\(i)_ff_fc2_w"] = layer.positionWiseFeedForward.fc2.w
+            decoderParams["layer_\(i)_ff_fc2_b"] = layer.positionWiseFeedForward.fc2.b
         }
         
         do {
+            // Evaluate arrays before saving to ensure computation is complete
+            MLX.eval(Array(encoderParams.values))
+            MLX.eval(Array(decoderParams.values))
+            
             // Save encoder parameters
             let encoderURL = URL(fileURLWithPath: "\(path)/encoder.safetensors")
             try MLX.save(arrays: encoderParams, url: encoderURL)
@@ -204,34 +291,38 @@ class Seq2Seq {
             let decoderURL = URL(fileURLWithPath: "\(path)/decoder.safetensors")
             try MLX.save(arrays: decoderParams, url: decoderURL)
             
-            print("Successfully saved model to \"\(path)\"")
+            logPrint("Successfully saved model to \"\(path)\"")
         } catch {
-            print("Error saving model parameters: \(error)")
+            logPrint("Error saving model parameters: \(error)")
         }
     }
     
     /// Creates a padding mask to handle variable-length sequences
     /// - Parameter x: Input tensor of token indices
-    /// - Returns: A boolean mask tensor where True indicates non-padding positions
+    /// - Returns: A boolean mask tensor where True (1) indicates non-padding positions
+    /// Shape: [batch, 1, seq_len] for broadcasting in attention
     ///
     func getPadMask(x: MLXArray) -> MLXArray {
-        
-        return (x .!= self.padIdx).asType(Int.self)[0..., .newAxis, 0...]
+        // x has shape [batch, seq_len]
+        // mask where pad_idx should be 0 (masked), non-pad should be 1 (not masked)
+        let mask = (x .!= self.padIdx).asType(DType.int32)
+        // Expand to [batch, 1, seq_len] for attention broadcasting
+        return mask.expandedDimensions(axis: 1)
     }
     
     
     /// Creates a subsequent (causal) mask for decoder self-attention
     /// - Parameter x: Input tensor
-    /// - Returns: A triangular mask to prevent attending to future positions
+    /// - Returns: A lower triangular mask to prevent attending to future positions
+    /// Shape: [seq_len, seq_len] - will be broadcast over batch and heads
     ///
     func getSubMask(x: MLXArray) -> MLXArray {
         
         let seqLen = x.shape[1]
         
-        /// Create upper triangular matrix for masking future positions
-        var subsequentMask = MLX.triu(MLX.ones([seqLen, seqLen]), k: 1).asType(Int.self)
-        
-        subsequentMask = MLX.logicalNot(subsequentMask, stream: .gpu)
+        // Create lower triangular matrix (1s below and on diagonal, 0s above)
+        // This allows attending to previous positions and current position
+        let subsequentMask = MLX.tril(MLX.ones([seqLen, seqLen]), k: 0).asType(DType.int32)
         
         return subsequentMask
     }
@@ -248,16 +339,19 @@ class Seq2Seq {
             let srcvar = src.asType(dataType)
             let trgvar = trg.asType(dataType)
             
-            // Create source padding mask
-            let srcMask = self.getPadMask(x: srcvar)
+            // Create source padding mask: [batch, 1, src_len]
+            let srcMask = self.getPadMask(x: src)
             
-            // Create target mask that combines padding and subsequent mask
-            let trgPadMask = getPadMask(x: trgvar)
-            let trgSubMask = getSubMask(x: trgvar)
+            // Create target masks
+            let trgPadMask = getPadMask(x: trg)  // [batch, 1, trg_len]
+            let trgSubMask = getSubMask(x: trg)  // [trg_len, trg_len]
             
-            // Combine masks properly
-            let trgMask = broadcast(trgPadMask, to: [trgvar.shape[0], trgvar.shape[1], trgvar.shape[1]], stream: .gpu)
-            & broadcast(trgSubMask, to: [trgvar.shape[0], trgvar.shape[1], trgvar.shape[1]], stream: .gpu)
+            // Combine padding and causal masks for target
+            // trgPadMask: [batch, 1, trg_len] - broadcasts to [batch, 1, trg_len, trg_len]
+            // trgSubMask: [trg_len, trg_len] - broadcasts to [batch, 1, trg_len, trg_len]
+            // Result: [batch, trg_len, trg_len]
+            let expandedPadMask = trgPadMask.expandedDimensions(axis: 2)  // [batch, 1, 1, trg_len]
+            let trgMask = (expandedPadMask * trgSubMask).squeezed(axis: 1)  // [batch, trg_len, trg_len]
             
             // Encoder forward pass
             let encSrc = self.encoder.forward(src: srcvar, srcMask: srcMask, training: training)
@@ -287,7 +381,7 @@ class Seq2Seq {
         
     }
     
-    func train(source: [MLXArray], target: [MLXArray], epoch: Int, epochs: Int) -> MLXArray {
+    func train(source: [MLXArray], target: [MLXArray], epoch: Int, epochs: Int, onBatchProgress: ((Int, Int, Float) -> Void)? = nil) -> MLXArray {
         
         // Start timer
         let startTime = Date()
@@ -298,7 +392,7 @@ class Seq2Seq {
         
         let zipped = zip(source, target).enumerated()
         
-        let tqdmRange = TqdmSequence(sequence: zipped, description: "Training", unit: "batch", color: .cyan)
+        let tqdmRange = TqdmSequence(sequence: zipped, description: "Epoch \(epoch + 1)/\(epochs)", unit: "batch", color: .cyan)
         
         for (batchNum, (sourceBatch, targetBatch)) in tqdmRange {
             autoreleasepool {
@@ -323,13 +417,22 @@ class Seq2Seq {
                 self.updateWeights()
                 
                 let latestLoss = lossHistory[lossHistory.count-1]
-                tqdmRange.setDescription(description: "training | loss: \(latestLoss) | perplexity: \(exp(latestLoss)) | epoch \(epoch + 1)/\(epochs)")
+                tqdmRange.setDescription(description: "loss: \(String(format: "%.4f", latestLoss)) | ppl: \(String(format: "%.2f", exp(latestLoss)))")
                 
+                // Report batch progress to UI (every 10 batches or on last batch)
+                if batchNum % 10 == 0 || batchNum == totalBatches - 1 {
+                    onBatchProgress?(batchNum + 1, totalBatches, latestLoss)
+                    // Also log to UI periodically
+                    if batchNum % 50 == 0 {
+                        logPrint("[Epoch \(epoch + 1)/\(epochs)] Batch \(batchNum + 1)/\(totalBatches) | Loss: \(String(format: "%.4f", latestLoss)) | Perplexity: \(String(format: "%.2f", exp(latestLoss)))")
+                    }
+                }
                 
                 if batchNum == (totalBatches - 1) {
                     epochLoss = MLX.mean(MLXArray(lossHistory))
-                    tqdmRange.setDescription(description: "training | avg loss: \(epochLoss.item(Float.self)) | avg perplexity: \(exp(epochLoss.item(Float.self))) | epoch \(epoch + 1)/\(epochs)")
-                    
+                    let avgLoss = epochLoss.item(Float.self)
+                    tqdmRange.setDescription(description: "avg loss: \(String(format: "%.4f", avgLoss)) | avg ppl: \(String(format: "%.2f", exp(avgLoss)))")
+                    logPrint("✓ Epoch \(epoch + 1)/\(epochs) completed | Avg Loss: \(String(format: "%.4f", avgLoss)) | Avg Perplexity: \(String(format: "%.2f", exp(avgLoss)))")
                 }
                 
                 GPU.clearCache()
@@ -339,7 +442,7 @@ class Seq2Seq {
         // End timer
         let endTime = Date()
         let timeInterval = endTime.timeIntervalSince(startTime)
-        print("Training completed in \(timeInterval) seconds")
+        logPrint("Training completed in \(timeInterval) seconds")
         
         return epochLoss
     }
@@ -371,14 +474,14 @@ class Seq2Seq {
                 
                 
                 let latestLoss = lossHistory[lossHistory.count - 1]
-                tqdmRange.setDescription(description: "testing | loss: \(latestLoss) | perplexity: \(exp(latestLoss))")
+                tqdmRange.setDescription(description: "loss: \(String(format: "%.4f", latestLoss)) | ppl: \(String(format: "%.2f", exp(latestLoss)))")
                 
                 if batchNum == (source.count - 1) {
                     
                     epochLoss = MLX.mean(MLXArray(lossHistory))
-                    
-                    tqdmRange.setDescription(description: "testing | avg loss: \(epochLoss.item(Float.self)) | avg perplexity: \(exp(epochLoss.item(Float.self)))")
-                    
+                    let avgLoss = epochLoss.item(Float.self)
+                    tqdmRange.setDescription(description: "avg loss: \(String(format: "%.4f", avgLoss)) | avg ppl: \(String(format: "%.2f", exp(avgLoss)))")
+                    logPrint("✓ Validation | Avg Loss: \(String(format: "%.4f", avgLoss)) | Avg Perplexity: \(String(format: "%.2f", exp(avgLoss)))")
                 }
                 
                 GPU.clearCache()
@@ -389,13 +492,13 @@ class Seq2Seq {
         // End timer
         let endTime = Date()
         let timeInterval = endTime.timeIntervalSince(startTime)
-        print("Testing completed in \(timeInterval) seconds")
+        logPrint("Testing completed in \(timeInterval) seconds")
         
         return epochLoss
         
     }
     
-    func fit(trainData: ([MLXArray], [MLXArray]), valData: ([MLXArray], [MLXArray]), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool) -> ([MLXArray],[MLXArray]) {
+    func fit(trainData: ([MLXArray], [MLXArray]), valData: ([MLXArray], [MLXArray]), epochs: Int, saveEveryEpochs: Int, savePath: String?, validationCheck: Bool, onEpochStart: ((Int, Int) -> Void)? = nil, onEpochEnd: ((Int, Float, Float) -> Void)? = nil, onBatchProgress: ((Int, Int, Float) -> Void)? = nil) -> ([MLXArray],[MLXArray]) {
         
         setOptimizer()
         
@@ -407,12 +510,17 @@ class Seq2Seq {
         let (valSource, valTarget) = valData
         
         for epoch in 0..<epochs {
+            // Notify epoch start
+            onEpochStart?(epoch + 1, epochs)
             
-            let trainLoss = self.train(source: trainSource, target: trainTarget, epoch: epoch, epochs: epochs)
+            let trainLoss = self.train(source: trainSource, target: trainTarget, epoch: epoch, epochs: epochs, onBatchProgress: onBatchProgress)
             trainLossHistory.append(trainLoss)
             
             let valLoss = self.evaluate(source: valSource, target: valTarget)
             valLossHistory.append(valLoss)
+            
+            // Notify epoch end with losses
+            onEpochEnd?(epoch + 1, trainLoss.item(Float.self), valLoss.item(Float.self))
             
             if ((savePath != nil) && ((epoch + 1) % saveEveryEpochs == 0)) {
                 if !validationCheck {
@@ -422,7 +530,7 @@ class Seq2Seq {
                         bestValLoss = valLossHistory[valLossHistory.count - 1].item(Float.self)
                         self.save(path: "\(savePath)/\(epoch + 1)")
                     } else {
-                        print("Current validation loss is higher than previous; Not saved")
+                        logPrint("Current validation loss is higher than previous; Not saved")
                     }
                 }
             }
@@ -447,12 +555,12 @@ class Seq2Seq {
         // Add SOS and EOS tokens
         let srcIndicesWithTokens = [sosIndex] + srcIndices + [eosIndex]
         
-        // Create an MLXArray from the source indices and reshape it
+        // Create an MLXArray from the source indices and reshape it [1, seq_len]
         let src = MLXArray(srcIndicesWithTokens).reshaped([1, -1])
         let srcMask = self.getPadMask(x: src)
         
         // Pass through the encoder
-        let encSrc = self.encoder.forward(src: src.asType(dataType), srcMask: srcMask, training: false)  // Added asType
+        let encSrc = self.encoder.forward(src: src.asType(dataType), srcMask: srcMask, training: false)
         
         // Initialize target indices with SOS token
         var trgIndices = [sosIndex]
@@ -460,19 +568,26 @@ class Seq2Seq {
         var attention = MLXArray([])
         
         for _ in 0..<maxLength {
-            // Create target tensor and mask
+            // Create target tensor [1, current_seq_len]
             let trg = MLXArray(trgIndices).reshaped([1, -1])
-            let trgMask = self.getPadMask(x: trg) & self.getSubMask(x: trg)
+            
+            // Create combined mask for target
+            let trgPadMask = self.getPadMask(x: trg)  // [1, 1, trg_len]
+            let trgSubMask = self.getSubMask(x: trg)  // [trg_len, trg_len]
+            let expandedPadMask = trgPadMask.expandedDimensions(axis: 2)  // [1, 1, 1, trg_len]
+            let trgMask = (expandedPadMask * trgSubMask).squeezed(axis: 1)  // [1, trg_len, trg_len]
             
             // Pass through the decoder
-            let (out, attn) = self.decoder.forward(trg: trg.asType(dataType), trgMask: trgMask, src: encSrc, srcMask: srcMask, training: false)  // Added asType
+            let (out, attn) = self.decoder.forward(trg: trg.asType(dataType), trgMask: trgMask, src: encSrc, srcMask: srcMask, training: false)
             output = out
             attention = attn
             
-            // Get prediction for next token - using argmax directly like in Python
-            let trgIndex = out.argMax(axis: -1)[0..., -1].item(Int.self)  // Fixed index access
+            // Get prediction for next token - using argmax on the last position
+            // out shape: [1, seq_len, vocab_size]
+            let lastOutput = out[0, -1]  // Get last position: [vocab_size]
+            let trgIndex = lastOutput.argMax().item(Int.self)
             
-            // Break if we hit EOS or max length
+            // Break if we hit EOS
             if trgIndex == eosIndex {
                 break
             }
@@ -495,8 +610,8 @@ class Seq2Seq {
             return unkToken
         }
         
-        // Get first attention layer like in Python
-        let attention0 = attention[0]
+        // Get first attention layer
+        let attention0 = attention.ndim > 0 ? attention[0] : attention
         
         // Drop the SOS token like in Python implementation
         return (Array(decodedSentence.dropFirst()), attention0)

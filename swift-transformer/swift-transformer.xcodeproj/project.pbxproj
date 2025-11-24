@@ -16,9 +16,6 @@
 		2A2912802BDEC183008A505C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29127F2BDEC183008A505C /* ContentView.swift */; };
 		2A2912822BDEC184008A505C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A2912812BDEC184008A505C /* Assets.xcassets */; };
 		2A2912852BDEC184008A505C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A2912842BDEC184008A505C /* Preview Assets.xcassets */; };
-		2A2912902BDEC184008A505C /* swift_transformerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29128F2BDEC184008A505C /* swift_transformerTests.swift */; };
-		2A29129A2BDEC184008A505C /* swift_transformerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2912992BDEC184008A505C /* swift_transformerUITests.swift */; };
-		2A29129C2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A29129B2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift */; };
 		2A2912AC2BDEC237008A505C /* prepare_data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2912AB2BDEC237008A505C /* prepare_data.swift */; };
 		2A3220A02BDFD7BF00739465 /* activations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A32209F2BDFD7BF00739465 /* activations.swift */; };
 		2A42066A2BEF97AA00F914ED /* dense.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4206692BEF97AA00F914ED /* dense.swift */; };
@@ -37,24 +34,8 @@
 		2ABF1CAD2BE0613900C700DD /* transformer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABF1CAC2BE0613900C700DD /* transformer.swift */; };
 		2AE3D9BE2BDED44F006AC004 /* decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE3D9BD2BDED44F006AC004 /* decoder.swift */; };
 		2AE3D9C02BDEFFBC006AC004 /* encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE3D9BF2BDEFFBC006AC004 /* encoder.swift */; };
+		4271C0B72ED51D3A00BB88C7 /* dataset in Resources */ = {isa = PBXBuildFile; fileRef = 4271C0B62ED51D3A00BB88C7 /* dataset */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		2A29128C2BDEC184008A505C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 2A2912722BDEC183008A505C /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 2A2912792BDEC183008A505C;
-			remoteInfo = "swift-transformer";
-		};
-		2A2912962BDEC184008A505C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 2A2912722BDEC183008A505C /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 2A2912792BDEC183008A505C;
-			remoteInfo = "swift-transformer";
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		2A29127A2BDEC183008A505C /* swift-transformer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "swift-transformer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -63,11 +44,6 @@
 		2A2912812BDEC184008A505C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2A2912842BDEC184008A505C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2A2912862BDEC184008A505C /* swift_transformer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = swift_transformer.entitlements; sourceTree = "<group>"; };
-		2A29128B2BDEC184008A505C /* swift-transformerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-transformerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2A29128F2BDEC184008A505C /* swift_transformerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_transformerTests.swift; sourceTree = "<group>"; };
-		2A2912952BDEC184008A505C /* swift-transformerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swift-transformerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2A2912992BDEC184008A505C /* swift_transformerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_transformerUITests.swift; sourceTree = "<group>"; };
-		2A29129B2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swift_transformerUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		2A2912AB2BDEC237008A505C /* prepare_data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = prepare_data.swift; sourceTree = "<group>"; };
 		2A32209F2BDFD7BF00739465 /* activations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = activations.swift; sourceTree = "<group>"; };
 		2A4206692BEF97AA00F914ED /* dense.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dense.swift; sourceTree = "<group>"; };
@@ -85,6 +61,7 @@
 		2ABF1CAC2BE0613900C700DD /* transformer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = transformer.swift; sourceTree = "<group>"; };
 		2AE3D9BD2BDED44F006AC004 /* decoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = decoder.swift; sourceTree = "<group>"; };
 		2AE3D9BF2BDEFFBC006AC004 /* encoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = encoder.swift; sourceTree = "<group>"; };
+		4271C0B62ED51D3A00BB88C7 /* dataset */ = {isa = PBXFileReference; lastKnownFileType = folder; name = dataset; path = "swift-transformer/dataset"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,29 +78,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2A2912882BDEC184008A505C /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		2A2912922BDEC184008A505C /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		2A2912712BDEC183008A505C = {
 			isa = PBXGroup;
 			children = (
+				4271C0B62ED51D3A00BB88C7 /* dataset */,
 				2A29127C2BDEC183008A505C /* swift-transformer */,
-				2A29128E2BDEC184008A505C /* swift-transformerTests */,
-				2A2912982BDEC184008A505C /* swift-transformerUITests */,
 				2A29127B2BDEC183008A505C /* Products */,
 				2A74CB3D2C92259E00B98059 /* Frameworks */,
 			);
@@ -133,8 +95,6 @@
 			isa = PBXGroup;
 			children = (
 				2A29127A2BDEC183008A505C /* swift-transformer.app */,
-				2A29128B2BDEC184008A505C /* swift-transformerTests.xctest */,
-				2A2912952BDEC184008A505C /* swift-transformerUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -165,23 +125,6 @@
 				2A2912842BDEC184008A505C /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		2A29128E2BDEC184008A505C /* swift-transformerTests */ = {
-			isa = PBXGroup;
-			children = (
-				2A29128F2BDEC184008A505C /* swift_transformerTests.swift */,
-			);
-			path = "swift-transformerTests";
-			sourceTree = "<group>";
-		};
-		2A2912982BDEC184008A505C /* swift-transformerUITests */ = {
-			isa = PBXGroup;
-			children = (
-				2A2912992BDEC184008A505C /* swift_transformerUITests.swift */,
-				2A29129B2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift */,
-			);
-			path = "swift-transformerUITests";
 			sourceTree = "<group>";
 		};
 		2A42066B2BEFA56D00F914ED /* layers */ = {
@@ -252,42 +195,6 @@
 			productReference = 2A29127A2BDEC183008A505C /* swift-transformer.app */;
 			productType = "com.apple.product-type.application";
 		};
-		2A29128A2BDEC184008A505C /* swift-transformerTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 2A2912A22BDEC184008A505C /* Build configuration list for PBXNativeTarget "swift-transformerTests" */;
-			buildPhases = (
-				2A2912872BDEC184008A505C /* Sources */,
-				2A2912882BDEC184008A505C /* Frameworks */,
-				2A2912892BDEC184008A505C /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				2A29128D2BDEC184008A505C /* PBXTargetDependency */,
-			);
-			name = "swift-transformerTests";
-			productName = "swift-transformerTests";
-			productReference = 2A29128B2BDEC184008A505C /* swift-transformerTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		2A2912942BDEC184008A505C /* swift-transformerUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 2A2912A52BDEC184008A505C /* Build configuration list for PBXNativeTarget "swift-transformerUITests" */;
-			buildPhases = (
-				2A2912912BDEC184008A505C /* Sources */,
-				2A2912922BDEC184008A505C /* Frameworks */,
-				2A2912932BDEC184008A505C /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				2A2912972BDEC184008A505C /* PBXTargetDependency */,
-			);
-			name = "swift-transformerUITests";
-			productName = "swift-transformerUITests";
-			productReference = 2A2912952BDEC184008A505C /* swift-transformerUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -296,18 +203,10 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1530;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					2A2912792BDEC183008A505C = {
 						CreatedOnToolsVersion = 15.3;
-					};
-					2A29128A2BDEC184008A505C = {
-						CreatedOnToolsVersion = 15.3;
-						TestTargetID = 2A2912792BDEC183008A505C;
-					};
-					2A2912942BDEC184008A505C = {
-						CreatedOnToolsVersion = 15.3;
-						TestTargetID = 2A2912792BDEC183008A505C;
 					};
 				};
 			};
@@ -329,8 +228,6 @@
 			projectRoot = "";
 			targets = (
 				2A2912792BDEC183008A505C /* swift-transformer */,
-				2A29128A2BDEC184008A505C /* swift-transformerTests */,
-				2A2912942BDEC184008A505C /* swift-transformerUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -340,22 +237,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4271C0B72ED51D3A00BB88C7 /* dataset in Resources */,
 				2A2912852BDEC184008A505C /* Preview Assets.xcassets in Resources */,
 				2A2912822BDEC184008A505C /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		2A2912892BDEC184008A505C /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		2A2912932BDEC184008A505C /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -388,37 +272,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2A2912872BDEC184008A505C /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				2A2912902BDEC184008A505C /* swift_transformerTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		2A2912912BDEC184008A505C /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				2A29129C2BDEC184008A505C /* swift_transformerUITestsLaunchTests.swift in Sources */,
-				2A29129A2BDEC184008A505C /* swift_transformerUITests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		2A29128D2BDEC184008A505C /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 2A2912792BDEC183008A505C /* swift-transformer */;
-			targetProxy = 2A29128C2BDEC184008A505C /* PBXContainerItemProxy */;
-		};
-		2A2912972BDEC184008A505C /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 2A2912792BDEC183008A505C /* swift-transformer */;
-			targetProxy = 2A2912962BDEC184008A505C /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2A29129D2BDEC184008A505C /* Debug */ = {
@@ -457,6 +311,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = MK2V998W66;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -521,6 +376,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = MK2V998W66;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -547,12 +403,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "swift-transformer/swift_transformer.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-transformer/Preview Content\"";
-				DEVELOPMENT_TEAM = MK2V998W66;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -577,12 +433,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "swift-transformer/swift_transformer.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-transformer/Preview Content\"";
-				DEVELOPMENT_TEAM = MK2V998W66;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -598,78 +454,6 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
-		2A2912A32BDEC184008A505C /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = MK2V998W66;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.4;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.swift-transformerTests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swift-transformer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/swift-transformer";
-			};
-			name = Debug;
-		};
-		2A2912A42BDEC184008A505C /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = MK2V998W66;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.4;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.swift-transformerTests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/swift-transformer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/swift-transformer";
-			};
-			name = Release;
-		};
-		2A2912A62BDEC184008A505C /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = MK2V998W66;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.swift-transformerUITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "swift-transformer";
-			};
-			name = Debug;
-		};
-		2A2912A72BDEC184008A505C /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = MK2V998W66;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.aryamirsepasi.swift-transformerUITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "swift-transformer";
 			};
 			name = Release;
 		};
@@ -690,24 +474,6 @@
 			buildConfigurations = (
 				2A2912A02BDEC184008A505C /* Debug */,
 				2A2912A12BDEC184008A505C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		2A2912A22BDEC184008A505C /* Build configuration list for PBXNativeTarget "swift-transformerTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				2A2912A32BDEC184008A505C /* Debug */,
-				2A2912A42BDEC184008A505C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		2A2912A52BDEC184008A505C /* Build configuration list for PBXNativeTarget "swift-transformerUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				2A2912A62BDEC184008A505C /* Debug */,
-				2A2912A72BDEC184008A505C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
